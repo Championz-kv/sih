@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolveSamaj — Societal Innovation Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="overview">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="hero">
+    <svg class="hero-contour" viewBox="0 0 800 300" preserveAspectRatio="none">
+      <path d="M0,180 C150,120 250,220 400,160 C550,100 650,200 800,140" fill="none" stroke="var(--setu)" stroke-width="1.4"/>
+      <path d="M0,220 C150,170 250,260 400,210 C550,150 650,250 800,190" fill="none" stroke="var(--ochre)" stroke-width="1.4"/>
+      <path d="M0,120 C150,70 250,150 400,100 C550,50 650,140 800,90" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+    </svg>
+    <div class="hero-inner">
+      <div>
+        <span class="eyebrow">Government · Academia · Industry</span>
+        <h1>Where societal problems meet the people who can solve them.</h1>
+        <p class="lead">Citizens file a problem once. SolveSamaj classifies it, routes it to universities, NGOs and industry with the right expertise, and tracks it all the way from case file to deployed solution.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary" onclick="go('submit.html')">File a Problem</button>
+          <button class="btn btn-outline" onclick="go('org-profile.html')">Register as an Organization</button>
+        </div>
+        <div class="hero-chips">
+          <span class="tag">Education</span><span class="tag">Healthcare</span><span class="tag">Agriculture</span>
+          <span class="tag">Water &amp; Sanitation</span><span class="tag">Infrastructure</span><span class="tag">+9 more</span>
+        </div>
+      </div>
+      <div class="dossier">
+        <div class="case-no">CASE NO. SS/JH/2026/1042</div>
+        <h4>Drainage failure floods school access road every monsoon</h4>
+        <p>Ranchi district · reported by 3 community members, backed by 183 supporters</p>
+        <div class="dossier-meta">
+          <div><b>3,000</b>affected</div>
+          <div><b>Civil Eng.</b>domain match</div>
+          <div><b>2</b>orgs engaged</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step"><div class="n">1</div><div class="lbl">Identify</div></div>
+      <div class="pipe-step"><div class="n">2</div><div class="lbl">Validate</div></div>
+      <div class="pipe-step"><div class="n">3</div><div class="lbl">Discover</div></div>
+      <div class="pipe-step"><div class="n">4</div><div class="lbl">Connect</div></div>
+      <div class="pipe-step"><div class="n">5</div><div class="lbl">Collaborate</div></div>
+      <div class="pipe-step"><div class="n">6</div><div class="lbl">Develop</div></div>
+      <div class="pipe-step"><div class="n">7</div><div class="lbl">Implement</div></div>
+      <div class="pipe-step"><div class="n">8</div><div class="lbl">Measure</div></div>
+    </div>
+  </div>
+
+  <div class="ledger-strip">
+    <div class="ledger-cell"><span class="v">12,482</span><span class="l">Problems Filed</span><span class="d d-up">▲ 4.2% wk</span></div>
+    <div class="ledger-cell"><span class="v">8,931</span><span class="l">Validated</span><span class="d d-up">▲ 2.1% wk</span></div>
+    <div class="ledger-cell"><span class="v">1,847</span><span class="l">Active Projects</span><span class="d d-up">▲ 6.0% wk</span></div>
+    <div class="ledger-cell"><span class="v">642</span><span class="l">Resolved</span><span class="d d-up">▲ 1.3% wk</span></div>
+    <div class="ledger-cell"><span class="v">387</span><span class="l">Organizations</span><span class="d d-up">▲ 12 new</span></div>
+    <div class="ledger-cell"><span class="v">62</span><span class="l">Universities</span><span class="d">— steady</span></div>
+  </div>
+
+  <div class="grid grid-3" style="align-items:start; margin-bottom:22px;">
+    <div class="card card-pad" style="grid-column: span 2;">
+      <div class="section-head"><h2>Recently filed</h2><a href="#" onclick="go('explore.html');return false;" class="mono" style="font-size:11.5px;">View all →</a></div>
+      <div id="overviewRecent"></div>
+    </div>
+    <div class="card card-pad">
+      <div class="section-head"><h2>Top domains</h2></div>
+      <div class="barlist" id="overviewDomains"></div>
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <div class="section-head">
+      <h2>Participating organizations</h2>
+      <span class="sub">A sample of universities, NGOs, startups and industry partners already on the desk</span>
+    </div>
+    <div class="grid grid-4" id="overviewOrgs"></div>
+  </div>
+
+  <div class="portal-footer">
+    <span>SolveSamaj is a public-good digital service · built by Team KUEST-L for Smart India Hackathon 2026</span>
+    <span class="mono"><a href="team.html" onclick="return false;" style="color:inherit;">Prototype UI — backend integration pending</a></span>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  document.getElementById('overviewRecent').innerHTML = PROBLEMS.slice(0,4).map(p => `
+    <div class="notif-item" style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
+      <span class="notif-dot" style="background:${categoryColor(p.category)};"></span>
+      <div style="flex:1;"><p><b class="mono" style="font-weight:600;">#${p.id}</b> ${p.title}</p><span>${p.district} · ${formatDate(p.date)}</span></div>
+      ${stampHTML(p.status)}
+    </div>`).join("");
+
+  const domainCounts = {};
+  PROBLEMS.forEach(p => domainCounts[p.category] = (domainCounts[p.category]||0)+1);
+  const total = PROBLEMS.length;
+  const domains = Object.entries(domainCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('overviewDomains').innerHTML = domains.map(([name,count]) => {
+    const pct = Math.round(count/total*100);
+    const c = categoryColor(name);
+    return `<div class="row"><span class="name">${name}</span><div class="track"><div class="fill" style="width:${pct}%; background:${c};"></div></div><span class="pct">${pct}%</span></div>`;
+  }).join("");
+
+  document.getElementById('overviewOrgs').innerHTML = ORGS.slice(0,4).map(o => `
+    <div class="card card-pad" style="text-align:center; padding:16px 10px; cursor:pointer;" onclick="go('organizations.html')">
+      <div class="av" style="margin:0 auto 8px; width:38px; height:38px; font-size:13px; background:${avatarColor(o.name)}; color:#fff;">${initials(o.name)}</div>
+      <b style="font-size:12.5px; display:block; margin-bottom:2px;">${o.name}</b>
+      <span style="font-size:11px; color:var(--text-faint);">${o.type}</span>
+    </div>`).join("");
+});
+</script>
+</body>
+</html>

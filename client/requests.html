@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collaboration Requests — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="requests">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Collaboration Requests</h1><p class="sub">Invitations between organizations to join forces on a problem or project.</p></div></div>
+  <div class="tabbar">
+    <button class="tabbtn active" data-rtab="in" onclick="switchRTab('in')">Incoming <span class="mono" style="font-size:11px;">(2)</span></button>
+    <button class="tabbtn" data-rtab="out" onclick="switchRTab('out')">Outgoing <span class="mono" style="font-size:11px;">(1)</span></button>
+  </div>
+  <div class="tabpanel active" id="rtab-in">
+    <div class="card card-pad" style="margin-bottom:12px;">
+      <div class="row-flex" style="justify-content:space-between;">
+        <div class="person-row" style="padding:0;"><div class="av" style="background:#2568A8; color:#fff;">SB</div><div><b>Sensfirm Robotics</b><span>invites you to PRJ-0312 — Smart Drainage &amp; Early Warning System</span></div></div>
+        <span class="stamp stamp-pending">Awaiting reply</span>
+      </div>
+      <p style="font-size:12.5px; margin:10px 0 12px;">"We'd like to bring our flood-monitoring sensor stack as the hardware layer for the early-warning system."</p>
+      <div class="row-flex" style="gap:8px;"><button class="btn btn-primary btn-sm" onclick="toast('Invitation accepted (placeholder)')">Accept</button><button class="btn btn-outline btn-sm" onclick="toast('Invitation declined (placeholder)')">Decline</button></div>
+    </div>
+    <div class="card card-pad">
+      <div class="row-flex" style="justify-content:space-between;">
+        <div class="person-row" style="padding:0;"><div class="av" style="background:#0F7173; color:#fff;">CN</div><div><b>Civica NGO</b><span>invites you to collaborate on Problem #1108 — Groundwater contamination</span></div></div>
+        <span class="stamp stamp-pending">Awaiting reply</span>
+      </div>
+      <p style="font-size:12.5px; margin:10px 0 12px;">"We have community access in the affected hamlets and can support local implementation."</p>
+      <div class="row-flex" style="gap:8px;"><button class="btn btn-primary btn-sm" onclick="toast('Invitation accepted (placeholder)')">Accept</button><button class="btn btn-outline btn-sm" onclick="toast('Invitation declined (placeholder)')">Decline</button></div>
+    </div>
+  </div>
+  <div class="tabpanel" id="rtab-out">
+    <div class="card card-pad">
+      <div class="row-flex" style="justify-content:space-between;">
+        <div class="person-row" style="padding:0;"><div class="av" style="background:#B4761F; color:#fff;">NJ</div><div><b>NIT Jamshedpur</b><span>invited to PRJ-0341 — Feeder Line Load Balancing Study</span></div></div>
+        <span class="stamp stamp-validated">Accepted</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function switchRTab(tab){
+  document.querySelectorAll('.tabbar .tabbtn[data-rtab]').forEach(b => b.classList.toggle('active', b.dataset.rtab === tab));
+  document.querySelectorAll('.tabpanel[id^="rtab-"]').forEach(p => p.classList.toggle('active', p.id === 'rtab-' + tab));
+}
+document.addEventListener('DOMContentLoaded', renderShell);
+</script>
+</body>
+</html>

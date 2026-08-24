@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore Problems — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="explore">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head">
+    <div><h1>Explore Problems</h1><p class="sub">Every validated societal challenge on the desk, open for search, support, and collaboration.</p></div>
+    <div class="page-head-actions">
+      <div class="btn-outline btn btn-sm" onclick="toast('Map-based discovery is a placeholder for now — list view stays active.')">Map view</div>
+      <button class="btn btn-primary btn-sm" onclick="go('submit.html')">+ Report a Problem</button>
+    </div>
+  </div>
+
+  <div class="filters-layout">
+    <div class="filter-box card card-pad">
+      <div class="field" style="margin-bottom:14px;">
+        <input class="input" id="exploreSearch" placeholder="Search title, tag, district...">
+      </div>
+      <div class="filter-group" id="filterCategory">
+        <h5>Category</h5>
+      </div>
+      <div class="filter-group" id="filterSeverity">
+        <h5>Severity</h5>
+        <label class="check-row"><input type="checkbox" value="critical"><span class="sev-dot sev-critical"></span>&nbsp;Critical</label>
+        <label class="check-row"><input type="checkbox" value="high"><span class="sev-dot sev-high"></span>&nbsp;High</label>
+        <label class="check-row"><input type="checkbox" value="medium"><span class="sev-dot sev-medium"></span>&nbsp;Medium</label>
+        <label class="check-row"><input type="checkbox" value="low"><span class="sev-dot sev-low"></span>&nbsp;Low</label>
+      </div>
+      <div class="filter-group" id="filterStatus">
+        <h5>Status</h5>
+        <label class="check-row"><input type="checkbox" value="validated"> Validated</label>
+        <label class="check-row"><input type="checkbox" value="review"> Under review</label>
+        <label class="check-row"><input type="checkbox" value="open"> Open for solutions</label>
+        <label class="check-row"><input type="checkbox" value="progress"> Project active</label>
+        <label class="check-row"><input type="checkbox" value="resolved"> Resolved</label>
+      </div>
+      <div class="filter-group" style="border-bottom:none;">
+        <button class="btn btn-outline btn-sm btn-block" onclick="clearExploreFilters()">Clear filters</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head">
+        <span class="sub mono" id="exploreCount">— matching problems</span>
+        <select class="input" id="exploreSort" style="width:auto; padding:7px 10px; font-size:12.5px;">
+          <option value="supporters">Sort: Most supporters</option>
+          <option value="urgent">Sort: Most urgent</option>
+          <option value="newest">Sort: Newest</option>
+          <option value="affected">Sort: Most affected</option>
+        </select>
+      </div>
+      <div class="problem-grid" id="exploreGrid"></div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function clearExploreFilters(){
+  document.getElementById('exploreSearch').value = '';
+  document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => cb.checked = false);
+  renderExplore();
+}
+function getChecked(containerId){
+  return Array.from(document.querySelectorAll('#'+containerId+' input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+function renderExplore(){
+  const q = document.getElementById('exploreSearch').value;
+  const sortMode = document.getElementById('exploreSort').value;
+  const cats = getChecked('filterCategory');
+  const sevs = getChecked('filterSeverity');
+  const stats = getChecked('filterStatus');
+
+  let list = searchProblems(PROBLEMS, q);
+  list = filterProblems(list, { categories:cats, severities:sevs, statuses:stats });
+  list = sortProblems(list, sortMode);
+
+  document.getElementById('exploreCount').textContent = `${list.length} matching problem${list.length===1?'':'s'}`;
+  document.getElementById('exploreGrid').innerHTML = list.length ? list.map(problemCardHTML).join("")
+    : `<div class="empty" style="grid-column:1/-1;"><h4>No problems match those filters</h4><p>Try widening your search or clearing a filter.</p></div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  const params = new URLSearchParams(location.search);
+  const category_counts = {};
+  PROBLEMS.forEach(p => category_counts[p.category] = (category_counts[p.category]||0)+1);
+  document.getElementById('filterCategory').innerHTML = '<h5>Category</h5>' + Object.entries(category_counts).map(([cat,n]) =>
+    `<label class="check-row"><input type="checkbox" value="${cat}"><span class="cat-dot" style="background:${categoryColor(cat)};"></span>${cat}<span class="n">${n}</span></label>`
+  ).join("");
+
+  if(params.get('q')) document.getElementById('exploreSearch').value = params.get('q');
+
+  document.getElementById('exploreSearch').addEventListener('input', renderExplore);
+  document.getElementById('exploreSort').addEventListener('change', renderExplore);
+  document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', renderExplore);
+  });
+
+  renderExplore();
+});
+</script>
+</body>
+</html>

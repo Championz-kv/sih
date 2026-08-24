@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="projects">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Projects</h1><p class="sub">Problems that have moved from "reported" to "being actively solved."</p></div></div>
+  <div class="grid grid-3" id="projectsGrid"></div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('projectsGrid').innerHTML = PROJECTS.map(pr => `
+    <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="go('project.html', {code:'${pr.code}'})">
+      <div class="row-flex" style="justify-content:space-between;">
+        <span class="pcard-id mono">${pr.code}</span>
+        <span class="eyebrow">${pr.stage}</span>
+      </div>
+      <h3 style="font-size:15.5px; margin:0;">${pr.title}</h3>
+      <p style="font-size:12px; margin:0; color:var(--text-faint);">Linked to case #${pr.problem} · lead ${pr.lead}</p>
+      <div class="milestone" style="margin:0;">
+        <div class="mtop"><b>Overall progress</b><span>${pr.progress}%</span></div>
+        <div class="track"><div class="fill" style="width:${pr.progress}%;"></div></div>
+      </div>
+      <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
+        <span>${pr.orgs.length} orgs · ${pr.team} members</span><span class="mono">since ${formatDate(pr.start)}</span>
+      </div>
+    </div>`).join("");
+});
+</script>
+</body>
+</html>

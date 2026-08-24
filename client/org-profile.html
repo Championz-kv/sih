@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organization Profile — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="orgprofile">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Organization Profile</h1><p class="sub">Tell SolveSamaj what your organization can actually do, so relevant problems find you.</p></div>
+    <div class="page-head-actions"><span class="stamp stamp-pending">Pending Verification</span></div>
+  </div>
+  <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+    <div class="card card-pad">
+      <div class="field-row">
+        <div class="field"><label>Organization name</label><input class="input" value="MMMUT — Madan Mohan Malaviya University of Technology"></div>
+        <div class="field"><label>Organization type</label>
+          <select class="input"><option>University / College</option><option>NGO</option><option>Startup</option><option>Industry</option><option>MSME</option><option>Research Institution</option><option>CSR Organization</option><option>Government Organization</option></select>
+        </div>
+      </div>
+      <div class="field"><label>About</label><textarea class="input">A public technical university engaged in applied research, student innovation projects, and rural technology deployment across Uttar Pradesh.</textarea></div>
+      <div class="field">
+        <label>Areas of expertise</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">AI/ML</span><span class="chip-opt sel">IoT</span><span class="chip-opt sel">Civil Engineering</span>
+          <span class="chip-opt sel">Water Management</span><span class="chip-opt">Electronics</span><span class="chip-opt">Agriculture Tech</span>
+          <span class="chip-opt">Public Health</span><span class="chip-opt">Renewable Energy</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>State</label><select class="input"><option>Uttar Pradesh</option></select></div>
+        <div class="field"><label>District / City</label><input class="input" value="Gorakhpur"></div>
+      </div>
+      <div class="field">
+        <label>Available resources</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">Student teams</span><span class="chip-opt sel">Faculty mentors</span><span class="chip-opt">Laboratories</span><span class="chip-opt">Prototyping facilities</span><span class="chip-opt">Funding</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Collaboration preferences</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">Student projects</span><span class="chip-opt sel">Research</span><span class="chip-opt">Prototype development</span><span class="chip-opt">Technical consultation</span>
+        </div>
+      </div>
+      <div class="row-flex" style="justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="toast('Profile saved (placeholder)')">Save profile</button>
+      </div>
+    </div>
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Verification</h4>
+        <p style="font-size:12.5px;">Admins review your registration documents before granting verified status. Verified organizations appear first in matching results.</p>
+        <button class="btn btn-outline btn-block btn-sm" onclick="toast('Documents submitted for review (placeholder)')">Submit documents</button>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Track record</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Projects completed</span><b>6</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Active projects</span><b>2</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">People impacted</span><b>18,400+</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>document.addEventListener('DOMContentLoaded', renderShell);</script>
+</body>
+</html>

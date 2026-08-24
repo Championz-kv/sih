@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Problem Detail — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="explore">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="explore.html" id="crumbHref">Explore Problems</a> <span>/</span> <span id="detailCaseNo">Case</span></div>
+  <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <div class="pcard-top" style="margin-bottom:10px;">
+          <div>
+            <div class="pcard-id mono" id="detailId">#1042</div>
+            <h1 style="font-size:22px; margin:4px 0 6px;" id="detailTitle">Problem title</h1>
+            <div class="pcard-tags" id="detailTags"></div>
+          </div>
+          <div id="detailStamp"></div>
+        </div>
+        <p id="detailDesc" style="font-size:13.5px; color:var(--text-soft);">Description</p>
+        <div class="grid grid-4" style="gap:10px; margin:16px 0;">
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </div>
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-family:var(--font-mono); font-size:11px;">+3</div>
+          <div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>
+        </div>
+        <div class="row-flex" style="gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-accent btn-sm" onclick="toast('Marked as supporting this problem')">Support this problem</button>
+          <button class="btn btn-outline btn-sm" onclick="toast('Evidence upload placeholder')">Add evidence</button>
+          <button class="btn btn-outline btn-sm" onclick="toast('Information noted (placeholder)')">Add information</button>
+          <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="openModal('interestModal')">Express Interest</button>
+        </div>
+      </div>
+
+      <div class="card card-pad">
+        <div class="section-head"><h2>Status timeline</h2></div>
+        <div class="status-rail" id="detailRail"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:12px;">Case File</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Location</span><b id="detailLoc">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Affected</span><b id="detailAffected">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Severity</span><b id="detailSev">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Urgency</span><b id="detailUrg">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Supporters</span><b id="detailSupp">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Filed on</span><b id="detailDate">—</b></div>
+        </div>
+      </div>
+      <div class="card card-pad" id="detailProjectCard" style="display:none; margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:8px;">Linked project</h4>
+        <div id="detailProjectLink"></div>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:8px;">Interested organizations</h4>
+        <div id="detailOrgs"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('crumbHref').href = 'explore.html' + paramStr();
+
+  const params = new URLSearchParams(location.search);
+  const id = parseInt(params.get('id'), 10);
+  const p = PROBLEMS.find(x => x.id === id) || PROBLEMS[0];
+
+  document.getElementById('detailCaseNo').textContent = `Case #${p.id}`;
+  document.getElementById('detailId').textContent = `CASE NO. ${caseNo(p.id)}`;
+  document.getElementById('detailTitle').textContent = p.title;
+  document.getElementById('detailDesc').textContent = p.desc;
+  document.getElementById('detailTags').innerHTML = categoryTagHTML(p.category) + p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  document.getElementById('detailStamp').innerHTML = stampHTML(p.status);
+  document.getElementById('detailLoc').textContent = `${p.district}, ${p.block}`;
+  document.getElementById('detailAffected').textContent = p.affected.toLocaleString();
+  document.getElementById('detailSev').innerHTML = `${sevDotHTML(p.severity)} ${p.severity[0].toUpperCase()+p.severity.slice(1)}`;
+  document.getElementById('detailUrg').textContent = p.urgency;
+  document.getElementById('detailSupp').textContent = `${p.supporters} supporters · ${p.contributors} contributors`;
+  document.getElementById('detailDate').textContent = formatDate(p.date);
+  document.title = p.title + ' — SolveSamaj';
+
+  const stageOrder = STATUS_STAGES.map(s=>s[0]);
+  const curIdx = stageOrder.indexOf(p.status) === -1 ? 0 : stageOrder.indexOf(p.status);
+  document.getElementById('detailRail').innerHTML = STATUS_STAGES.map(([key,label,desc],i) => {
+    const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
+    return `<div class="rail-item ${cls}"><div class="rail-dot"></div><div class="rail-body"><b>${label}</b><span>${desc}</span></div></div>`;
+  }).join("");
+
+  document.getElementById('detailOrgs').innerHTML = p.orgs.length
+    ? p.orgs.map(name => {
+        const o = ORGS.find(x=>x.name===name);
+        return `<div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:${avatarColor(name)}; color:#fff;">${initials(name)}</div><div><b>${name}</b><span>${o?o.type:'Organization'} · expressed interest</span></div></div>`;
+      }).join("")
+    : `<p style="font-size:12px; color:var(--text-faint); margin:0;">No organizations yet — be the first to express interest.</p>`;
+
+  const linkedProject = PROJECTS.find(pr => pr.problem === p.id);
+  if(linkedProject){
+    document.getElementById('detailProjectCard').style.display = 'block';
+    document.getElementById('detailProjectLink').innerHTML = `
+      <div style="cursor:pointer;" onclick="go('project.html', {code:'${linkedProject.code}'})">
+        <span class="pcard-id mono">${linkedProject.code}</span>
+        <h4 style="font-size:14px; margin:4px 0 8px;">${linkedProject.title}</h4>
+        <div class="milestone" style="margin:0;"><div class="mtop"><b>Progress</b><span>${linkedProject.progress}%</span></div><div class="track"><div class="fill" style="width:${linkedProject.progress}%;"></div></div></div>
+      </div>`;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report a Problem — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="submit">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Report a Problem</h1><p class="sub">Structured intake so your problem can be validated, categorized, and routed to the right organizations.</p></div></div>
+  <div class="card card-pad" style="max-width:760px;">
+    <div class="steps-track">
+      <div class="st done"><span>Basics</span></div>
+      <div class="st done"><span>Classification</span></div>
+      <div class="st"><span>Location &amp; Impact</span></div>
+      <div class="st"><span>Evidence &amp; Request</span></div>
+    </div>
+
+    <div class="field"><label>Problem title</label><input class="input" id="fTitle" placeholder="e.g. Drainage failure floods school access road every monsoon"></div>
+    <div class="field"><label>Detailed description</label><textarea class="input" placeholder="What exactly is happening? When does it occur? What has been tried so far?"></textarea></div>
+
+    <div class="field">
+      <label>Category</label>
+      <div class="chip-select" id="categoryChips"></div>
+      <p class="hint">AI suggests a category from your description — you can confirm or change it.</p>
+    </div>
+    <div class="field"><label>Tags</label><input class="input" placeholder="#monsoon #drainage #road (press enter to add)"></div>
+
+    <div class="field-row">
+      <div class="field"><label>State</label><select class="input"><option>Jharkhand</option></select></div>
+      <div class="field"><label>District</label><select class="input"><option>Ranchi</option><option>Dhanbad</option><option>Jamshedpur</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Block / Village / City</label><input class="input" placeholder="e.g. Ormanjhi block"></div>
+      <div class="field"><label>Pin exact location</label><button class="btn btn-outline btn-block" onclick="toast('Map picker placeholder')" type="button">Pick on map</button></div>
+    </div>
+
+    <div class="field-row3">
+      <div class="field"><label>Estimated people affected</label><input class="input" type="number" placeholder="e.g. 3000"></div>
+      <div class="field"><label>Severity</label><select class="input"><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select></div>
+      <div class="field"><label>Urgency</label><select class="input"><option>Long-term</option><option>Within months</option><option selected>Within days</option><option>Immediate</option></select></div>
+    </div>
+
+    <div class="field">
+      <label>What's needed</label>
+      <div class="chip-select">
+        <span class="chip-opt sel">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
+        <span class="chip-opt">Volunteers</span><span class="chip-opt">Equipment</span><span class="chip-opt">Mentorship</span><span class="chip-opt">Government intervention</span>
+      </div>
+    </div>
+
+    <div class="field"><label>Evidence (photos, videos, documents)</label>
+      <div class="upload-zone">Drag files here, or click to browse — placeholder only</div>
+    </div>
+
+    <div class="row-flex" style="justify-content:flex-end; gap:10px; margin-top:8px;">
+      <button class="btn btn-outline" onclick="go('index.html')" type="button">Save as draft</button>
+      <button class="btn btn-primary" onclick="submitProblem()" type="button">Submit problem</button>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function submitProblem(){
+  const title = document.getElementById('fTitle').value.trim();
+  const nextId = Math.max(...PROBLEMS.map(p=>p.id)) + 1;
+  toast(`${title ? '"'+title+'" filed' : 'Problem filed'} — Case No. ${caseNo(nextId)} (placeholder, not saved)`);
+  setTimeout(() => go('my-problems.html'), 900);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('categoryChips').innerHTML = Object.keys(CATEGORY_COLORS).map((cat,i) =>
+    `<span class="chip-opt${i===3?' sel':''}" style="${i===3?`background:${categoryColor(cat)};border-color:${categoryColor(cat)};`:''}">${cat}</span>`
+  ).join("");
+});
+</script>
+</body>
+</html>

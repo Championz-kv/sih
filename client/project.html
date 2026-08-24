@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Workspace — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="projects">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="projects.html" id="crumbHref">Projects</a> <span>/</span> <span id="wsCode">PRJ</span></div>
+  <div class="page-head">
+    <div>
+      <span class="eyebrow" id="wsStage">RESEARCH</span>
+      <h1 id="wsTitle" style="margin-top:4px;">Project title</h1>
+      <p class="sub" id="wsLinked">Linked to case —</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-outline btn-sm" onclick="openModal('inviteModal')">Invite collaborator</button>
+      <button class="btn btn-primary btn-sm" onclick="toast('Update posted (placeholder)')">Post update</button>
+    </div>
+  </div>
+
+  <div class="pipeline" style="margin-bottom:22px;" id="wsPipeline"></div>
+
+  <div class="tabbar">
+    <button class="tabbtn active" data-tab="ov" onclick="switchTab('ov')">Overview</button>
+    <button class="tabbtn" data-tab="team" onclick="switchTab('team')">Members &amp; Orgs</button>
+    <button class="tabbtn" data-tab="milestones" onclick="switchTab('milestones')">Milestones</button>
+    <button class="tabbtn" data-tab="tasks" onclick="switchTab('tasks')">Tasks</button>
+    <button class="tabbtn" data-tab="docs" onclick="switchTab('docs')">Documents</button>
+    <button class="tabbtn" data-tab="discussion" onclick="switchTab('discussion')">Discussion</button>
+    <button class="tabbtn" data-tab="outcomes" onclick="switchTab('outcomes')">Outcomes &amp; Impact</button>
+  </div>
+
+  <div class="tabpanel active" id="tab-ov">
+    <div class="grid grid-3" style="grid-template-columns:2fr 1fr;">
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Project summary</h4>
+        <p id="wsSummary" style="font-size:13px;">Summary text.</p>
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:16px 0 10px;">Recent updates</h4>
+        <div id="wsUpdates"></div>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">At a glance</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Lead organization</span><b id="wsLead">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Participating orgs</span><b id="wsOrgCount">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Team size</span><b id="wsTeamSize">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Started</span><b id="wsStart">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Overall progress</span><b id="wsProgress">—</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-team">
+    <div class="grid grid-2">
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Participating organizations</h4>
+        <div id="wsOrgs"></div>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Members &amp; mentors</h4>
+        <div id="wsMembers"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-milestones"><div class="card card-pad" id="wsMilestones"></div></div>
+
+  <div class="tabpanel" id="tab-tasks">
+    <div class="card">
+      <table class="datatable">
+        <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th></tr></thead>
+        <tbody id="wsTasksBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-docs">
+    <div class="card card-pad">
+      <div class="row-flex" style="justify-content:space-between; margin-bottom:12px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0;">Shared documents</h4>
+        <button class="btn btn-outline btn-sm" onclick="toast('Upload placeholder')">+ Upload</button>
+      </div>
+      <div id="wsDocs"></div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-discussion">
+    <div class="card card-pad">
+      <div id="wsDiscussion" style="margin-bottom:14px;"></div>
+      <div class="row-flex" style="gap:8px;">
+        <input class="input" id="wsPostInput" placeholder="Post an update to the team...">
+        <button class="btn btn-primary btn-sm" onclick="postDiscussion()">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-outcomes">
+    <div class="card card-pad">
+      <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:12px;">Measured impact</h4>
+      <div class="grid grid-4" id="wsOutcomes"></div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+const PIPELINE_STAGES = ["Proposed","Approved","Research","Development","Prototype","Testing","Deployment","Completed"];
+
+function switchTab(tab){
+  document.querySelectorAll('.tabbar .tabbtn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tabpanel[id^="tab-"]').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+}
+function postDiscussion(){
+  const input = document.getElementById('wsPostInput');
+  if(input.value.trim()) toast('Message posted (placeholder — not saved)');
+  input.value = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('crumbHref').href = 'projects.html' + paramStr();
+
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  const pr = PROJECTS.find(x => x.code === code) || PROJECTS[0];
+
+  document.getElementById('wsCode').textContent = pr.code;
+  document.getElementById('wsStage').textContent = pr.stage.toUpperCase();
+  document.getElementById('wsTitle').textContent = pr.title;
+  document.title = pr.title + ' — SolveSamaj';
+  const linkedProblem = PROBLEMS.find(p => p.id === pr.problem);
+  document.getElementById('wsLinked').innerHTML = `Linked to <a href="problem.html${paramStr({id:pr.problem})}">case #${pr.problem} — ${linkedProblem ? linkedProblem.title : ''}</a>`;
+  document.getElementById('wsSummary').textContent = pr.summary;
+  document.getElementById('wsLead').textContent = pr.lead;
+  document.getElementById('wsOrgCount').textContent = pr.orgs.length;
+  document.getElementById('wsTeamSize').textContent = pr.team;
+  document.getElementById('wsStart').textContent = formatDate(pr.start);
+  document.getElementById('wsProgress').textContent = pr.progress + '%';
+
+  document.getElementById('wsPipeline').innerHTML = PIPELINE_STAGES.map((label,i) => {
+    const n = i < pr.stageIdx ? '✓' : (i + 1);
+    return `<div class="pipe-step"><div class="n">${n}</div><div class="lbl">${label}</div></div>`;
+  }).join("");
+
+  document.getElementById('wsUpdates').innerHTML = pr.discussion.map(([who,msg,when]) => `
+    <div class="notif-item"><span class="notif-dot" style="background:${avatarColor(who)};"></span>
+      <div><p><b>${who}</b> — ${msg}</p><span>${when}</span></div>
+    </div>`).join("");
+
+  document.getElementById('wsOrgs').innerHTML = pr.orgs.map(name => `
+    <div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:${avatarColor(name)}; color:#fff;">${initials(name)}</div><div><b>${name}</b><span>${name===pr.lead?'Lead organization':'Partner organization'}</span></div></div>`).join("");
+  document.getElementById('wsMembers').innerHTML = `
+    <div class="person-row"><div class="av">FM</div><div><b>Faculty Mentor</b><span>Principal Investigator</span></div></div>
+    <div class="person-row"><div class="av">ST</div><div><b>Student Team (${pr.team-1})</b><span>Multidisciplinary contributors</span></div></div>`;
+
+  document.getElementById('wsMilestones').innerHTML = pr.milestones.map(([name,pct]) => `
+    <div class="milestone ${pct===0?'pending':''}">
+      <div class="mtop"><b>${name}</b><span>${pct}%</span></div>
+      <div class="track"><div class="fill" style="width:${pct}%;"></div></div>
+    </div>`).join("");
+
+  document.getElementById('wsTasksBody').innerHTML = pr.tasks.map(([t,owner,status,due]) => `
+    <tr><td>${t}</td><td>${owner}</td><td>${status==='Done'?'<span class="stamp stamp-resolved">Done</span>':status==='In progress'?'<span class="stamp stamp-open">In progress</span>':'<span class="stamp stamp-pending">Not started</span>'}</td><td class="mono">${due}</td></tr>`).join("");
+
+  document.getElementById('wsDocs').innerHTML = pr.docs.map(([name,meta]) => `
+    <div class="person-row"><div class="av" style="border-radius:6px;">📄</div><div><b>${name}</b><span>${meta}</span></div></div>`).join("");
+
+  document.getElementById('wsDiscussion').innerHTML = pr.discussion.map(([who,msg,when]) => `
+    <div class="notif-item"><div class="av" style="width:30px;height:30px;border-radius:50%;background:${avatarColor(who)};color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--font-mono);font-weight:600;">${initials(who)}</div>
+      <div><p><b>${who}</b></p><p style="margin-top:-4px;">${msg}</p><span>${when}</span></div>
+    </div>`).join("");
+
+  document.getElementById('wsOutcomes').innerHTML = pr.outcomes.map(([v,l]) => `
+    <div><span class="mono" style="font-size:19px; display:block; color:var(--ink); font-weight:600;">${v}</span><span style="font-size:11px; color:var(--text-faint);">${l}</span></div>`).join("");
+});
+</script>
+</body>
+</html>
