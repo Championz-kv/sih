@@ -94,14 +94,22 @@ const PROBLEM_CATEGORY_GROUPS = [
 ];
 
 const ORGS = [
-  { name:"MMMUT", full:"Madan Mohan Malaviya University of Technology", type:"University", verified:true, location:"Gorakhpur, UP", expertise:["Civil & Structural Engineering","IT / Computer Science & AI","Electronics & Embedded Systems","Renewable Energy & Clean Technology"], projects:6 },
-  { name:"NIT Jamshedpur", full:"National Institute of Technology, Jamshedpur", type:"University", verified:true, location:"Jamshedpur, JH", expertise:["Electronics & Embedded Systems","Mechanical Engineering","Electrical and Electronics"], projects:11 },
-  { name:"Civica NGO", full:"Civica Rural Development Trust", type:"NGO", verified:true, location:"Ranchi, JH", expertise:["Social Work & Community Development","Public Health & Medicine"], projects:14 },
-  { name:"AgroLink Startup", full:"AgroLink Technologies Pvt. Ltd.", type:"Startup", verified:false, location:"Ranchi, JH", expertise:["Agricultural technology","Business, Entrepreneurship & Management"], projects:3 },
-  { name:"Vidya Foundation", full:"Vidya Education Foundation", type:"NGO", verified:true, location:"Patna, BR", expertise:["Education & Pedagogy","Psychology & Behavioral Science"], projects:22 },
-  { name:"Sahyog NGO", full:"Sahyog Disability Rights Collective", type:"NGO", verified:true, location:"Dhanbad, JH", expertise:["Social Work & Community Development","Law & Public Policy"], projects:9 },
-  { name:"PowerGrid Interns Collective", full:"PowerGrid Corp — CSR Innovation Cell", type:"Industry / CSR", verified:true, location:"Ranchi, JH", expertise:["Electrical and Electronics","Renewable Energy & Clean Technology"], projects:5 },
-  { name:"Sensfirm Robotics", full:"Sensfirm Robotics Pvt. Ltd.", type:"Startup", verified:false, location:"Bengaluru, KA", expertise:["Electronics & Embedded Systems","IT / Computer Science & AI"], projects:2 },
+  { name:"MMMUT", full:"Madan Mohan Malaviya University of Technology", type:"University", verified:true, location:"Gorakhpur, UP", expertise:["Civil & Structural Engineering","IT / Computer Science & AI","Electronics & Embedded Systems","Renewable Energy & Clean Technology"], projects:6,
+    desc:"A public technical university running applied research, student innovation projects and rural technology deployment programs across eastern Uttar Pradesh." },
+  { name:"NIT Jamshedpur", full:"National Institute of Technology, Jamshedpur", type:"University", verified:true, location:"Jamshedpur, JH", expertise:["Electronics & Embedded Systems","Mechanical Engineering","Electrical and Electronics"], projects:11,
+    desc:"An Institute of National Importance known for power-systems research, robotics labs and industry-sponsored infrastructure studies across Jharkhand." },
+  { name:"Civica NGO", full:"Civica Rural Development Trust", type:"NGO", verified:true, location:"Ranchi, JH", expertise:["Social Work & Community Development","Public Health & Medicine"], projects:14,
+    desc:"Rural development trust working on community mobilization, drinking-water safety and sanitation drives across Ranchi's blocks and panchayats." },
+  { name:"AgroLink Startup", full:"AgroLink Technologies Pvt. Ltd.", type:"Startup", verified:false, location:"Ranchi, JH", expertise:["Agricultural technology","Business, Entrepreneurship & Management"], projects:3,
+    desc:"Agri-tech startup building cold-chain IoT hardware and market-linkage tools that cut post-harvest losses for smallholder farmers." },
+  { name:"Vidya Foundation", full:"Vidya Education Foundation", type:"NGO", verified:true, location:"Patna, BR", expertise:["Education & Pedagogy","Psychology & Behavioral Science"], projects:22,
+    desc:"Education NGO focused on STEM learning, teacher training and dropout-prevention programs in government schools across Bihar." },
+  { name:"Sahyog NGO", full:"Sahyog Disability Rights Collective", type:"NGO", verified:true, location:"Dhanbad, JH", expertise:["Social Work & Community Development","Law & Public Policy"], projects:9,
+    desc:"Disability-rights collective conducting accessibility audits and assistive-tech adoption drives in Dhanbad's public spaces." },
+  { name:"PowerGrid Interns Collective", full:"PowerGrid Corp — CSR Innovation Cell", type:"Industry / CSR", verified:true, location:"Ranchi, JH", expertise:["Electrical and Electronics","Renewable Energy & Clean Technology"], projects:5,
+    desc:"CSR innovation cell of PowerGrid Corp piloting grid-reliability upgrades and rural electrification models with engineering interns." },
+  { name:"Sensfirm Robotics", full:"Sensfirm Robotics Pvt. Ltd.", type:"Startup", verified:false, location:"Bengaluru, KA", expertise:["Electronics & Embedded Systems","IT / Computer Science & AI"], projects:2,
+    desc:"Robotics startup prototyping low-cost environmental sensors, including flood early-warning nodes for riverine districts." },
 ];
 
 const PROJECTS = [

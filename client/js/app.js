@@ -146,7 +146,10 @@ function orgCardHTML(o){
       </div>
       ${o.verified ? '<span class="stamp stamp-validated">Verified</span>' : '<span class="stamp stamp-pending">Pending</span>'}
     </div>
-    <div class="pcard-tags">${o.expertise.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+    <p title="${o.desc || ''}" style="font-size:12px; color:var(--text-soft); margin:0; line-height:1.55;">${(() => {
+        const d = o.desc || '';
+        return d.length > 118 ? d.slice(0, 115).trimEnd() + '…' : d;
+      })()}</p>
     <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
       <span>${o.location}</span><span class="mono">${o.projects} projects · ${inr(orgDonated(o.name))} donated</span>
     </div>
