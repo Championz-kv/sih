@@ -5,9 +5,26 @@
    holds logic that's the same everywhere.
    =================================================================== */
 
-/* ---------------- URL state (role + theme persist across pages) ---------------- */
-function currentRole(){ return new URLSearchParams(location.search).get('role') || 'citizen'; }
-function currentTheme(){ return new URLSearchParams(location.search).get('theme') || 'light'; }
+/* ---------------- state (role + theme persist across pages) ----------------
+   Theme & role are stored in localStorage so they survive ANY navigation,
+   even links rendered before a toggle. The ?theme=/?role= URL params still
+   work as a first-visit seed / for sharing links. */
+function storageGet(key){
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+function storageSet(key, val){
+  try{ localStorage.setItem(key, val); }catch(e){}
+}
+function currentRole(){
+  const saved = storageGet('ss-role');
+  if(saved) return saved;
+  return new URLSearchParams(location.search).get('role') || 'citizen';
+}
+function currentTheme(){
+  const saved = storageGet('ss-theme');
+  if(saved) return saved;
+  return new URLSearchParams(location.search).get('theme') || 'light';
+}
 function paramStr(extra){
   const p = new URLSearchParams();
   p.set('role', currentRole());
@@ -24,7 +41,7 @@ function updateUrlParam(key, value){
 }
 
 /* ---------------- colour helpers (data-driven, see data.js) ---------------- */
-function categoryColor(cat){ return (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) || '#0F7173'; }
+function categoryColor(cat){ return (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) || '#C76500'; }
 function hexToRgba(hex, alpha){
   const h = hex.replace('#','');
   const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
@@ -58,6 +75,40 @@ function formatDate(iso){
   const d = new Date(iso + 'T00:00:00');
   if(isNaN(d)) return iso;
   return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+/* ---------------- funding helpers (data: FUND_REQUESTS in data.js) ---------------- */
+function inr(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function fundById(id){ return (typeof FUND_REQUESTS !== 'undefined') ? FUND_REQUESTS.find(f => f.id === id) : null; }
+function fundRaised(fr){ return fr.pledges.filter(p => p.status === 'received').reduce((s,p) => s + p.amount, 0); }
+function fundPledged(fr){ return fr.pledges.filter(p => p.status === 'pledged').reduce((s,p) => s + p.amount, 0); }
+function fundIsFunded(fr){ return fundRaised(fr) >= fr.target; }
+function orgDonated(name){
+  if(typeof FUND_REQUESTS === 'undefined') return 0;
+  return FUND_REQUESTS.reduce((s,f) => s + f.pledges.filter(p => p.type==='org' && p.by===name && p.status==='received').reduce((a,p)=>a+p.amount,0), 0);
+}
+function individualDonated(name){
+  if(typeof FUND_REQUESTS === 'undefined') return 0;
+  return FUND_REQUESTS.reduce((s,f) => s + f.pledges.filter(p => p.type==='individual' && p.by===name && p.status==='received').reduce((a,p)=>a+p.amount,0), 0);
+}
+function pledgeRowHTML(frId, idx, p){
+  const badge = p.status === 'received'
+    ? '<span class="stamp stamp-validated">Received</span>'
+    : '<span class="stamp stamp-pending">Awaiting verification</span>';
+  const verify = p.status === 'pledged'
+    ? `<button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="verifyPledge('${frId}', ${idx})">✓ Verify receipt</button>` : '';
+  return `<div class="person-row">
+      <div class="av" style="background:${p.type==='org' ? avatarColor(p.by) : 'var(--setu-2)'}; color:#fff;">${initials(p.by)}</div>
+      <div style="flex:1;"><b>${p.by}</b><span>${p.type==='org' ? 'Organization' : 'Individual'} · ${inr(p.amount)}</span></div>
+      ${badge}${verify}
+    </div>`;
+}
+function fundProgressHTML(fr){
+  const r = fundRaised(fr), pl = fundPledged(fr);
+  const pct = Math.min(100, Math.round(r / fr.target * 100));
+  const backers = fr.pledges.length;
+  return `<div class="milestone"><div class="mtop"><b>${inr(r)} received</b><span>${pl ? inr(pl)+' pledged · ' : ''}${backers} backer${backers===1?'':'s'}</span></div><div class="track"><div class="fill" style="width:${pct}%;"></div></div></div>
+  <p style="font-size:11px; color:var(--text-faint); margin:-4px 0 10px;">of ${inr(fr.target)} target</p>`;
 }
 
 /* ---------------- reusable card markup ---------------- */
@@ -97,7 +148,7 @@ function orgCardHTML(o){
     </div>
     <div class="pcard-tags">${o.expertise.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
     <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
-      <span>${o.location}</span><span class="mono">${o.projects} projects</span>
+      <span>${o.location}</span><span class="mono">${o.projects} projects · ${inr(orgDonated(o.name))} donated</span>
     </div>
   </div>`;
 }

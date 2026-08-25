@@ -13,7 +13,7 @@
 
 const NAV = [
   { group:null, items:[
-    { page:'overview', href:'index.html', label:'Overview', icon:'<path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/>' },
+    { page:'overview', href:'dashboard.html', label:'Overview', icon:'<path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/>' },
     { page:'explore',  href:'explore.html', label:'Explore Problems', icon:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
   ]},
   { group:'citizen', label:'Problem Side', items:[
@@ -29,6 +29,7 @@ const NAV = [
   { group:null, label:'Collaboration', items:[
     { page:'projects', href:'projects.html', label:'Projects', icon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' },
     { page:'requests', href:'requests.html', label:'Collaboration Requests', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', count:3 },
+    { page:'funding', href:'funding.html', label:'Funding', icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', count:FUND_REQUESTS.filter(f => !fundIsFunded(f)).length },
   ]},
   { group:null, label:'Insights', items:[
     { page:'analytics', href:'analytics.html', label:'Public Analytics', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
@@ -51,7 +52,7 @@ function renderTopbar(){
   return `
   <header class="topbar">
     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">${svgIcon('<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>')}</button>
-    <a class="brand" href="index.html${paramStr()}" style="text-decoration:none;">
+    <a class="brand" href="dashboard.html${paramStr()}" style="text-decoration:none;">
       <div class="brand-mark">S</div>
       <div class="brand-text"><b>SolveSamaj</b><span>Innovation Portal</span></div>
     </a>
@@ -161,13 +162,129 @@ function renderModals(){
         <button class="btn btn-primary" onclick="closeModal('inviteModal'); toast('Invitation sent (placeholder)')">Send invitation</button>
       </div>
     </div>
+
+  <div class="modal-overlay" id="donateModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Support this request</h3><button class="close-x" onclick="closeModal('donateModal')">✕</button></div>
+      <div class="modal-body">
+        <p id="donateReqTitle" style="font-weight:600; margin:0 0 2px;"></p>
+        <p id="donateReqMeta" class="hint" style="margin-top:0;"></p>
+        <div class="field"><label>I'm contributing as</label>
+          <select class="input" id="donorType" onchange="donorTypeChanged()">
+            <option value="individual">Individual</option>
+            <option value="org">Organization</option>
+          </select>
+        </div>
+        <div class="field" id="donorIndField"><label>Your name</label><input class="input" id="donorName" placeholder="e.g. Ravi Kumar"></div>
+        <div class="field" id="donorOrgField" style="display:none;"><label>Organization</label>
+          <select class="input" id="donorOrg">${ORGS.map(o => '<option>' + o.name + '</option>').join('')}</select>
+        </div>
+        <div class="field"><label>Amount (₹)</label><input class="input" id="donorAmount" type="number" min="100" step="100" placeholder="Partial amounts are welcome">
+          <p class="hint">Payment is simulated in this prototype — the case/project owner verifies each receipt.</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('donateModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitDonation()">Record contribution</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="requestFundModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Request funds</h3><button class="close-x" onclick="closeModal('requestFundModal')">✕</button></div>
+      <div class="modal-body">
+        <p class="hint" style="margin-top:0;">Posted publicly so organizations and individuals can pledge support. You verify each receipt as payments come in.</p>
+        <div class="field"><label>Purpose — what the funds are for</label><input class="input" id="rfTitle" placeholder="e.g. Water testing kits & lab analysis"></div>
+        <div class="field"><label>Details</label><textarea class="input" id="rfDesc" placeholder="Breakdown, vendors, timeline…"></textarea></div>
+        <div class="field"><label>Target amount (₹)</label><input class="input" id="rfTarget" type="number" min="500" step="500"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('requestFundModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFundRequest()">Post request</button>
+      </div>
+    </div>
   </div>`;
+}
+
+/* ---------------- funding (pledge → owner verifies receipt) ---------------- */
+let fundCtx = null;
+
+function openDonate(reqId){
+  const fr = fundById(reqId);
+  if(!fr) return;
+  fundCtx = reqId;
+  document.getElementById('donateReqTitle').textContent = fr.title;
+  document.getElementById('donateReqMeta').innerHTML =
+    `${fr.kind === 'problem' ? 'Case #' + fr.ref : fr.ref} · ${inr(fundRaised(fr))} received of ${inr(fr.target)} · ${inr(Math.max(fr.target - fundRaised(fr), 0))} still needed`;
+  document.getElementById('donorType').value = currentRole() === 'org' ? 'org' : 'individual';
+  donorTypeChanged();
+  document.getElementById('donorAmount').value = '';
+  openModal('donateModal');
+}
+function donorTypeChanged(){
+  const t = document.getElementById('donorType').value;
+  document.getElementById('donorIndField').style.display = t === 'individual' ? 'block' : 'none';
+  document.getElementById('donorOrgField').style.display = t === 'org' ? 'block' : 'none';
+}
+function submitDonation(){
+  const fr = fundById(fundCtx);
+  if(!fr) return;
+  const type = document.getElementById('donorType').value;
+  const name = type === 'org'
+    ? document.getElementById('donorOrg').value
+    : (document.getElementById('donorName').value.trim() || 'Anonymous donor');
+  let amount = parseInt(document.getElementById('donorAmount').value, 10);
+  if(!amount || amount <= 0){ toast('Enter a valid amount first'); return; }
+  const remaining = Math.max(fr.target - fundRaised(fr), 0);
+  if(remaining <= 0){ toast('This request is already fully funded 🎉'); closeModal('donateModal'); return; }
+  if(amount > remaining){
+    amount = remaining;
+    toast('Capped to the remaining need — ' + inr(remaining));
+  }
+  fr.pledges.push({ by:name, type:type, amount:amount, status:'pledged' });
+  closeModal('donateModal');
+  toast('Contribution recorded — the ' + (fr.kind === 'problem' ? 'case owner' : 'project team') + ' will verify receipt');
+  if(window.renderFunding) window.renderFunding();
+}
+function verifyPledge(reqId, idx){
+  const fr = fundById(reqId);
+  if(!fr || !fr.pledges[idx]) return;
+  fr.pledges[idx].status = 'received';
+  toast('Receipt verified — ' + inr(fr.pledges[idx].amount) + ' from ' + fr.pledges[idx].by);
+  if(window.renderFunding) window.renderFunding();
+}
+function openRequestFund(kind, ref){
+  fundCtx = { kind:kind, ref:ref };
+  document.getElementById('rfTitle').value = '';
+  document.getElementById('rfDesc').value = '';
+  document.getElementById('rfTarget').value = '';
+  openModal('requestFundModal');
+}
+function submitFundRequest(){
+  const title = document.getElementById('rfTitle').value.trim();
+  const target = parseInt(document.getElementById('rfTarget').value, 10);
+  if(!title){ toast('Give the request a purpose first'); return; }
+  if(!target || target <= 0){ toast('Enter a valid target amount'); return; }
+  FUND_REQUESTS.unshift({
+    id:'FR-' + (2405 + FUND_REQUESTS.length),
+    kind:fundCtx.kind, ref:fundCtx.ref,
+    title:title,
+    desc:document.getElementById('rfDesc').value.trim(),
+    target:target,
+    postedBy:(currentRole() === 'org' ? 'MMMUT' : currentRole() === 'admin' ? 'Admin Desk' : 'Case Owner'),
+    pledges:[]
+  });
+  closeModal('requestFundModal');
+  toast('Fund request posted — visible under Funding');
+  if(window.renderFunding) window.renderFunding();
 }
 
 /* ---------------- role handling ---------------- */
 function toggleRoleMenu(){ document.getElementById('roleMenu').classList.toggle('open'); }
 function setRole(role){
-  const home = { citizen:'index.html', org:'discover.html', admin:'admin.html' };
+  storageSet('ss-role', role);
+  const home = { citizen:'dashboard.html', org:'discover.html', admin:'admin.html' };
   go(home[role], { role: role });
 }
 function applyRoleUI(role){
@@ -194,6 +311,7 @@ function switchLoginTab(tab){
 function toggleTheme(){
   const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
+  storageSet('ss-theme', next);
   updateUrlParam('theme', next);
 }
 

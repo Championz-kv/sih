@@ -69,6 +69,11 @@
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">People impacted</span><b>18,400+</b></div>
         </div>
       </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Funding footprint</h4>
+        <div id="orgFunding"></div>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Verified contributions by MMMUT across the desk — the public record of who funded how much.</p>
+      </div>
     </div>
   </div>
 </main>
@@ -80,5 +85,30 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>document.addEventListener('DOMContentLoaded', renderShell);</script>
+<script>
+/* Funding footprint for MMMUT (this profile's organization) */
+(function(){
+  const ORG = 'MMMUT';
+  const rows = [];
+  FUND_REQUESTS.forEach(f => f.pledges.forEach(p => {
+    if(p.by !== ORG) return;
+    rows.push({ fr:f, p:p });
+  }));
+  const received = rows.filter(r => r.p.status === 'received').reduce((s,r) => s + r.p.amount, 0);
+  const pledged  = rows.filter(r => r.p.status === 'pledged').reduce((s,r) => s + r.p.amount, 0);
+  document.getElementById('orgFunding').innerHTML = `
+    <div class="grid grid-2" style="margin-bottom:12px;">
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(received)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(pledged)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
+    </div>
+    ${rows.length ? rows.map(({fr, p}) => `
+      <div class="person-row">
+        <div class="av" style="border-radius:6px;">₹</div>
+        <div style="flex:1;"><b>${inr(p.amount)}</b><span>${fr.id} · ${fr.title}</span></div>
+        ${p.status === 'received' ? '<span class="stamp stamp-validated">Received</span>' : '<span class="stamp stamp-pending">Pledged</span>'}
+      </div>`).join('')
+    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No contributions recorded yet.</p>'}`;
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funding — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="funding">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#" onclick="go('dashboard.html');return false;">Overview</a><span>/</span><span>Funding</span></div>
+
+  <div class="page-head">
+    <div>
+      <h1>Funding</h1>
+      <p class="sub">Money needed by cases and project teams — and every rupee pledged toward it. Post a need from any problem or project page; organizations and individuals can back any portion of it.</p>
+    </div>
+  </div>
+
+  <div class="ledger-strip" id="fundLedger"></div>
+
+  <div class="grid grid-3" style="align-items:start;">
+    <div class="card card-pad" style="grid-column: span 2;">
+      <div class="section-head">
+        <h2>All fund requests <span class="count-pill" id="fundAllCount"></span></h2>
+        <span class="sub">Open requests accept partial contributions</span>
+      </div>
+      <div id="fundAllList"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0 0 12px;">Top backers <span class="mono" style="text-transform:none; letter-spacing:0;">(verified)</span></h4>
+        <div id="topBackers"></div>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0 0 12px;">Received by source</h4>
+        <div id="fundSplit"></div>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:14px 0 0;">Both organizations and individual citizens can back any portion of a request — every verified rupee is on the public record.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  renderFunding();
+});
+
+window.renderFunding = function(){
+  /* ---- ledger strip totals ---- */
+  const requested = FUND_REQUESTS.reduce((s,f) => s + f.target, 0);
+  const received  = FUND_REQUESTS.reduce((s,f) => s + fundRaised(f), 0);
+  const awaiting  = FUND_REQUESTS.reduce((s,f) => s + fundPledged(f), 0);
+  const backers   = new Set(FUND_REQUESTS.flatMap(f => f.pledges.map(p => p.by))).size;
+  document.getElementById('fundLedger').innerHTML = [
+    [requested, 'Requested', ''],
+    [received,  'Received', 'd-up ▲ verified'],
+    [awaiting,  'Awaiting verification', 'd-down ⏳ pending'],
+    [backers,   'Backers', '— orgs + individuals'],
+  ].map(([v, l, d]) => `
+    <div class="ledger-cell"><span class="v">${l === 'Backers' ? v : inr(v)}</span><span class="l">${l}</span>${d ? `<span class="d ${String(d).startsWith('d-up') ? 'd-up' : String(d).startsWith('d-down') ? 'd-down' : ''}">${d.replace(/^(d-up|d-down)\s?/, '')}</span>` : ''}</div>`).join('');
+
+  document.getElementById('fundAllCount').textContent = FUND_REQUESTS.length + ' request' + (FUND_REQUESTS.length === 1 ? '' : 's');
+
+  /* ---- all requests with full pledge records ---- */
+  document.getElementById('fundAllList').innerHTML = FUND_REQUESTS.map(fr => {
+    const link = fr.kind === 'problem'
+      ? `go('problem.html', {id:${fr.ref}})`
+      : `go('project.html', {code:'${fr.ref}'})`;
+    const src = fr.kind === 'problem' ? 'Case #' + fr.ref : fr.ref;
+    return `
+    <div style="padding:16px 0; border-bottom:1px dashed var(--border);">
+      <div class="row-flex" style="justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div>
+          <b style="font-size:14.5px;">${fr.title}</b>
+          <div class="pcard-id mono">
+            <a href="#" onclick="${link}; return false;">${src}</a> · ${fr.id} · posted by ${fr.postedBy}
+          </div>
+        </div>
+        ${fundIsFunded(fr) ? '<span class="stamp stamp-validated">Fully funded</span>' : '<span class="stamp stamp-open">Open</span>'}
+      </div>
+      <p style="font-size:12.5px; margin:6px 0 12px;">${fr.desc}</p>
+      ${fundProgressHTML(fr)}
+      <h4 style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin:10px 0 4px;">Contribution record</h4>
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        ${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}
+      </div>
+      ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:6px 0;">No contributions yet.</p>'}
+      ${fundIsFunded(fr) ? '' : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
+    </div>`;
+  }).join("");
+
+  /* ---- top backers leaderboard (verified only) ---- */
+  const tally = {};
+  FUND_REQUESTS.forEach(f => f.pledges.forEach(p => {
+    if(p.status !== 'received') return;
+    if(!tally[p.by]) tally[p.by] = { type:p.type, received:0, pledged:0, causes:0 };
+    tally[p.by].received += p.amount;
+    tally[p.by].causes += 1;
+    if(p.status === 'pledged') tally[p.by].pledged += p.amount;
+  }));
+  FUND_REQUESTS.forEach(f => f.pledges.filter(p => p.status === 'pledged').forEach(p => {
+    if(tally[p.by]) tally[p.by].pledged += p.amount;
+  }));
+  const rows = Object.entries(tally).sort((a,b) => b[1].received - a[1].received).slice(0,6);
+  document.getElementById('topBackers').innerHTML = rows.length ? rows.map(([name, t]) => `
+    <div class="person-row">
+      <div class="av" style="background:${t.type === 'org' ? avatarColor(name) : 'var(--setu-2)'}; color:#fff;">${initials(name)}</div>
+      <div style="flex:1;"><b>${name}</b><span>${t.type === 'org' ? 'Organization' : 'Individual'} · ${t.causes} cause${t.causes === 1 ? '' : 's'}</span></div>
+      <span class="mono" style="font-weight:600; color:var(--ink);">${inr(t.received)}</span>
+    </div>`).join("")
+  : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No verified contributions yet.</p>';
+
+  /* ---- org vs individual split ---- */
+  let orgTotal = 0, indTotal = 0;
+  FUND_REQUESTS.forEach(f => f.pledges.forEach(p => {
+    if(p.status !== 'received') return;
+    if(p.type === 'org') orgTotal += p.amount; else indTotal += p.amount;
+  }));
+  const tot = orgTotal + indTotal || 1;
+  document.getElementById('fundSplit').innerHTML = `
+    <div class="barlist" style="gap:12px;">
+      <div class="row"><span class="name">Organizations</span><div class="track"><div class="fill" style="width:${Math.round(orgTotal/tot*100)}%;"></div></div><span class="pct">${inr(orgTotal)}</span></div>
+      <div class="row"><span class="name">Individuals</span><div class="track"><div class="fill" style="width:${Math.round(indTotal/tot*100)}%; background:var(--ochre);"></div></div><span class="pct">${inr(indTotal)}</span></div>
+    </div>`;
+};
+</script>
+</body>
+</html>

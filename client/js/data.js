@@ -123,3 +123,38 @@ const TEAM = {
     { name:"Lakshay" },
   ],
 };
+
+/* -------------------------------------------------------------------
+   FUNDING — demo records.
+   kind: 'problem' | 'project'; ref: problem id or project code.
+   pledges[]: { by, type:'org'|'individual', amount, status }
+     'pledged' = recorded, awaiting receipt verification by the
+                 case/project owner
+     'received'= verified by the owner
+   raised  = sum of verified ('received') pledges
+   pledged = sum of pledges still awaiting verification
+   ------------------------------------------------------------------- */
+const FUND_REQUESTS = [
+  { id:'FR-2401', kind:'problem', ref:1108, title:'Water testing kits & lab analysis',
+    desc:'Chromium test kits for four hamlets plus NIT Jamshedpur lab analysis fees.',
+    target:60000, postedBy:'Dhanbad Zila Parishad', pledges:[
+      { by:'MMMUT', type:'org', amount:25000, status:'received' },
+      { by:'Ravi Sharma', type:'individual', amount:5000, status:'received' },
+      { by:'PowerGrid Interns Collective', type:'org', amount:10000, status:'pledged' },
+    ]},
+  { id:'FR-2402', kind:'project', ref:'PRJ-0312', title:'Cold-storage prototype enclosure',
+    desc:'Insulated panels, thermostat controller and field-trial logistics for the tomato pilot.',
+    target:120000, postedBy:'AgroLink Startup', pledges:[
+      { by:'NIT Jamshedpur', type:'org', amount:40000, status:'received' },
+      { by:'Meena Gupta', type:'individual', amount:7500, status:'received' },
+      { by:'Civica NGO', type:'org', amount:20000, status:'pledged' },
+    ]},
+  { id:'FR-2403', kind:'problem', ref:1201, title:'Portable ultrasound deposit',
+    desc:'Advance payment to rent a portable ultrasound unit for the primary health centre.',
+    target:95000, postedBy:'Bokaro Health Society', pledges:[
+      { by:'Ankit Verma', type:'individual', amount:11000, status:'received' },
+    ]},
+  { id:'FR-2404', kind:'project', ref:'PRJ-0341', title:'Feeder sensor hardware',
+    desc:'Current & voltage sensors plus data loggers for the load-balancing study.',
+    target:45000, postedBy:'NIT Jamshedpur', pledges:[] },
+];

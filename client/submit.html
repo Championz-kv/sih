@@ -52,7 +52,7 @@
     <div class="field">
       <label>What's needed</label>
       <div class="chip-select">
-        <span class="chip-opt sel">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
+        <span class="chip-opt">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
         <span class="chip-opt">Volunteers</span><span class="chip-opt">Equipment</span><span class="chip-opt">Mentorship</span><span class="chip-opt">Government intervention</span>
       </div>
     </div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="row-flex" style="justify-content:flex-end; gap:10px; margin-top:8px;">
-      <button class="btn btn-outline" onclick="go('index.html')" type="button">Save as draft</button>
+      <button class="btn btn-outline" onclick="go('dashboard.html')" type="button">Save as draft</button>
       <button class="btn btn-primary" onclick="submitProblem()" type="button">Submit problem</button>
     </div>
   </div>
@@ -85,7 +85,7 @@ function submitProblem(){
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   document.getElementById('categoryChips').innerHTML = Object.keys(CATEGORY_COLORS).map((cat,i) =>
-    `<span class="chip-opt${i===3?' sel':''}" style="${i===3?`background:${categoryColor(cat)};border-color:${categoryColor(cat)};`:''}">${cat}</span>`
+    `<span class="chip-opt">${cat}</span>`
   ).join("");
 });
 </script>

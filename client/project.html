@@ -38,6 +38,7 @@
     <button class="tabbtn" data-tab="docs" onclick="switchTab('docs')">Documents</button>
     <button class="tabbtn" data-tab="discussion" onclick="switchTab('discussion')">Discussion</button>
     <button class="tabbtn" data-tab="outcomes" onclick="switchTab('outcomes')">Outcomes &amp; Impact</button>
+    <button class="tabbtn" data-tab="funding" onclick="switchTab('funding')">Funding</button>
   </div>
 
   <div class="tabpanel active" id="tab-ov">
@@ -102,6 +103,16 @@
         <input class="input" id="wsPostInput" placeholder="Post an update to the team...">
         <button class="btn btn-primary btn-sm" onclick="postDiscussion()">Post</button>
       </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tab-funding">
+    <div class="card card-pad">
+      <div class="section-head">
+        <h2>Funding needs <span class="count-pill" id="projFundCount"></span></h2>
+        <button class="btn btn-outline btn-sm" onclick="openRequestFund('project', CUR_REF)">+ Request funds for this project</button>
+      </div>
+      <div id="projFundList"></div>
     </div>
   </div>
 
@@ -188,6 +199,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('wsOutcomes').innerHTML = pr.outcomes.map(([v,l]) => `
     <div><span class="mono" style="font-size:19px; display:block; color:var(--ink); font-weight:600;">${v}</span><span style="font-size:11px; color:var(--text-faint);">${l}</span></div>`).join("");
+
+  window.CUR_REF = pr.code;
+
+  window.renderFunding = function(){
+    const list = FUND_REQUESTS.filter(f => f.kind === 'project' && f.ref === pr.code);
+    document.getElementById('projFundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
+    document.getElementById('projFundList').innerHTML = list.length ? list.map(fr => `
+      <div style="padding:14px 0; border-bottom:1px dashed var(--border);">
+        <div class="row-flex" style="justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div>
+            <b style="font-size:14px;">${fr.title}</b>
+            <div class="pcard-id mono">${fr.id} · posted by ${fr.postedBy}</div>
+          </div>
+          ${fundIsFunded(fr) ? '<span class="stamp stamp-validated">Fully funded</span>' : '<span class="stamp stamp-open">Open</span>'}
+        </div>
+        <p style="font-size:12.5px; margin:6px 0 12px;">${fr.desc}</p>
+        ${fundProgressHTML(fr)}
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          ${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}
+        </div>
+        ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:4px 0 8px;">No contributions yet — post the need and let backers find it.</p>'}
+        ${fundIsFunded(fr) ? '<p style="font-size:12px; color:var(--ledger); margin:8px 0 0;"><b>Fully funded.</b> Thank you to every backer.</p>'
+          : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
+      </div>`).join("")
+      : `<div class="empty" style="padding:26px 16px;">
+          <h4>No funding needs posted for this project</h4>
+          <p>Hardware, logistics, field trials — if the team needs money for it, post a request and the community can back any portion of it.</p>
+        </div>`;
+  };
+  window.renderFunding();
 });
 </script>
 </body>
