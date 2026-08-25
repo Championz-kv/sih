@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Assistant — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="chatbot">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#" onclick="go('index.html');return false;">Overview</a><span>/</span><span>AI Assistant</span></div>
+
+  <div class="page-head">
+    <div>
+      <h1>Ask Sahayak — AI Assistant</h1>
+      <p class="sub">A helper for citizens, organizations and administrators: filing steps, collaboration rules, case statuses — explained in plain language.</p>
+    </div>
+  </div>
+
+  <div class="chat-shell">
+    <div class="card chat-window">
+      <div class="chat-head">
+        <span class="bot-av"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 7V4M8 4h8"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/></svg></span>
+        <div style="flex:1;">
+          <b>Sahayak — SolveSamaj Assistant</b>
+          <span class="chat-status">Online · answers instantly</span>
+        </div>
+        <button class="icon-btn" title="Clear conversation" onclick="clearChat()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+      <div class="chat-demo-strip">DEMO MODE · responses are placeholders — connect your model in the aiReply() function of this page</div>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-chips" id="chatChips"></div>
+      <div class="chat-inputrow">
+        <input class="input" id="chatInput" placeholder="Type your question… (Enter to send)" autocomplete="off" onkeydown="onInputKey(event)">
+        <button class="btn btn-accent" id="sendBtn" onclick="sendFromInput()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Ask
+        </button>
+      </div>
+    </div>
+    <div class="chat-foot">Sahayak is an assistant, not an official record — verify important case details on the case file itself.</div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+/* ==================================================================
+   AI BACKEND — CONNECTION POINT
+   ------------------------------------------------------------------
+   To connect a real model, replace ONLY the body of aiReply() below.
+
+   Contract:  aiReply(message:string, history:Array) -> Promise<string>
+              history = [{ role:'user'|'assistant', content:'...' }, ...]
+              Return plain text or simple HTML (<b>, <a>, <br>).
+
+   Example:
+     async function aiReply(message, history){
+       const res = await fetch('/api/chat', {
+         method:'POST',
+         headers:{ 'Content-Type':'application/json' },
+         body: JSON.stringify({ message, history })
+       });
+       const data = await res.json();
+       return data.reply;
+     }
+
+   Everything else on this page (queueing, typing dots, history,
+   rendering, Enter-to-send) keeps working unchanged.
+   ================================================================== */
+function aiReply(message, history){
+  return new Promise((resolve) => {
+    /* Placeholder: simulated latency + keyword-flavoured canned replies. */
+    setTimeout(() => resolve(placeholderReply(message)), 800 + Math.random()*900);
+  });
+}
+
+const GENERIC_REPLIES = [
+  "I'm running in demo mode right now — answers are placeholders until the AI backend is connected in <code>aiReply()</code>. Meanwhile, try asking about <b>filing a problem</b>, <b>validation</b> or <b>collaboration</b>!",
+  "Good question! Once the real model is wired in I'll answer this properly. The two guides on the homepage cover most process questions in detail.",
+];
+let genericIdx = 0;
+
+function placeholderReply(message){
+  const m = (message || '').toLowerCase();
+  if(/(^|\s)(hi|hello|namaste|hey)(\s|$|[!,.?])/.test(m))
+    return "Namaste! 👋 I'm <b>Sahayak</b>, the SolveSamaj assistant. Ask me how to <b>report a problem</b>, what happens during <b>validation</b>, or how <b>organizations collaborate</b> on solutions.";
+  if(/(report|file|submit|complaint|put forward)/.test(m))
+    return `Citizens report issues through the <b>Report a Problem</b> form — describe the failure, pin the district &amp; block, add evidence, and you get a permanent case number instantly. <a href="#" onclick="go('submit.html');return false;">Open the form →</a>`;
+  if(/(valid|review|approve|duplicate)/.test(m))
+    return `After filing, the platform runs duplicate detection, then a government admin reviews the case. Once validated, supporters can back it and it's stamped <b>Open for Solutions</b>. Full journey: <a href="#" onclick="go('guide-filing.html');return false;">filing guide →</a>`;
+  if(/(collab|partner|organization|ngo|university|team up)/.test(m))
+    return `Verified organizations see problems matched to their expertise, express interest with resources &amp; timeline, then join as technical / implementation / funding / research partners inside a shared project workspace. Walkthrough: <a href="#" onclick="go('guide-collaboration.html');return false;">collaboration guide →</a>`;
+  if(/(status|track|where is|progress|case no)/.test(m))
+    return `Every case file carries a live stamp: Submitted → Under Review → Validated → Open → Project Active → Testing → Resolved. Track yours under <a href="#" onclick="go('my-problems.html');return false;">My Problems →</a>`;
+  if(/(project|milestone|workspace)/.test(m))
+    return `Accepted interests become projects with milestone bars, task boards, shared documents and a discussion thread visible to every partner and to admins. Browse current work: <a href="#" onclick="go('projects.html');return false;">Projects →</a>`;
+  const reply = GENERIC_REPLIES[genericIdx % GENERIC_REPLIES.length];
+  genericIdx++;
+  return reply;
+}
+/* ---------------- chat UI ---------------- */
+let chatLocked = false;
+let chatHistory = [];   // [{role:'user'|'assistant', content}] — passed to aiReply()
+
+function chatLogEl(){ return document.getElementById('chatLog'); }
+function scrollBottom(){ const l = chatLogEl(); l.scrollTop = l.scrollHeight; }
+function nowTime(){ return new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }); }
+function escapeHTML(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function appendMsg(role, html){
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+  row.innerHTML =
+    `<div class="msg-av">${role === 'user' ? 'YOU' : 'S'}</div>` +
+    `<div class="msg">${html}<span class="msg-time">${nowTime()}</span></div>`;
+  chatLogEl().appendChild(row);
+  scrollBottom();
+}
+
+function pushHistory(role, text){
+  chatHistory.push({ role, content:text });
+  if(chatHistory.length > 24) chatHistory.shift();   // keep context window small
+}
+
+function showTyping(){
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  row.id = 'typingRow';
+  row.innerHTML = `<div class="msg-av">S</div><div class="msg"><span class="typing-dots"><i></i><i></i><i></i></span></div>`;
+  chatLogEl().appendChild(row);
+  scrollBottom();
+}
+function hideTyping(){ const t = document.getElementById('typingRow'); if(t) t.remove(); }
+
+function sendUserMessage(text){
+  text = (text || '').trim();
+  if(!text || chatLocked) return;
+  appendMsg('user', escapeHTML(text));
+  pushHistory('user', text);
+  document.getElementById('chatInput').value = '';
+  chatLocked = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  Promise.resolve(aiReply(text, chatHistory.slice()))
+    .then(reply => {
+      hideTyping();
+      appendMsg('bot', reply);
+      pushHistory('assistant', reply.replace(/<[^>]+>/g, ''));
+    })
+    .catch(() => { hideTyping(); appendMsg('bot', 'Sorry — something went wrong reaching the assistant. Please try again.'); })
+    .finally(() => {
+      chatLocked = false;
+      const b = document.getElementById('sendBtn');
+      if(b){ b.disabled = false; }
+      document.getElementById('chatInput').focus();
+    });
+}
+
+function sendFromInput(){ sendUserMessage(document.getElementById('chatInput').value); }
+function onInputKey(e){ if(e.key === 'Enter'){ e.preventDefault(); sendFromInput(); } }
+
+const STARTER_CHIPS = [
+  'How do I report a problem?',
+  'What happens after I file?',
+  'How do organizations collaborate?',
+  'How do I track my case?',
+];
+function renderChips(){
+  document.getElementById('chatChips').innerHTML = STARTER_CHIPS.map(c =>
+    `<button class="chat-chip" onclick="sendUserMessage('${c.replace(/'/g, "\\'")}')">${c}</button>`
+  ).join('');
+}
+
+function welcome(){
+  appendMsg('bot',
+    "Namaste! 🙏 I'm <b>Sahayak</b>, the SolveSamaj assistant. I can explain how problems are <b>filed</b>, how organizations <b>collaborate</b> on solutions, and what each <b>case status</b> means.<br>Pick a question below or type your own.");
+}
+
+function clearChat(){
+  if(chatLocked) return;
+  chatHistory = [];
+  genericIdx = 0;
+  chatLogEl().innerHTML = '';
+  welcome();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  welcome();
+  renderChips();
+});
+</script>
+</body>
+</html>

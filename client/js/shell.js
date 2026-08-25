@@ -40,6 +40,7 @@ const NAV = [
   ]},
   { group:null, items:[
     { page:'notifications', href:'notifications.html', label:'Notifications', icon:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', count:NOTIFICATIONS.length },
+    { page:'chatbot', href:'chatbot.html', label:'AI Assistant', icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
     { page:'team', href:'team.html', label:'About & Team', icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>' },
   ]},
 ];
