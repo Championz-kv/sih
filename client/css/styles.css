@@ -204,7 +204,7 @@ html[data-theme="dark"] .theme-toggle .icon-moon{ display:block; }
 .btn:active{ transform:translateY(1px); }
 .btn-primary{ background:var(--ink); color:#fff; }
 .btn-primary:hover{ filter:brightness(1.18); }
-.btn-accent{ background:var(--setu); color:#fff; }
+.btn-accent{ background:var(--setu); color:var(--ink); }
 .btn-accent:hover{ filter:brightness(1.1); }
 .btn-outline{ background:transparent; border-color:var(--border-2); color:var(--ink); }
 .btn-outline:hover{ border-color:var(--setu); color:var(--setu-2); }
@@ -455,6 +455,21 @@ textarea.input{ resize:vertical; min-height:88px; }
   color:var(--text-soft); background:var(--surface); user-select:none;
 }
 .chip-opt.sel{ background:var(--ink); color:#fff; border-color:var(--ink); }
+/* ---- Problem posting category panels ---- */
+.cat-panel{
+  border:1px solid var(--border-2); border-radius:var(--radius-m);
+  background:var(--surface); padding:14px 16px;
+}
+.cat-panel-head{ display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; color:var(--ink); margin-bottom:10px; }
+.cat-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+.cat-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+.cat-panel .chip-opt{ font-size:12px; padding:6px 12px; background:var(--paper-2); }
+.cat-panel .chip-opt:hover{ border-color:var(--setu); color:var(--text); }
+#categoryGroups .cat-tag.sel{ background:var(--setu); border-color:var(--setu); color:#33270A; font-weight:600; }
+html[data-theme="dark"] #categoryGroups .cat-tag.sel{ background:var(--setu-2); border-color:var(--setu-2); color:#171400; }
+#selectedCats .cat-mirror{ background:var(--ink); border-color:var(--ink); color:#fff; }
+html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi); border-color:var(--border-2); color:var(--text); }
+
 .upload-zone{
   border:1.5px dashed var(--border-2); border-radius:var(--radius-m); padding:26px; text-align:center; color:var(--text-faint);
   font-size:12.5px; cursor:pointer;
@@ -558,6 +573,7 @@ textarea.input{ resize:vertical; min-height:88px; }
 /* ---- Dark theme component tuning (black & yellow palette) ---- */
 html[data-theme="dark"] .btn-primary{ background:var(--setu-2); color:#171400; }
 html[data-theme="dark"] .chip-opt.sel{ background:var(--setu-2); border-color:var(--setu-2); color:#171400; }
+html[data-theme="dark"] .btn-accent{ color:#171400; }
 html[data-theme="dark"] .toast{ background:var(--surface-hi); color:var(--text); border:1px solid var(--border-2); }
 html[data-theme="dark"] .modal-overlay{ background:rgba(0,0,0,0.66); }
 html[data-theme="dark"] .sidebar-backdrop.show{ background:rgba(0,0,0,0.55); }

@@ -15,6 +15,7 @@ const NAV = [
   { group:null, items:[
     { page:'overview', href:'dashboard.html', label:'Overview', icon:'<path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/>' },
     { page:'explore',  href:'explore.html', label:'Explore Problems', icon:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
+    { page:'orgdirectory', href:'organizations.html', label:'Organization Directory', icon:'<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="8" r="3"/><path d="M15.5 14.2c3.4.4 6 2.8 6 5.8"/>' },
   ]},
   { group:'citizen', label:'Problem Side', items:[
     { page:'submit',      href:'submit.html', label:'Report a Problem', icon:'<path d="M12 5v14M5 12h14"/>' },
@@ -24,7 +25,6 @@ const NAV = [
     { page:'orgprofile', href:'org-profile.html', label:'Organization Profile', icon:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
     { page:'discover',   href:'discover.html', label:'Matched Problems', icon:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>', count:PROBLEMS.filter(p=>["open","validated","review"].includes(p.status)).length },
     { page:'interests',  href:'interests.html', label:'Interests', icon:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>', count:PROBLEMS.filter(p=>p.orgs.length).length },
-    { page:'orgdirectory', href:'organizations.html', label:'Organization Directory', icon:'<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="17" cy="8" r="3"/><path d="M15.5 14.2c3.4.4 6 2.8 6 5.8"/>' },
   ]},
   { group:null, label:'Collaboration', items:[
     { page:'projects', href:'projects.html', label:'Projects', icon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' },

@@ -48,15 +48,60 @@ const PROBLEMS = [
   { id:1314, title:"Crop pest outbreak unreported to Krishi Kendra", desc:"A fall-armyworm outbreak is spreading across maize fields with no formal channel for farmers to alert the local agriculture extension office.", category:"Agriculture", tags:["#pest","#maize"], district:"Gumla", block:"Gumla Sadar", affected:1800, severity:"high", urgency:"Immediate", status:"review", supporters:22, contributors:3, date:"2026-08-19", orgs:[] },
 ];
 
+/* Problem posting taxonomy — grouped sub-tags rendered on the report form.
+   Each group borrows a palette colour (same keys as CATEGORY_COLORS) so
+   panels stay visually consistent with the rest of the desk. */
+const PROBLEM_CATEGORY_GROUPS = [
+  { name:"Healthcare", color:"#B23A63", tags:[
+    "Hospital Access & Infrastructure","Primary & Preventive Healthcare","Emergency & Trauma Care",
+    "Maternal & Child Health","Mental Health & Counseling","Disease Outbreak & Epidemics",
+    "Medicine Availability & Affordability","Healthcare for Elderly & Disabled","Nutrition & Malnutrition",
+    "Drug Abuse & Rehabilitation"] },
+  { name:"Water & Sanitation", color:"#2568A8", tags:[
+    "Drinking Water Access","Water Quality & Contamination","Groundwater Depletion",
+    "Irrigation & Farming Water","Sewage & Wastewater","Open Defecation & Toilet Access",
+    "Waterlogging & Drainage","Flood Control & River Management"] },
+  { name:"Agriculture & Food", color:"#5C7A29", tags:[
+    "Crop Yield & Soil Health","Pest & Disease Control","Farmer Income & Market Access",
+    "Post-Harvest Loss & Storage","Irrigation Technology","Animal Husbandry & Dairy",
+    "Fisheries & Aquaculture","Food Adulteration & Safety","Seed & Fertilizer Access"] },
+  { name:"Infrastructure", color:"#C9622E", tags:[
+    "Railways","Airways","Road & Bridge Connectivity","Rural Electrification","Housing & Shelter",
+    "Public Building Maintenance","Street Lighting","Telecom & Internet Connectivity","Public Transport Access"] },
+  { name:"Education", color:"#6E4FA0", tags:[
+    "School Access & Dropout","Teacher Shortage & Quality","Adult Literacy","Vocational & Skill Training",
+    "Higher Education Access","Digital Learning Infrastructure","Disability-Inclusive Education",
+    "Student Project and Innovation"] },
+  { name:"Environment", color:"#2F8F5B", tags:[
+    "Air Pollution","Soil Degradation & Erosion","Deforestation & Illegal Logging",
+    "Wildlife & Biodiversity Loss","Industrial & Chemical Pollution","Plastic & Solid Waste",
+    "E-Waste Management","Climate Adaptation & Resilience"] },
+  { name:"Energy", color:"#B8860B", tags:[
+    "Rural Electrification & Power Cuts","Affordable Clean Cooking Fuel",
+    "Solar & Renewable Adoption","Energy Efficiency in Buildings"] },
+  { name:"Livelihoods & Economy", color:"#8A6A3D", tags:[
+    "Unemployment & Underemployment","Tribal & Marginalized Community Livelihoods",
+    "Women's Economic Empowerment","Migrant Worker Welfare","Child Labour","MSME & Small Business Support"] },
+  { name:"Governance & Public Services", color:"#0F7173", tags:[
+    "Corruption & Bribery","Delay in Government Schemes","Land Records & Property Disputes",
+    "Legal Aid Access","Police & Safety Concerns","Voter Awareness & Participation"] },
+  { name:"Disaster & Safety", color:"#A32F2F", tags:[
+    "Flood Preparedness & Relief","Drought & Water Scarcity","Earthquake Preparedness",
+    "Industrial Accident Safety","Fire Safety in Public Spaces","Road Accident Hotspots"] },
+  { name:"Social Issues", color:"#4552B8", tags:[
+    "Caste Discrimination","Gender-Based Violence","Child Marriage","Trafficking & Exploitation",
+    "Accessibility for Persons with Disabilities","Elderly Care & Abandonment"] },
+];
+
 const ORGS = [
-  { name:"MMMUT", full:"Madan Mohan Malaviya University of Technology", type:"University", verified:true, location:"Gorakhpur, UP", expertise:["AI/ML","IoT","Civil Engineering","Water Management"], projects:6 },
-  { name:"NIT Jamshedpur", full:"National Institute of Technology, Jamshedpur", type:"University", verified:true, location:"Jamshedpur, JH", expertise:["Electronics","Power Systems","Robotics"], projects:11 },
-  { name:"Civica NGO", full:"Civica Rural Development Trust", type:"NGO", verified:true, location:"Ranchi, JH", expertise:["Community Mobilization","Water & Sanitation"], projects:14 },
-  { name:"AgroLink Startup", full:"AgroLink Technologies Pvt. Ltd.", type:"Startup", verified:false, location:"Ranchi, JH", expertise:["Cold-chain IoT","Agri-fintech"], projects:3 },
-  { name:"Vidya Foundation", full:"Vidya Education Foundation", type:"NGO", verified:true, location:"Patna, BR", expertise:["STEM Education","Teacher Training"], projects:22 },
-  { name:"Sahyog NGO", full:"Sahyog Disability Rights Collective", type:"NGO", verified:true, location:"Dhanbad, JH", expertise:["Accessibility Audits","Assistive Tech"], projects:9 },
-  { name:"PowerGrid Interns Collective", full:"PowerGrid Corp — CSR Innovation Cell", type:"Industry / CSR", verified:true, location:"Ranchi, JH", expertise:["Grid Reliability","Rural Electrification"], projects:5 },
-  { name:"Sensfirm Robotics", full:"Sensfirm Robotics Pvt. Ltd.", type:"Startup", verified:false, location:"Bengaluru, KA", expertise:["Sensors","Flood Monitoring"], projects:2 },
+  { name:"MMMUT", full:"Madan Mohan Malaviya University of Technology", type:"University", verified:true, location:"Gorakhpur, UP", expertise:["Civil & Structural Engineering","IT / Computer Science & AI","Electronics & Embedded Systems","Renewable Energy & Clean Technology"], projects:6 },
+  { name:"NIT Jamshedpur", full:"National Institute of Technology, Jamshedpur", type:"University", verified:true, location:"Jamshedpur, JH", expertise:["Electronics & Embedded Systems","Mechanical Engineering","Electrical and Electronics"], projects:11 },
+  { name:"Civica NGO", full:"Civica Rural Development Trust", type:"NGO", verified:true, location:"Ranchi, JH", expertise:["Social Work & Community Development","Public Health & Medicine"], projects:14 },
+  { name:"AgroLink Startup", full:"AgroLink Technologies Pvt. Ltd.", type:"Startup", verified:false, location:"Ranchi, JH", expertise:["Agricultural technology","Business, Entrepreneurship & Management"], projects:3 },
+  { name:"Vidya Foundation", full:"Vidya Education Foundation", type:"NGO", verified:true, location:"Patna, BR", expertise:["Education & Pedagogy","Psychology & Behavioral Science"], projects:22 },
+  { name:"Sahyog NGO", full:"Sahyog Disability Rights Collective", type:"NGO", verified:true, location:"Dhanbad, JH", expertise:["Social Work & Community Development","Law & Public Policy"], projects:9 },
+  { name:"PowerGrid Interns Collective", full:"PowerGrid Corp — CSR Innovation Cell", type:"Industry / CSR", verified:true, location:"Ranchi, JH", expertise:["Electrical and Electronics","Renewable Energy & Clean Technology"], projects:5 },
+  { name:"Sensfirm Robotics", full:"Sensfirm Robotics Pvt. Ltd.", type:"Startup", verified:false, location:"Bengaluru, KA", expertise:["Electronics & Embedded Systems","IT / Computer Science & AI"], projects:2 },
 ];
 
 const PROJECTS = [

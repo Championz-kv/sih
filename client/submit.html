@@ -27,10 +27,23 @@
     <div class="field"><label>Problem title</label><input class="input" id="fTitle" placeholder="e.g. Drainage failure floods school access road every monsoon"></div>
     <div class="field"><label>Detailed description</label><textarea class="input" placeholder="What exactly is happening? When does it occur? What has been tried so far?"></textarea></div>
 
-    <div class="field">
+    <div class="field" style="margin-bottom:20px;">
       <label>Category</label>
-      <div class="chip-select" id="categoryChips"></div>
-      <p class="hint">AI suggests a category from your description — you can confirm or change it.</p>
+
+      <!-- Selected categories (mirrors the tags picked below) -->
+      <div class="cat-panel" style="border-color:var(--setu); margin-bottom:12px;">
+        <div class="cat-panel-head">
+          <span class="cat-dot" style="background:var(--setu);"></span>
+          Selected <span class="mono" id="selCount" style="color:var(--text-faint); font-weight:400;">(0)</span>
+        </div>
+        <div class="chip-select" id="selectedCats">
+          <span style="font-size:12px; color:var(--text-faint);">Nothing selected yet — pick tags from the panels below. Click a tag here to remove it.</span>
+        </div>
+      </div>
+
+      <!-- Grouped category panels -->
+      <div id="categoryGroups" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <p class="hint">Pick one or more tags across any group — selected tags are collected in the Selected panel above and stay highlighted in both places.</p>
     </div>
     <div class="field"><label>Tags</label><input class="input" placeholder="#monsoon #drainage #road (press enter to add)"></div>
 
@@ -84,9 +97,61 @@ function submitProblem(){
 
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  document.getElementById('categoryChips').innerHTML = Object.keys(CATEGORY_COLORS).map((cat,i) =>
-    `<span class="chip-opt">${cat}</span>`
-  ).join("");
+
+  /* ---- grouped category panels + Selected mirror ---- */
+  const selectedTags = new Set();
+
+  function toggleTag(tag){
+    if(selectedTags.has(tag)) selectedTags.delete(tag);
+    else selectedTags.add(tag);
+    syncSelection();
+  }
+
+  function syncSelection(){
+    /* highlight the source chips inside their group panels */
+    document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => {
+      el.classList.toggle('sel', selectedTags.has(el.dataset.tag));
+    });
+
+    /* rebuild the Selected mirror */
+    const wrap = document.getElementById('selectedCats');
+    if(!selectedTags.size){
+      wrap.innerHTML = '<span style="font-size:12px; color:var(--text-faint);">Nothing selected yet — pick tags from the panels below. Click a tag here to remove it.</span>';
+    } else {
+      wrap.innerHTML = '';
+      [...selectedTags].forEach(tag => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip-opt sel cat-mirror';
+        b.title = 'Click to remove';
+        b.innerHTML = tag + ' <span style="opacity:.55;">✕</span>';
+        b.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+        wrap.appendChild(b);
+      });
+    }
+    document.getElementById('selCount').textContent = '(' + selectedTags.size + ')';
+  }
+
+  const groupsWrap = document.getElementById('categoryGroups');
+  PROBLEM_CATEGORY_GROUPS.forEach(gr => {
+    const panel = document.createElement('div');
+    panel.className = 'cat-panel';
+    panel.style.borderColor = gr.color;
+    panel.innerHTML = `<div class="cat-panel-head"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+    gr.tags.forEach(tag => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'chip-opt cat-tag';
+      el.dataset.tag = tag;
+      el.textContent = tag;
+      el.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+      grid.appendChild(el);
+    });
+    panel.appendChild(grid);
+    groupsWrap.appendChild(panel);
+  });
 });
 </script>
 </body>

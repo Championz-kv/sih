@@ -138,7 +138,7 @@ function problemCardHTML(p){
 function orgCardHTML(o){
   const c = avatarColor(o.name);
   return `
-  <div class="card card-pad" style="display:flex; flex-direction:column; gap:10px;">
+  <div class="card card-pad" style="display:flex; flex-direction:column; gap:10px; cursor:pointer;" onclick="void(0)" title="Organization profile — coming with the accounts module">
     <div class="row-flex" style="justify-content:space-between; align-items:flex-start;">
       <div class="person-row" style="padding:0;">
         <div class="av" style="background:${c}; color:#fff;">${initials(o.name)}</div>

@@ -15,7 +15,15 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Projects <span class="count-pill" id="pageCount"></span></h1><p class="sub">Problems that have moved from "reported" to "being actively solved."</p></div></div>
+  <div class="page-head">
+    <div>
+      <h1>Projects <span class="count-pill" id="pageCount"></span></h1>
+      <p class="sub" id="scopeHint">Connected to your activity — problems you posted, funded, supported, added evidence to, or expressed interest in; plus projects you're involved in.</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-outline btn-sm" id="allProjBtn" onclick="toggleAllProjects()" aria-pressed="false">All projects</button>
+    </div>
+  </div>
   <div class="grid grid-3" id="projectsGrid"></div>
 </main>
 
@@ -26,10 +34,36 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  renderShell();
-  document.getElementById('pageCount').textContent = PROJECTS.length;
-  document.getElementById('projectsGrid').innerHTML = PROJECTS.map(pr => `
+/* "All projects" toggle — deselected by default (your activity feed).
+   Personalization is a demo stand-in until the accounts module exists:
+   it treats a project as "related to you" when you'd plausibly be
+   connected — org involvement, funding activity, or strong community
+   support on the linked case. */
+let showAllProjects = false;
+
+function toggleAllProjects(){
+  showAllProjects = !showAllProjects;
+  const btn = document.getElementById('allProjBtn');
+  btn.classList.toggle('btn-accent', showAllProjects);
+  btn.classList.toggle('btn-outline', !showAllProjects);
+  btn.setAttribute('aria-pressed', String(showAllProjects));
+  renderProjects();
+}
+
+function demoRelatedProject(pr){
+  const linked = PROBLEMS.find(p => p.id === pr.problem);
+  const hasFundingActivity = FUND_REQUESTS.some(f => f.ref === pr.code && f.pledges.length > 0);
+  return pr.orgs.length > 0 || hasFundingActivity || (linked && linked.supporters >= 100);
+}
+
+function renderProjects(){
+  const list = showAllProjects ? PROJECTS : PROJECTS.filter(demoRelatedProject);
+  document.getElementById('pageCount').textContent = list.length + (showAllProjects ? '' : ' of ' + PROJECTS.length);
+  document.getElementById('scopeHint').textContent = showAllProjects
+    ? 'Every collaboration project on the desk.'
+    : 'Connected to your activity — problems you posted, funded, supported, added evidence to, or expressed interest in; plus projects you\'re involved in. (Demo selection until accounts are live.)';
+
+  document.getElementById('projectsGrid').innerHTML = list.length ? list.map(pr => `
     <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="go('project.html', {code:'${pr.code}'})">
       <div class="row-flex" style="justify-content:space-between;">
         <span class="pcard-id mono">${pr.code}</span>
@@ -44,7 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
         <span>${pr.orgs.length} orgs · ${pr.team} members</span><span class="mono">since ${formatDate(pr.start)}</span>
       </div>
-    </div>`).join("");
+    </div>`).join("")
+  : `<div class="empty" style="grid-column:1/-1;">
+      <h4>Nothing connected yet</h4>
+      <p>Once accounts are live, projects tied to your posted, funded, supported or evidence-added problems will appear here. Use “All projects” to browse everything.</p>
+    </div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  renderProjects();
 });
 </script>
 </body>
