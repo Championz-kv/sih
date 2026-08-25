@@ -431,7 +431,7 @@ html[data-theme="dark"] .guide-banner.gb-ochre{ background:linear-gradient(130de
 .pcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .pcard-id{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); }
 .pcard h3{ font-size:15.5px; margin:2px 0 4px; }
-.pcard .desc{ font-size:12.5px; color:var(--text-soft); margin-bottom:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.pcard .desc{ font-size:12.5px; color:var(--text-soft); margin-bottom:2px; display:-webkit-box; line-clamp:2; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .pcard-tags{ display:flex; gap:6px; flex-wrap:wrap; }
 .pcard-foot{ display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-faint); }
 .pcard-foot .loc{ display:flex; align-items:center; gap:4px; }
