@@ -323,6 +323,17 @@ function closeSidebar(){
 }
 
 /* ---------------- boot ---------------- */
+/* Floating Sahayak widget — auto-mounted on every page except chatbot.html
+   (which runs the full-page chat over the same shared transcript). */
+if((document.body.dataset.page || '') !== 'chatbot'){
+  const cwBrain = document.createElement('script');
+  cwBrain.src = 'js/chat-brain.js';
+  document.body.appendChild(cwBrain);
+  const cwWidget = document.createElement('script');
+  cwWidget.src = 'js/chat-widget.js';
+  document.body.appendChild(cwWidget);
+}
+
 function renderShell(){
   const activePage = document.body.dataset.page || '';
   document.documentElement.setAttribute('data-theme', currentTheme());

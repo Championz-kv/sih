@@ -57,64 +57,19 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/chat-brain.js"></script>
 <script>
-/* ==================================================================
-   AI BACKEND — CONNECTION POINT
-   ------------------------------------------------------------------
-   To connect a real model, replace ONLY the body of aiReply() below.
+/* Chat brain — aiReply(), the demo replies and the shared transcript —
+   lives in js/chat-brain.js: the same brain behind the floating Sahayak
+   widget on every other page. Connect a real model by editing aiReply()
+   there; this page and the widget both pick it up automatically. */
 
-   Contract:  aiReply(message:string, history:Array) -> Promise<string>
-              history = [{ role:'user'|'assistant', content:'...' }, ...]
-              Return plain text or simple HTML (<b>, <a>, <br>).
 
-   Example:
-     async function aiReply(message, history){
-       const res = await fetch('/api/chat', {
-         method:'POST',
-         headers:{ 'Content-Type':'application/json' },
-         body: JSON.stringify({ message, history })
-       });
-       const data = await res.json();
-       return data.reply;
-     }
 
-   Everything else on this page (queueing, typing dots, history,
-   rendering, Enter-to-send) keeps working unchanged.
-   ================================================================== */
-function aiReply(message, history){
-  return new Promise((resolve) => {
-    /* Placeholder: simulated latency + keyword-flavoured canned replies. */
-    setTimeout(() => resolve(placeholderReply(message)), 800 + Math.random()*900);
-  });
-}
-
-const GENERIC_REPLIES = [
-  "I'm running in demo mode right now — answers are placeholders until the AI backend is connected in <code>aiReply()</code>. Meanwhile, try asking about <b>filing a problem</b>, <b>validation</b> or <b>collaboration</b>!",
-  "Good question! Once the real model is wired in I'll answer this properly. The two guides on the homepage cover most process questions in detail.",
-];
-let genericIdx = 0;
-
-function placeholderReply(message){
-  const m = (message || '').toLowerCase();
-  if(/(^|\s)(hi|hello|namaste|hey)(\s|$|[!,.?])/.test(m))
-    return "Namaste! 👋 I'm <b>Sahayak</b>, the SolveSamaj assistant. Ask me how to <b>report a problem</b>, what happens during <b>validation</b>, or how <b>organizations collaborate</b> on solutions.";
-  if(/(report|file|submit|complaint|put forward)/.test(m))
-    return `Citizens report issues through the <b>Report a Problem</b> form — describe the failure, pin the district &amp; block, add evidence, and you get a permanent case number instantly. <a href="#" onclick="go('submit.html');return false;">Open the form →</a>`;
-  if(/(valid|review|approve|duplicate)/.test(m))
-    return `After filing, the platform runs duplicate detection, then a government admin reviews the case. Once validated, supporters can back it and it's stamped <b>Open for Solutions</b>. Full journey: <a href="#" onclick="go('guide-filing.html');return false;">filing guide →</a>`;
-  if(/(collab|partner|organization|ngo|university|team up)/.test(m))
-    return `Verified organizations see problems matched to their expertise, express interest with resources &amp; timeline, then join as technical / implementation / funding / research partners inside a shared project workspace. Walkthrough: <a href="#" onclick="go('guide-collaboration.html');return false;">collaboration guide →</a>`;
-  if(/(status|track|where is|progress|case no)/.test(m))
-    return `Every case file carries a live stamp: Submitted → Under Review → Validated → Open → Project Active → Testing → Resolved. Track yours under <a href="#" onclick="go('my-problems.html');return false;">My Problems →</a>`;
-  if(/(project|milestone|workspace)/.test(m))
-    return `Accepted interests become projects with milestone bars, task boards, shared documents and a discussion thread visible to every partner and to admins. Browse current work: <a href="#" onclick="go('projects.html');return false;">Projects →</a>`;
-  const reply = GENERIC_REPLIES[genericIdx % GENERIC_REPLIES.length];
-  genericIdx++;
-  return reply;
-}
 /* ---------------- chat UI ---------------- */
 let chatLocked = false;
-let chatHistory = [];   // [{role:'user'|'assistant', content}] — passed to aiReply()
+/* Transcript lives in localStorage through ChatCore — shared with the
+   floating Sahayak widget on every other page. */
 
 function chatLogEl(){ return document.getElementById('chatLog'); }
 function scrollBottom(){ const l = chatLogEl(); l.scrollTop = l.scrollHeight; }
@@ -131,10 +86,7 @@ function appendMsg(role, html){
   scrollBottom();
 }
 
-function pushHistory(role, text){
-  chatHistory.push({ role, content:text });
-  if(chatHistory.length > 24) chatHistory.shift();   // keep context window small
-}
+function pushHistory(role, text){ ChatCore.push(role, text); }
 
 function showTyping(){
   const row = document.createElement('div');
@@ -156,7 +108,7 @@ function sendUserMessage(text){
   document.getElementById('sendBtn').disabled = true;
   showTyping();
 
-  Promise.resolve(aiReply(text, chatHistory.slice()))
+  Promise.resolve(aiReply(text, ChatCore.history.slice()))
     .then(reply => {
       hideTyping();
       appendMsg('bot', reply);
@@ -193,15 +145,24 @@ function welcome(){
 
 function clearChat(){
   if(chatLocked) return;
-  chatHistory = [];
-  genericIdx = 0;
+  ChatCore.clear();
   chatLogEl().innerHTML = '';
   welcome();
 }
 
+function seedOrReplay(){
+  if(ChatCore.history.length === 0){
+    welcome();
+    ChatCore.push('assistant', "Namaste! I'm Sahayak, the SolveSamaj assistant. Ask me about filing problems, collaboration, funding or case statuses.");
+  } else {
+    ChatCore.history.forEach(h =>
+      appendMsg(h.role, h.role === 'user' ? escapeHTML(h.content) : h.content, false));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  welcome();
+  seedOrReplay();
   renderChips();
 });
 </script>

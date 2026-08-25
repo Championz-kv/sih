@@ -479,6 +479,67 @@ html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi);
 .check-row.dimmed{ opacity:.45; }
 .tag-more{ color:var(--text-faint); background:transparent; border-style:dashed; }
 
+/* ---- Floating Sahayak widget (bottom-left, every page) ---- */
+.cw-btn{
+  position:fixed; right:18px; bottom:18px; z-index:940;
+  width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
+  background:linear-gradient(150deg, var(--setu) 0%, var(--violet) 115%);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow-md); transition:transform .15s ease;
+}
+.cw-btn:hover{ transform:scale(1.07); }
+html[data-theme="dark"] .cw-btn{ color:#171400; }
+#cwRoot.open .cw-btn{ display:none; }
+.cw-panel{
+  position:fixed; left:16px; bottom:16px; z-index:945;
+  width:min(380px, calc(100vw - 24px)); height:min(560px, calc(100vh - 28px));
+  display:none; flex-direction:column;
+  background:var(--surface-hi); border:1px solid var(--border-2);
+  border-radius:var(--radius-l); overflow:hidden;
+}
+html[data-theme="dark"] .cw-panel{ box-shadow:0 18px 50px -10px rgba(0,0,0,.7); }
+#cwRoot.open .cw-panel{ display:flex; animation:cwIn .22s ease; }
+@keyframes cwIn{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+.cw-head{ display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--surface-2); border-bottom:1px solid var(--border); }
+.cw-av{
+  width:34px; height:34px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  background:linear-gradient(150deg, var(--setu) 0%, var(--violet) 115%);
+  font-family:var(--font-mono); font-weight:700; font-size:13px;
+}
+html[data-theme="dark"] .cw-av{ color:#171400; }
+.cw-head b{ display:block; font-family:var(--font-display); font-size:14.5px; color:var(--ink); line-height:1.15; }
+.cw-head span{ font-size:10px; color:var(--text-faint); font-family:var(--font-mono); }
+.cw-ico{
+  width:28px; height:28px; border-radius:8px; border:none; cursor:pointer; flex:none;
+  background:transparent; color:var(--text-faint);
+  display:flex; align-items:center; justify-content:center;
+}
+.cw-ico:hover{ background:var(--paper-2); color:var(--ink); }
+html[data-theme="dark"] .cw-ico:hover{ background:var(--paper-3); }
+.cw-log{ flex:1; overflow-y:auto; padding:14px 12px; display:flex; flex-direction:column; gap:10px; }
+.cw-panel .msg-row{ max-width:94%; gap:7px; }
+.cw-panel .msg{ font-size:12.5px; padding:8px 11px; line-height:1.5; }
+.cw-panel .msg-av{ width:20px; height:20px; font-size:8.5px; margin-top:1px; }
+.cw-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border); align-items:center; }
+.cw-input input{
+  flex:1; min-width:0; padding:9px 14px; font-size:12.5px;
+  border:1px solid var(--border-2); border-radius:100px;
+  background:var(--surface); color:var(--text); outline:none; font-family:var(--font-body);
+}
+.cw-input input:focus{ border-color:var(--setu); }
+.cw-send{
+  width:38px; height:38px; border-radius:50%; border:none; cursor:pointer; flex:none;
+  background:var(--setu); color:#33270A;
+  display:flex; align-items:center; justify-content:center;
+}
+html[data-theme="dark"] .cw-send{ color:#171400; }
+.cw-send:disabled{ opacity:.5; cursor:not-allowed; }
+@media (max-width:520px){
+  .cw-panel{ right:10px; bottom:80px; width:auto; height:min(66vh, 500px); }
+  .cw-btn{ right:12px; bottom:12px; }
+}
+
 .upload-zone{
   border:1.5px dashed var(--border-2); border-radius:var(--radius-m); padding:26px; text-align:center; color:var(--text-faint);
   font-size:12.5px; cursor:pointer;
