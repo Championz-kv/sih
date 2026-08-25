@@ -24,13 +24,13 @@
   </div>
 
   <div class="filters-layout">
-    <div class="filter-box card card-pad">
-      <div class="field" style="margin-bottom:14px;">
+    <div class="filter-box card card-pad" style="padding:14px 15px;">
+      <div class="field" style="margin-bottom:12px;">
         <input class="input" id="exploreSearch" placeholder="Search title, tag, district...">
       </div>
-      <div class="filter-group" id="filterCategory">
+      <div class="filter-group collapsed" id="filterCategory">
       </div>
-      <div class="filter-group" id="filterSeverity">
+      <div class="filter-group collapsed" id="filterSeverity">
         <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Severity <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5>
         <div class="filter-body">
           <label class="check-row"><input type="checkbox" value="critical"><span class="sev-dot sev-critical"></span>&nbsp;Critical</label>
@@ -39,7 +39,7 @@
           <label class="check-row"><input type="checkbox" value="low"><span class="sev-dot sev-low"></span>&nbsp;Low</label>
         </div>
       </div>
-      <div class="filter-group" id="filterStatus">
+      <div class="filter-group collapsed" id="filterStatus">
         <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Status <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5>
         <div class="filter-body">
           <label class="check-row"><input type="checkbox" value="validated"> Validated</label>
