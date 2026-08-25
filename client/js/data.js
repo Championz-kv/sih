@@ -7,7 +7,7 @@
    same shape, and every page keeps working unmodified.
 
    Shapes:
-     PROBLEM   { id, title, desc, category, tags[], district, block,
+     PROBLEM   { id, title, desc, category(primary), cats[], tags[],
                  affected, severity, urgency, status, supporters,
                  contributors, date, orgs[] }
      ORG       { name, full, type, verified, location, expertise[],
@@ -19,33 +19,24 @@
                  outcomes[[value,label]] }
    =================================================================== */
 
-const CATEGORY_COLORS = {
-  "Agriculture":        "#5C7A29",
-  "Healthcare":         "#B23A63",
-  "Water & Sanitation": "#2568A8",
-  "Infrastructure":     "#C9622E",
-  "Education":          "#6E4FA0",
-  "Environment":        "#2F8F5B",
-  "Energy":             "#B8860B",
-  "Accessibility":      "#4552B8",
-  "Disaster Management":"#A32F2F",
-  "Public Services":    "#0F7173",
-  "Rural Livelihoods":  "#8A6A3D",
-};
+/* Colours resolve from PROBLEM_CATEGORY_GROUPS (defined below): every
+   heading and each sub-tag under it gets registered there, so pages can
+   hand either a group name or a tag to categoryColor(). */
+const CATEGORY_COLORS = {};
 
 const AVATAR_PALETTE = ["#0F7173","#B4761F","#5C7A29","#B23A63","#2568A8","#6E4FA0","#A32F2F","#2F8F5B"];
 
 const PROBLEMS = [
-  { id:1042, title:"Drainage failure floods school access road every monsoon", desc:"The only road connecting Village X to the block highway becomes impassable for 6–8 weeks every monsoon because the drainage channel silts up, cutting off ~3,000 residents and forcing children to skip school.", category:"Infrastructure", tags:["#monsoon","#drainage","#road"], district:"Ranchi", block:"Ormanjhi", affected:3000, severity:"high", urgency:"Within days", status:"progress", supporters:183, contributors:27, date:"2026-07-12", orgs:["MMMUT","Civica NGO"] },
-  { id:1108, title:"Groundwater contamination near tannery cluster", desc:"Well-water testing shows elevated chromium levels affecting drinking water for four hamlets downstream of a small tannery cluster.", category:"Water & Sanitation", tags:["#groundwater","#pollution"], district:"Dhanbad", block:"Baliapur", affected:1200, severity:"critical", urgency:"Immediate", status:"open", supporters:96, contributors:14, date:"2026-08-03", orgs:[] },
-  { id:1156, title:"No cold-storage access for tomato farmers", desc:"Farmers lose an estimated 30% of tomato yield post-harvest due to the nearest cold storage being over 40km away, leading to distress sales.", category:"Agriculture", tags:["#postharvest","#coldchain"], district:"Ranchi", block:"Bero", affected:2400, severity:"medium", urgency:"Within months", status:"validated", supporters:211, contributors:19, date:"2026-07-22", orgs:["AgroLink Startup"] },
-  { id:1201, title:"Primary health centre lacks a functioning ultrasound unit", desc:"Pregnant women in three panchayats must travel 25km for basic prenatal ultrasound, delaying detection of high-risk pregnancies.", category:"Healthcare", tags:["#maternal-health","#phc"], district:"Bokaro", block:"Chandankiyari", affected:5600, severity:"high", urgency:"Within days", status:"review", supporters:142, contributors:9, date:"2026-07-29", orgs:[] },
-  { id:1233, title:"Frequent transformer burnouts cut power to weaving cluster", desc:"A cottage-industry weaving cluster of 80+ households loses 3–4 working days a month to transformer failures on an overloaded feeder line.", category:"Energy", tags:["#electricity","#livelihoods"], district:"Jamshedpur", block:"Potka", affected:400, severity:"medium", urgency:"Within months", status:"progress", supporters:58, contributors:6, date:"2026-07-15", orgs:["NIT Jamshedpur","PowerGrid Interns Collective"] },
-  { id:1267, title:"River erosion threatens riverside settlement", desc:"Seasonal flooding has eroded over 40 metres of riverbank in the last three years, now within 15 metres of the nearest homes.", category:"Environment", tags:["#erosion","#flood"], district:"Sahibganj", block:"Rajmahal", affected:850, severity:"critical", urgency:"Immediate", status:"open", supporters:77, contributors:11, date:"2026-08-08", orgs:[] },
-  { id:1288, title:"Learning gap in government middle school science labs", desc:"Of 12 middle schools in the block, only 2 have a functioning science lab, limiting practical learning ahead of board exams.", category:"Education", tags:["#stem","#schools"], district:"Ranchi", block:"Kanke", affected:2100, severity:"low", urgency:"Long-term", status:"validated", supporters:64, contributors:8, date:"2026-07-19", orgs:["Vidya Foundation"] },
-  { id:1305, title:"No wheelchair-accessible ramp at district hospital OPD", desc:"The district hospital's main OPD block has stairs only, making outpatient visits difficult for elderly and disabled patients.", category:"Accessibility", tags:["#accessibility","#hospital"], district:"Dhanbad", block:"Dhanbad Sadar", affected:900, severity:"medium", urgency:"Within months", status:"resolved", supporters:39, contributors:5, date:"2026-06-02", orgs:["Sahyog NGO"] },
-  { id:1319, title:"Broken handpump serving three hamlets", desc:"The only functioning handpump for roughly 600 people across three hamlets has been broken for five weeks, forcing a 2km walk for water.", category:"Water & Sanitation", tags:["#handpump","#water"], district:"Ranchi", block:"Namkum", affected:600, severity:"high", urgency:"Immediate", status:"review", supporters:31, contributors:4, date:"2026-08-21", orgs:[] },
-  { id:1314, title:"Crop pest outbreak unreported to Krishi Kendra", desc:"A fall-armyworm outbreak is spreading across maize fields with no formal channel for farmers to alert the local agriculture extension office.", category:"Agriculture", tags:["#pest","#maize"], district:"Gumla", block:"Gumla Sadar", affected:1800, severity:"high", urgency:"Immediate", status:"review", supporters:22, contributors:3, date:"2026-08-19", orgs:[] },
+  { id:1042, title:"Drainage failure floods school access road every monsoon", desc:"The only road connecting Village X to the block highway becomes impassable for 6–8 weeks every monsoon because the drainage channel silts up, cutting off ~3,000 residents and forcing children to skip school.", category:"Waterlogging & Drainage", cats:["Waterlogging & Drainage","Road & Bridge Connectivity","School Access & Dropout"], tags:["#monsoon","#drainage","#road","#school"], district:"Ranchi", block:"Ormanjhi", affected:3000, severity:"high", urgency:"Within days", status:"progress", supporters:183, contributors:27, date:"2026-07-12", orgs:["MMMUT","Civica NGO"] },
+  { id:1108, title:"Groundwater contamination near tannery cluster", desc:"Well-water testing shows elevated chromium levels affecting drinking water for four hamlets downstream of a small tannery cluster.", category:"Water Quality & Contamination", cats:["Water Quality & Contamination","Drinking Water Access","Industrial & Chemical Pollution"], tags:["#groundwater","#pollution","#chromium","#watersafety"], district:"Dhanbad", block:"Baliapur", affected:1200, severity:"critical", urgency:"Immediate", status:"open", supporters:96, contributors:14, date:"2026-08-03", orgs:[] },
+  { id:1156, title:"No cold-storage access for tomato farmers", desc:"Farmers lose an estimated 30% of tomato yield post-harvest due to the nearest cold storage being over 40km away, leading to distress sales.", category:"Post-Harvest Loss & Storage", cats:["Post-Harvest Loss & Storage","Farmer Income & Market Access"], tags:["#coldchain"], district:"Ranchi", block:"Bero", affected:2400, severity:"medium", urgency:"Within months", status:"validated", supporters:211, contributors:19, date:"2026-07-22", orgs:["AgroLink Startup"] },
+  { id:1201, title:"Primary health centre lacks a functioning ultrasound unit", desc:"Pregnant women in three panchayats must travel 25km for basic prenatal ultrasound, delaying detection of high-risk pregnancies.", category:"Primary & Preventive Healthcare", cats:["Primary & Preventive Healthcare","Maternal & Child Health","Hospital Access & Infrastructure"], tags:["#maternal-health","#phc","#ultrasound","#rural-health"], district:"Bokaro", block:"Chandankiyari", affected:5600, severity:"high", urgency:"Within days", status:"review", supporters:142, contributors:9, date:"2026-07-29", orgs:[] },
+  { id:1233, title:"Frequent transformer burnouts cut power to weaving cluster", desc:"A cottage-industry weaving cluster of 80+ households loses 3–4 working days a month to transformer failures on an overloaded feeder line.", category:"Rural Electrification & Power Cuts", cats:["Rural Electrification & Power Cuts","MSME & Small Business Support","Unemployment & Underemployment"], tags:["#electricity","#powercuts","#handloom","#livelihoods"], district:"Jamshedpur", block:"Potka", affected:400, severity:"medium", urgency:"Within months", status:"progress", supporters:58, contributors:6, date:"2026-07-15", orgs:["NIT Jamshedpur","PowerGrid Interns Collective"] },
+  { id:1267, title:"River erosion threatens riverside settlement", desc:"Seasonal flooding has eroded over 40 metres of riverbank in the last three years, now within 15 metres of the nearest homes.", category:"Soil Degradation & Erosion", cats:["Soil Degradation & Erosion","Flood Control & River Management","Housing & Shelter"], tags:["#erosion","#riverbank"], district:"Sahibganj", block:"Rajmahal", affected:850, severity:"critical", urgency:"Immediate", status:"open", supporters:77, contributors:11, date:"2026-08-08", orgs:[] },
+  { id:1288, title:"Learning gap in government middle school science labs", desc:"Of 12 middle schools in the block, only 2 have a functioning science lab, limiting practical learning ahead of board exams.", category:"Student Project and Innovation", cats:["Student Project and Innovation","Vocational & Skill Training"], tags:["#stem","#science","#schools","#education","#innovation","#practical-learning"], district:"Ranchi", block:"Kanke", affected:2100, severity:"low", urgency:"Long-term", status:"validated", supporters:64, contributors:8, date:"2026-07-19", orgs:["Vidya Foundation"] },
+  { id:1305, title:"No wheelchair-accessible ramp at district hospital OPD", desc:"The district hospital's main OPD block has stairs only, making outpatient visits difficult for elderly and disabled patients.", category:"Accessibility for Persons with Disabilities", cats:["Accessibility for Persons with Disabilities","Hospital Access & Infrastructure","Healthcare for Elderly & Disabled"], tags:["#accessibility","#elderly"], district:"Dhanbad", block:"Dhanbad Sadar", affected:900, severity:"medium", urgency:"Within months", status:"resolved", supporters:39, contributors:5, date:"2026-06-02", orgs:["Sahyog NGO"] },
+  { id:1319, title:"Broken handpump serving three hamlets", desc:"The only functioning handpump for roughly 600 people across three hamlets has been broken for five weeks, forcing a 2km walk for water.", category:"Drinking Water Access", cats:["Drinking Water Access"], tags:[], district:"Ranchi", block:"Namkum", affected:600, severity:"high", urgency:"Immediate", status:"review", supporters:31, contributors:4, date:"2026-08-21", orgs:[] },
+  { id:1314, title:"Crop pest outbreak unreported to Krishi Kendra", desc:"A fall-armyworm outbreak is spreading across maize fields with no formal channel for farmers to alert the local agriculture extension office.", category:"Pest & Disease Control", cats:["Pest & Disease Control","Crop Yield & Soil Health","Farmer Income & Market Access"], tags:[], district:"Gumla", block:"Gumla Sadar", affected:1800, severity:"high", urgency:"Immediate", status:"review", supporters:22, contributors:3, date:"2026-08-19", orgs:[] },
 ];
 
 /* Problem posting taxonomy — grouped sub-tags rendered on the report form.
@@ -92,6 +83,13 @@ const PROBLEM_CATEGORY_GROUPS = [
     "Caste Discrimination","Gender-Based Violence","Child Marriage","Trafficking & Exploitation",
     "Accessibility for Persons with Disabilities","Elderly Care & Abandonment"] },
 ];
+
+/* Register every heading + sub-tag into CATEGORY_COLORS so categoryColor()
+   resolves everywhere (explore filters, cards, analytics bars, dots...). */
+PROBLEM_CATEGORY_GROUPS.forEach(g => {
+  CATEGORY_COLORS[g.name] = g.color;
+  g.tags.forEach(t => { CATEGORY_COLORS[t] = g.color; });
+});
 
 const ORGS = [
   { name:"MMMUT", full:"Madan Mohan Malaviya University of Technology", type:"University", verified:true, location:"Gorakhpur, UP", expertise:["Civil & Structural Engineering","IT / Computer Science & AI","Electronics & Embedded Systems","Renewable Energy & Clean Technology"], projects:6,
@@ -145,10 +143,10 @@ const NOTIFICATIONS = [
 ];
 
 const REVIEW_QUEUE = [
-  { id:1319, title:"Broken handpump serving 3 hamlets", category:"Water & Sanitation", flag:"—", date:"Today" },
-  { id:1318, title:"Village road flooding every rainy season", category:"Infrastructure", flag:"92% match to #1042", date:"Today" },
-  { id:1316, title:"No streetlights on school route", category:"Infrastructure", flag:"—", date:"Yesterday" },
-  { id:1314, title:"Crop pest outbreak unreported to Krishi Kendra", category:"Agriculture", flag:"Needs location", date:"Yesterday" },
+  { id:1319, title:"Broken handpump serving 3 hamlets", category:"Drinking Water Access", flag:"—", date:"Today" },
+  { id:1318, title:"Village road flooding every rainy season", category:"Waterlogging & Drainage", flag:"92% match to #1042", date:"Today" },
+  { id:1316, title:"No streetlights on school route", category:"Street Lighting", flag:"—", date:"Yesterday" },
+  { id:1314, title:"Crop pest outbreak unreported to Krishi Kendra", category:"Pest & Disease Control", flag:"Needs location", date:"Yesterday" },
 ];
 
 const STATUS_STAGES = [

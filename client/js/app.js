@@ -42,6 +42,15 @@ function updateUrlParam(key, value){
 
 /* ---------------- colour helpers (data-driven, see data.js) ---------------- */
 function categoryColor(cat){ return (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[cat]) || '#C76500'; }
+/* Resolve the taxonomy heading a category belongs to (the tag itself if standalone). */
+function categoryGroupOf(tag){
+  if(typeof PROBLEM_CATEGORY_GROUPS === 'undefined') return tag;
+  const g = PROBLEM_CATEGORY_GROUPS.find(gr => gr.name === tag || gr.tags.includes(tag));
+  return g ? g.name : tag;
+}
+/* A case can carry several taxonomy tags; 'category' remains the primary
+   (first) tag used for accent colours and compact tables. */
+function problemCats(p){ return (p.cats && p.cats.length) ? p.cats : [p.category]; }
 function hexToRgba(hex, alpha){
   const h = hex.replace('#','');
   const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
@@ -55,7 +64,7 @@ function avatarColor(name){
 }
 function categoryTagHTML(cat){
   const c = categoryColor(cat);
-  return `<span class="tag tag-domain" style="color:${c}; background:${hexToRgba(c,0.12)}; border-color:${hexToRgba(c,0.32)};"><span class="cat-dot" style="background:${c};"></span>${cat}</span>`;
+  return `<span class="tag tag-domain" title="Category: ${categoryGroupOf(cat)}" style="color:${c}; background:${hexToRgba(c,0.12)}; border-color:${hexToRgba(c,0.32)};"><span class="cat-dot" style="background:${c};"></span>${cat}</span>`;
 }
 
 /* ---------------- formatting helpers ---------------- */
@@ -125,8 +134,14 @@ function problemCardHTML(p){
     </div>
     <p class="desc">${p.desc}</p>
     <div class="pcard-tags">
-      ${categoryTagHTML(p.category)}
-      ${p.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join("")}
+      ${(() => {
+        /* show at most 5 chips; the rest collapse into “+N” but still
+           count for search and filters */
+        const chips = [...problemCats(p).map(categoryTagHTML),
+                       ...p.tags.map(t=>`<span class="tag">${t}</span>`)];
+        return chips.slice(0,5).join("") +
+          (chips.length > 5 ? `<span class="tag tag-more">+${chips.length-5}</span>` : "");
+      })()}
     </div>
     <div class="pcard-foot">
       <span class="loc">${sevDotHTML(p.severity)}&nbsp;${p.district} · ${p.block}</span>
@@ -185,9 +200,9 @@ function searchProblems(list, q){
   return list.filter(p =>
     p.title.toLowerCase().includes(needle) ||
     p.desc.toLowerCase().includes(needle) ||
-    p.category.toLowerCase().includes(needle) ||
     p.district.toLowerCase().includes(needle) ||
-    p.tags.some(t => t.toLowerCase().includes(needle))
+    p.tags.some(t => t.toLowerCase().includes(needle)) ||
+    problemCats(p).some(c => c.toLowerCase().includes(needle))
   );
 }
 function sortProblems(list, mode){
@@ -201,7 +216,7 @@ function sortProblems(list, mode){
 }
 function filterProblems(list, {categories, severities, statuses} = {}){
   return list.filter(p =>
-    (!categories || !categories.length || categories.includes(p.category)) &&
+    (!categories || !categories.length || categories.some(c => problemCats(p).includes(c))) &&
     (!severities || !severities.length || severities.includes(p.severity)) &&
     (!statuses || !statuses.length || statuses.includes(p.status))
   );

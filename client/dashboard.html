@@ -36,8 +36,8 @@
           <button class="btn btn-outline" onclick="go('org-profile.html')">Register as an Organization</button>
         </div>
         <div class="hero-chips">
-          <span class="tag">Education</span><span class="tag">Healthcare</span><span class="tag">Agriculture</span>
-          <span class="tag">Water &amp; Sanitation</span><span class="tag">Infrastructure</span><span class="tag">+9 more</span>
+          <span class="tag">Healthcare</span><span class="tag">Water &amp; Sanitation</span><span class="tag">Education</span>
+          <span class="tag">Environment</span><span class="tag">Energy</span><span class="tag">+6 more</span>
         </div>
         <div class="hero-guides">
           <button class="guide-banner gb-violet" onclick="go('guide-filing.html')">
@@ -125,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>`).join("");
 
   const domainCounts = {};
-  PROBLEMS.forEach(p => domainCounts[p.category] = (domainCounts[p.category]||0)+1);
-  const total = PROBLEMS.length;
+  PROBLEMS.forEach(p => problemCats(p).forEach(c => domainCounts[c] = (domainCounts[c]||0)+1));
+  const total = Object.values(domainCounts).reduce((s,n)=>s+n, 0); /* total tag instances */
   const domains = Object.entries(domainCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   document.getElementById('overviewDomains').innerHTML = domains.map(([name,count]) => {
     const pct = Math.round(count/total*100);

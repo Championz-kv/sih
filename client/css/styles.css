@@ -470,6 +470,15 @@ html[data-theme="dark"] #categoryGroups .cat-tag.sel{ background:var(--setu-2); 
 #selectedCats .cat-mirror{ background:var(--ink); border-color:var(--ink); color:#fff; }
 html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi); border-color:var(--border-2); color:var(--text); }
 
+/* ---- Explore category filter (grouped taxonomy) ---- */
+.filter-body-cats{ max-height:340px; overflow:auto; }
+.filter-cat-group{ padding-bottom:4px; }
+.filter-subhead{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink); opacity:.78; margin:12px 0 3px; }
+.filter-subhead .cat-dot{ flex:none; }
+.filter-subhead .n{ margin-left:auto; font-family:var(--font-mono); font-size:10px; color:var(--text-faint); }
+.check-row.dimmed{ opacity:.45; }
+.tag-more{ color:var(--text-faint); background:transparent; border-style:dashed; }
+
 .upload-zone{
   border:1.5px dashed var(--border-2); border-radius:var(--radius-m); padding:26px; text-align:center; color:var(--text-faint);
   font-size:12.5px; cursor:pointer;

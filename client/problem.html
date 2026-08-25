@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('detailId').textContent = `CASE NO. ${caseNo(p.id)}`;
   document.getElementById('detailTitle').textContent = p.title;
   document.getElementById('detailDesc').textContent = p.desc;
-  document.getElementById('detailTags').innerHTML = categoryTagHTML(p.category) + p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  document.getElementById('detailTags').innerHTML = problemCats(p).map(categoryTagHTML).join("") + p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
   document.getElementById('detailStamp').innerHTML = stampHTML(p.status);
   document.getElementById('detailLoc').textContent = `${p.district}, ${p.block}`;
   document.getElementById('detailAffected').textContent = p.affected.toLocaleString();
