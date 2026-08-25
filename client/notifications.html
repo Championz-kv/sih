@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Notifications</h1><p class="sub">Everything that needs your attention, in one place.</p></div></div>
+  <div class="page-head"><div><h1>Notifications <span class="count-pill" id="pageCount"></span></h1><p class="sub">Everything that needs your attention, in one place.</p></div></div>
   <div class="card card-pad" id="notifList"></div>
 </main>
 
@@ -28,6 +28,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
+  document.getElementById('pageCount').textContent = NOTIFICATIONS.length;
   document.getElementById('notifList').innerHTML = NOTIFICATIONS.map(n => `
     <div class="notif-item"><span class="notif-dot" style="background:${n.color};"></span><div><p>${n.text}</p><span>${n.time}</span></div></div>`).join("");
 });

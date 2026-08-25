@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Verification Queue</h1><p class="sub">Review organization registrations before granting verified status.</p></div></div>
+  <div class="page-head"><div><h1>Verification Queue <span class="count-pill" id="pageCount"></span></h1><p class="sub">Review organization registrations before granting verified status.</p></div></div>
   <div id="verifyList"></div>
 </main>
 
@@ -28,6 +28,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
+  document.getElementById('pageCount').textContent = ORGS.filter(o=>!o.verified).length + ' pending';
   document.getElementById('verifyList').innerHTML = ORGS.map(o => `
     <div class="card card-pad" style="margin-bottom:12px; display:flex; align-items:center; gap:16px;">
       <div class="av" style="width:44px; height:44px; font-size:14px; background:${avatarColor(o.name)}; color:#fff;">${initials(o.name)}</div>

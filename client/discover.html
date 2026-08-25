@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Matched Problems</h1><p class="sub">Problems SolveSamaj thinks fit your organization's expertise — refine your profile to improve matches.</p></div></div>
+  <div class="page-head"><div><h1>Matched Problems <span class="count-pill" id="pageCount"></span></h1><p class="sub">Problems SolveSamaj thinks fit your organization's expertise — refine your profile to improve matches.</p></div></div>
   <div class="problem-grid" id="discoverGrid"></div>
 </main>
 
@@ -29,6 +29,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   const matched = PROBLEMS.filter(p => ["open","validated","review"].includes(p.status));
+  document.getElementById('pageCount').textContent = matched.length;
   document.getElementById('discoverGrid').innerHTML = matched.map(problemCardHTML).join("")
     || `<div class="empty"><h4>No matches right now</h4><p>Widen your organization's expertise tags to see more problems.</p></div>`;
 });

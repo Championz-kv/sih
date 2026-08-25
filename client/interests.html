@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>My Interests</h1><p class="sub">Problems you've expressed interest in, and their collaboration status.</p></div></div>
+  <div class="page-head"><div><h1>My Interests <span class="count-pill" id="pageCount"></span></h1><p class="sub">Problems you've expressed interest in, and their collaboration status.</p></div></div>
   <div class="card">
     <table class="datatable">
       <thead><tr><th>Case</th><th>Title</th><th>Your proposal</th><th>Status</th><th></th></tr></thead>
@@ -34,6 +34,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   const mine = PROBLEMS.filter(p => p.orgs.length);
+  document.getElementById('pageCount').textContent = mine.length;
   document.getElementById('myInterestsBody').innerHTML = mine.length ? mine.map(p => `
     <tr style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
       <td class="mono">#${p.id}</td>

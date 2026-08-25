@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Problem Review Queue</h1><p class="sub">Validate new submissions, flag duplicates, and route to appropriate categories.</p></div></div>
+  <div class="page-head"><div><h1>Problem Review Queue <span class="count-pill" id="pageCount"></span></h1><p class="sub">Validate new submissions, flag duplicates, and route to appropriate categories.</p></div></div>
   <div class="card">
     <table class="datatable">
       <thead><tr><th>Case</th><th>Title</th><th>Category</th><th>Flag</th><th>Filed</th><th></th></tr></thead>
@@ -33,6 +33,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
+  document.getElementById('pageCount').textContent = REVIEW_QUEUE.length;
   document.getElementById('reviewBody').innerHTML = REVIEW_QUEUE.map(r => `
     <tr>
       <td class="mono">#${r.id}</td>

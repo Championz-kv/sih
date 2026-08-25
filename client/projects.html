@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>Projects</h1><p class="sub">Problems that have moved from "reported" to "being actively solved."</p></div></div>
+  <div class="page-head"><div><h1>Projects <span class="count-pill" id="pageCount"></span></h1><p class="sub">Problems that have moved from "reported" to "being actively solved."</p></div></div>
   <div class="grid grid-3" id="projectsGrid"></div>
 </main>
 
@@ -28,6 +28,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
+  document.getElementById('pageCount').textContent = PROJECTS.length;
   document.getElementById('projectsGrid').innerHTML = PROJECTS.map(pr => `
     <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="go('project.html', {code:'${pr.code}'})">
       <div class="row-flex" style="justify-content:space-between;">

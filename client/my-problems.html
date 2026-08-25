@@ -15,7 +15,7 @@
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <main class="main">
-  <div class="page-head"><div><h1>My Problems</h1><p class="sub">Everything you've filed or contributed to, and where each one stands.</p></div>
+  <div class="page-head"><div><h1>My Problems <span class="count-pill" id="pageCount"></span></h1><p class="sub">Everything you've filed or contributed to, and where each one stands.</p></div>
     <div class="page-head-actions"><button class="btn btn-primary btn-sm" onclick="go('submit.html')">+ Report a Problem</button></div>
   </div>
   <div class="card">
@@ -35,7 +35,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  document.getElementById('myProblemsBody').innerHTML = PROBLEMS.slice(0,5).map(p => `
+  const mine = PROBLEMS.slice(0,5);
+  document.getElementById('pageCount').textContent = mine.length;
+  document.getElementById('myProblemsBody').innerHTML = mine.map(p => `
     <tr style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
       <td class="mono">#${p.id}</td>
       <td>${p.title}</td>

@@ -29,22 +29,25 @@
         <input class="input" id="exploreSearch" placeholder="Search title, tag, district...">
       </div>
       <div class="filter-group" id="filterCategory">
-        <h5>Category</h5>
       </div>
       <div class="filter-group" id="filterSeverity">
-        <h5>Severity</h5>
-        <label class="check-row"><input type="checkbox" value="critical"><span class="sev-dot sev-critical"></span>&nbsp;Critical</label>
-        <label class="check-row"><input type="checkbox" value="high"><span class="sev-dot sev-high"></span>&nbsp;High</label>
-        <label class="check-row"><input type="checkbox" value="medium"><span class="sev-dot sev-medium"></span>&nbsp;Medium</label>
-        <label class="check-row"><input type="checkbox" value="low"><span class="sev-dot sev-low"></span>&nbsp;Low</label>
+        <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Severity <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" value="critical"><span class="sev-dot sev-critical"></span>&nbsp;Critical</label>
+          <label class="check-row"><input type="checkbox" value="high"><span class="sev-dot sev-high"></span>&nbsp;High</label>
+          <label class="check-row"><input type="checkbox" value="medium"><span class="sev-dot sev-medium"></span>&nbsp;Medium</label>
+          <label class="check-row"><input type="checkbox" value="low"><span class="sev-dot sev-low"></span>&nbsp;Low</label>
+        </div>
       </div>
       <div class="filter-group" id="filterStatus">
-        <h5>Status</h5>
-        <label class="check-row"><input type="checkbox" value="validated"> Validated</label>
-        <label class="check-row"><input type="checkbox" value="review"> Under review</label>
-        <label class="check-row"><input type="checkbox" value="open"> Open for solutions</label>
-        <label class="check-row"><input type="checkbox" value="progress"> Project active</label>
-        <label class="check-row"><input type="checkbox" value="resolved"> Resolved</label>
+        <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Status <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" value="validated"> Validated</label>
+          <label class="check-row"><input type="checkbox" value="review"> Under review</label>
+          <label class="check-row"><input type="checkbox" value="open"> Open for solutions</label>
+          <label class="check-row"><input type="checkbox" value="progress"> Project active</label>
+          <label class="check-row"><input type="checkbox" value="resolved"> Resolved</label>
+        </div>
       </div>
       <div class="filter-group" style="border-bottom:none;">
         <button class="btn btn-outline btn-sm btn-block" onclick="clearExploreFilters()">Clear filters</button>
@@ -73,6 +76,7 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
+function toggleFilterGroup(headerEl){ headerEl.closest('.filter-group').classList.toggle('collapsed'); }
 function clearExploreFilters(){
   document.getElementById('exploreSearch').value = '';
   document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -103,9 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   const category_counts = {};
   PROBLEMS.forEach(p => category_counts[p.category] = (category_counts[p.category]||0)+1);
-  document.getElementById('filterCategory').innerHTML = '<h5>Category</h5>' + Object.entries(category_counts).map(([cat,n]) =>
-    `<label class="check-row"><input type="checkbox" value="${cat}"><span class="cat-dot" style="background:${categoryColor(cat)};"></span>${cat}<span class="n">${n}</span></label>`
-  ).join("");
+  document.getElementById('filterCategory').innerHTML =
+    '<h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Category <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5><div class="filter-body">' +
+    Object.entries(category_counts).map(([cat,n]) =>
+      `<label class="check-row"><input type="checkbox" value="${cat}"><span class="cat-dot" style="background:${categoryColor(cat)};"></span>${cat}<span class="n">${n}</span></label>`
+    ).join("") + '</div>';
 
   if(params.get('q')) document.getElementById('exploreSearch').value = params.get('q');
 

@@ -38,7 +38,7 @@
 
   <div class="card card-pad">
     <div class="section-head">
-      <h2>Team <span id="teamName">KUEST-L</span></h2>
+      <h2>Team <span id="teamName">KUEST-L</span> <span class="count-pill" id="pageCount"></span></h2>
       <span class="sub" id="teamMeta">Built for Smart India Hackathon 2026</span>
     </div>
     <p style="font-size:12.5px; color:var(--text-faint); margin-bottom:18px;" id="teamAcronym"></p>
@@ -56,6 +56,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   document.getElementById('teamName').textContent = TEAM.name;
+  document.getElementById('pageCount').textContent = TEAM.members.length + ' members';
   document.getElementById('teamMeta').textContent = `Built for ${TEAM.event} · ${TEAM.problemStatement}`;
   document.getElementById('teamAcronym').textContent =
     TEAM.name + ' — ' + TEAM.members.map(m => m.name[0]).join('') + ', from ' + TEAM.members.map(m => m.name).join(', ') + '.';
