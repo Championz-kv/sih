@@ -1,4 +1,4 @@
-/* =========================================================================
+﻿/* =========================================================================
    SolveSamaj — public LANDING page (index.html only)
    Layout inspired by the CivicSolve reference; colors come from the shared
    tokens in styles.css (light = bright yellow-orange on white, dark = black & yellow).
@@ -52,6 +52,38 @@ html[data-theme="dark"] .lp-btn--primary{ color:#171400; }
 .lp-drawer.open{ display:block; }
 .lp-drawer a, .lp-drawer button.lp-link{ display:block; width:100%; text-align:left; padding:11px 4px; font-size:14px; border-bottom:1px dashed var(--border); color:var(--text); text-decoration:none; }
 .lp-drawer .lp-btn{ margin-top:12px; width:100%; }
+
+/* ---------------- development notice banner (govt-style announcement strip) ---------------- */
+.lp-notice{
+  position:fixed; top:72px; left:0; right:0; height:34px; z-index:890;
+  background:#111114; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px; padding:0 18px; box-sizing:border-box;
+}
+html[data-theme="dark"] .lp-notice{ background:#0b0b0c; }
+.lp-notice-label{
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  color:#fff; opacity:.85; white-space:nowrap; flex:none;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.lp-notice-track{ flex:1; overflow:hidden; }
+.lp-notice-marquee{
+  display:inline-block; width:max-content;
+  font-size:12px; color:#fff; letter-spacing:.03em; white-space:nowrap;
+  animation:lp-marquee 24s linear infinite;
+}
+.lp-notice-marquee::after{
+  content:attr(data-text);
+  display:inline-block;
+  margin-left:24px;
+}
+@keyframes lp-marquee{
+  0%   { transform:translateX(0); }
+  100% { transform:translateX(-100%); }
+}
+@media (prefers-reduced-motion: reduce){
+  .lp-notice-marquee{ animation:none !important; transform:none !important; }
+}
+.lp-sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
 /* ---------------- hero ---------------- */
 .lp-hero{
@@ -157,22 +189,6 @@ html[data-theme="dark"] .process-card .num{ color:var(--setu); background:rgba(2
 .lp-guides{ max-width:600px; margin:40px auto 0; }
 .lp-guides .eyebrow{ display:block; text-align:center; margin-bottom:14px; }
 
-/* ---------------- featured challenge ---------------- */
-.challenge-card{ display:grid; grid-template-columns:.9fr 1.1fr; overflow:hidden; border-radius:var(--radius-l); border:1px solid var(--border); background:var(--surface-hi); box-shadow:var(--shadow-md); }
-.challenge-media{ position:relative; min-height:300px; background:
-   radial-gradient(400px 240px at 20% 15%, rgba(255,170,0,0.28), transparent 60%), var(--surface-2);
-   display:flex; align-items:center; justify-content:center; }
-html[data-theme="dark"] .challenge-media{ background:
-   radial-gradient(400px 240px at 20% 15%, rgba(255,212,0,0.10), transparent 60%), var(--surface-2); }
-.challenge-media img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.85; }
-.challenge-priority{ position:absolute; top:16px; left:16px; z-index:2; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; background:var(--rust); color:#fff; padding:4px 10px; border-radius:20px; }
-.challenge-body{ padding:30px 32px; }
-.challenge-loc{ font-size:12.5px; color:var(--text-faint); margin:2px 0 14px; }
-.challenge-desc{ font-size:13px; color:var(--text-soft); line-height:1.6; margin-bottom:20px; }
-.challenge-meta{ display:flex; gap:26px; flex-wrap:wrap; padding-top:16px; border-top:1px dashed var(--border-2); margin-bottom:22px; }
-.challenge-meta strong{ display:block; font-family:var(--font-mono); font-size:15px; color:var(--ink); }
-.challenge-meta span{ font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); }
-.challenge-actions{ display:flex; gap:10px; flex-wrap:wrap; }
 /* ---------------- stats band ---------------- */
 .lp-stats{ background:var(--ink); color:var(--paper); padding:56px 0; }
 .lp-stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:22px; text-align:center; }
@@ -235,8 +251,6 @@ html[data-theme="dark"] .lp-foot-col a:hover{ color:var(--setu); }
   .lp-hero-grid{ grid-template-columns:1fr; gap:44px; }
   .lp-process{ grid-template-columns:repeat(2,1fr); }
   .lp-grid-3{ grid-template-columns:repeat(2,1fr); }
-  .challenge-card{ grid-template-columns:1fr; }
-  .challenge-media{ min-height:220px; }
   .lp-footer-grid{ grid-template-columns:1fr 1fr; }
 }
 @media (max-width:680px){

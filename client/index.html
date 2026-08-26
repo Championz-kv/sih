@@ -25,8 +25,7 @@
       <li><button class="lp-link" onclick="lpScroll('top')">Home</button></li>
       <li><button class="lp-link" onclick="lpScroll('entry')">Get Started</button></li>
       <li><button class="lp-link" onclick="lpScroll('features')">Platform</button></li>
-      <li><button class="lp-link" onclick="lpScroll('process')">How It Works</button></li>
-      <li><button class="lp-link" onclick="lpScroll('challenge')">Challenges</button></li>
+            <li><button class="lp-link" onclick="lpScroll('process')">How It Works</button></li>
     </ul>
     <div class="lp-nav-right">
       <button class="icon-btn theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -40,11 +39,18 @@
   <div class="lp-drawer" id="lpDrawer">
     <button class="lp-link" onclick="lpScroll('entry')">Get Started</button>
     <button class="lp-link" onclick="lpScroll('features')">Platform</button>
-    <button class="lp-link" onclick="lpScroll('process')">How It Works</button>
-    <button class="lp-link" onclick="lpScroll('challenge')">Challenges</button>
+        <button class="lp-link" onclick="lpScroll('process')">How It Works</button>
     <button class="lp-btn lp-btn--primary" onclick="go('login.html')">Explore Problems</button>
   </div>
-</header>
+ </header>
+<!-- ================= DEVELOPMENT NOTICE BANNER ================= -->
+<div class="lp-notice" role="status" aria-live="polite">
+  <span class="lp-notice-label"><i class="fa-solid fa-bullhorn"></i> NOTICE</span>
+  <div class="lp-notice-track" aria-hidden="true">
+    <span class="lp-notice-marquee" data-text="This portal is under development- Some features may not be working or could just be sitting as placeholders.">This portal is under development- Some features may not be working or could just be sitting as placeholders.</span>
+  </div>
+  <span class="lp-sr-only">This portal is under development. Some features may not be working or could just be sitting as placeholders. The data included in this project is not real or referenced from any particular source.</span>
+</div>
 
 <main id="top">
 <!-- ================= HERO ================= -->
@@ -182,41 +188,7 @@
     </div>
   </div>
 </section>
-<!-- ================= FEATURED CHALLENGE ================= -->
-<section class="lp-section" id="challenge">
-  <div class="lp-container">
-    <div class="lp-center reveal">
-      <p class="lp-eyebrow">LIVE ON THE DESK</p>
-      <h2 class="lp-h2">Featured challenge</h2>
-      <p class="lp-sub">A real case file currently open for solutions — one of thousands.</p>
-    </div>
-    <article class="challenge-card reveal" style="margin-top:44px;">
-      <div class="challenge-media">
-        <span class="challenge-priority"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp;CRITICAL PRIORITY</span>
-        <div style="text-align:center; padding:20px;">
-          <i class="fa-solid fa-droplet-slash" style="font-size:64px; color:var(--setu-2); opacity:.55;"></i>
-          <p style="margin:14px 0 0; font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; color:var(--text-faint);">CASE NO. SS/JH/2026/1108</p>
-        </div>
-      </div>
-      <div class="challenge-body">
-        <p class="lp-eyebrow">WATER &amp; SANITATION</p>
-        <h3 style="font-family:var(--font-display); font-size:21px; color:var(--ink); margin:6px 0 6px;">Groundwater contamination near tannery cluster</h3>
-        <p class="challenge-loc"><i class="fa-solid fa-location-dot"></i> Dhanbad, Jharkhand · Baliapur block</p>
-        <p class="challenge-desc">Well-water testing shows elevated chromium levels affecting drinking water for four hamlets downstream of a small tannery cluster. The case is validated and open — waiting for the right team of environmental engineers and public-health partners.</p>
-        <div class="challenge-meta">
-          <div><strong>1,200+</strong><span>People Affected</span></div>
-          <div><strong>CRITICAL</strong><span>Severity</span></div>
-          <div><strong>96</strong><span>Supporters</span></div>
-          <div><strong>OPEN</strong><span>Status</span></div>
-        </div>
-        <div class="challenge-actions">
-          <button class="lp-btn lp-btn--primary lp-btn--sm" onclick="go('problem.html', {id:1108})">View This Case File</button>
-          <button class="lp-btn lp-btn--outline lp-btn--sm" onclick="go('explore.html')">All Challenges</button>
-        </div>
-      </div>
-    </article>
-  </div>
-</section>
+
 
 <!-- ================= STATS ================= -->
 <section class="lp-stats">

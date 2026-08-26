@@ -350,6 +350,9 @@ function applyRoleUI(role){
   if(acctRoleLbl) acctRoleLbl.textContent =
     { citizen:'Citizen account', guest:'Guest session', org:'Organization account', admin:'Administrator account' }[role] || '';
   document.querySelectorAll('[data-role-group]').forEach(g => g.style.display = (g.dataset.roleGroup === role) ? 'flex' : 'none');
+  /* Guest sessions get a moving glow on the top-right account button to nudge login */
+  const ab = document.getElementById('acctBtn');
+  if(ab) ab.classList.toggle('guest-glow', role === 'guest');
 }
 
 /* ---------------- theme handling ---------------- */
