@@ -18,7 +18,7 @@ function storageSet(key, val){
 function currentRole(){
   const saved = storageGet('ss-role');
   if(saved) return saved;
-  return new URLSearchParams(location.search).get('role') || 'citizen';
+  return new URLSearchParams(location.search).get('role') || 'guest';
 }
 function currentTheme(){
   const saved = storageGet('ss-theme');

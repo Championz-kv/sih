@@ -479,6 +479,56 @@ html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi);
 .check-row.dimmed{ opacity:.45; }
 .tag-more{ color:var(--text-faint); background:transparent; border-style:dashed; }
 
+/* ---- Account menu (topbar avatar dropdown) ---- */
+.acct-wrap{ position:relative; }
+.acct-menu{
+  position:absolute; right:0; top:calc(100% + 8px); width:230px;
+  background:var(--surface-hi); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--shadow-md);
+  padding:8px; z-index:95; display:none;
+}
+.acct-menu.open{ display:block; animation:fadeIn .18s ease; }
+.acct-id{ padding:8px 10px 10px; border-bottom:1px dashed var(--border); margin-bottom:6px; }
+.acct-id b{ display:block; font-size:13px; color:var(--ink); line-height:1.3; }
+.acct-id span{ font-size:11px; color:var(--text-faint); }
+.acct-menu > button{
+  width:100%; text-align:left; background:none; border:none; cursor:pointer;
+  padding:8px 10px; border-radius:var(--radius-s); font-size:13px;
+  color:var(--text); font-family:var(--font-body);
+}
+.acct-menu > button:hover{ background:var(--paper-2); }
+.acct-menu > button.danger:hover{ color:var(--rust); }
+
+/* ---- Auth (login / register) page ---- */
+.auth-body{ min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(700px 340px at 12% -8%, rgba(232,162,0,.12), transparent 60%),
+    var(--paper); }
+html[data-theme="dark"] .auth-body{
+  background:
+    radial-gradient(700px 340px at 12% -8%, rgba(255,212,0,.08), transparent 60%),
+    var(--paper); }
+.auth-wrap{ width:min(440px, calc(100vw - 32px)); margin:40px auto; }
+.auth-card{ background:var(--surface-hi); border:1px solid var(--border);
+  border-radius:var(--radius-l); box-shadow:var(--shadow-md); padding:30px 30px 24px; }
+.auth-brand{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px; }
+.auth-brand .lp-mark{ width:38px; height:38px; border-radius:10px; font-size:18px; }
+.auth-brand b{ font-family:var(--font-display); font-size:20px; color:var(--ink); }
+.auth-title{ font-family:var(--font-display); font-size:22px; color:var(--ink);
+  margin:0 0 4px; text-align:center; }
+.auth-sub{ text-align:center; font-size:12.5px; color:var(--text-faint); margin:0 0 20px; }
+.auth-pane{ display:none; }
+.auth-pane.active{ display:block; animation:fadeIn .25s ease; }
+.auth-alt{ text-align:center; margin-top:20px; font-size:12.5px; color:var(--text-faint); }
+.auth-alt button.linklike{ background:none; border:none; cursor:pointer; padding:0;
+  color:var(--setu-2); font-size:12.5px; font-weight:600; font-family:var(--font-body); }
+.auth-alt button.linklike:hover{ text-decoration:underline; }
+.auth-err{ display:none; margin:-4px 0 14px; font-size:12px; color:var(--rust);
+  text-align:center; background:rgba(193,58,32,.08); border-radius:8px; padding:7px 10px; }
+.auth-err.show{ display:block; }
+.auth-foot{ text-align:center; margin-top:20px; padding-top:16px;
+  border-top:1px dashed var(--border); font-size:11.5px; color:var(--text-faint); }
+
 /* ---- Community discussion on problem pages ---- */
 .cm-compose textarea{ min-height:84px; margin-bottom:8px; }
 .cm-compose{ margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:16px; }

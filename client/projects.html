@@ -18,10 +18,10 @@
   <div class="page-head">
     <div>
       <h1>Projects <span class="count-pill" id="pageCount"></span></h1>
-      <p class="sub" id="scopeHint">Connected to your activity — problems you posted, funded, supported, added evidence to, or expressed interest in; plus projects you're involved in.</p>
+      <p class="sub" id="scopeHint">Shared collaboration projects you're involved in — orgs, funding, support or interest.</p>
     </div>
     <div class="page-head-actions">
-      <button class="btn btn-outline btn-sm" id="allProjBtn" onclick="toggleAllProjects()" aria-pressed="false">All projects</button>
+      <button class="btn btn-outline btn-sm" id="allProjBtn" onclick="toggleAllProjects()" aria-pressed="false">Involved projects</button>
     </div>
   </div>
   <div class="grid grid-3" id="projectsGrid"></div>
@@ -47,6 +47,7 @@ function toggleAllProjects(){
   btn.classList.toggle('btn-accent', showAllProjects);
   btn.classList.toggle('btn-outline', !showAllProjects);
   btn.setAttribute('aria-pressed', String(showAllProjects));
+  btn.textContent = showAllProjects ? 'All projects' : 'Involved projects';
   renderProjects();
 }
 

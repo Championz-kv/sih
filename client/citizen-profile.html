@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="citizenprofile">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>My Profile</h1><p class="sub">Your contact details and civic footprint on SolveSamaj.</p></div></div>
+  <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+    <div class="card card-pad">
+      <div class="field-row">
+        <div class="field"><label>Full name</label><input class="input" id="cName" value="Guest Citizen"></div>
+        <div class="field"><label>Username</label><input class="input" id="cUser" value="guest"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Phone</label><input class="input" type="tel" id="cPhone" placeholder="+91 …"></div>
+      </div>
+      <div class="field"><label>Address</label><textarea class="input" id="cAddr" placeholder="Block, District, State…"></textarea></div>
+      <div class="field"><label>Links <span style="font-weight:400; color:var(--text-faint);">(personal sites, profiles)</span></label>
+        <div id="linkRows"><div class="link-row"><input class="input" type="url" id="cLink" placeholder="https://…"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addLinkRow()">+ Add another link</button>
+      </div>
+      <div class="row-flex" style="justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="saveProfile()">Save profile</button>
+      </div>
+    </div>
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">View profile</h4>
+        <div class="person-row" style="padding:0; margin-bottom:10px;">
+          <div class="av" id="cAvatar" style="width:44px; height:44px; font-size:15px; background:var(--setu); color:#fff;">GC</div>
+          <div><b id="pvName">Guest Citizen</b></div>
+        </div>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:0;">Public-facing profile details.</p>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Civic footprint</h4>
+        <div class="barlist" style="gap:12px;" id="civicStats"></div>
+      </div>
+      <div class="card card-pad" style="margin-top:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Funding footprint</h4>
+        <div id="citizenFunding"></div>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Your verified and awaiting contributions across problems and projects.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function profileLinkRowHTML(){
+  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+    '<button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeLinkRow(this)">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
+}
+function addLinkRow(){
+  document.getElementById('linkRows').insertAdjacentHTML('beforeend', profileLinkRowHTML());
+}
+function removeLinkRow(btn){
+  const rows = document.querySelectorAll('#linkRows .link-row');
+  if(rows.length === 1){ rows[0].querySelector('input').value = ''; return; }
+  btn.closest('.link-row').remove();
+}
+function saveProfile(){
+  toast('Profile saved (placeholder — nothing sent)');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  $ = id => document.getElementById(id);
+  /* prefill from the signed-in session */
+  const uname = storageGet('ss-user') || '';
+  if(uname){ $('cUser').value = uname; $('cName').value = uname; $('pvName').textContent = uname; }
+  $('cAvatar').textContent = (uname || 'Guest Citizen').slice(0,2).toUpperCase();
+  const citizenName = uname || 'Ravi Sharma';
+  const citizenRows = [];
+  FUND_REQUESTS.forEach(fr => fr.pledges.forEach(p => {
+    if(p.type === 'individual' && p.by === citizenName) citizenRows.push({ fr, pledge:p });
+  }));
+  const received = citizenRows.filter(r => r.pledge.status === 'received').reduce((sum,r) => sum + r.pledge.amount, 0);
+  const pledged = citizenRows.filter(r => r.pledge.status === 'pledged').reduce((sum,r) => sum + r.pledge.amount, 0);
+  const donated = received > 0;
+  $('civicStats').innerHTML =
+    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Donated</span><b style="color:${donated?'var(--ledger)':'var(--text-faint)'};">${donated?'Yes ✓':'No'}</b></div>` +
+    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Problems posted</span><b>${PROBLEMS.filter(p=>p.orgs.length===0).length||0}</b></div>` +
+    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Supported cases</span><b>${Math.min(PROBLEMS.length, 2)}</b></div>`;
+  $('citizenFunding').innerHTML = `
+    <div class="grid grid-2" style="margin-bottom:12px;">
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(received)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(pledged)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
+    </div>
+    ${citizenRows.length ? citizenRows.map(({fr, pledge}) => `
+      <div class="person-row">
+        <div class="av" style="border-radius:6px;">₹</div>
+        <div style="flex:1;"><b>${inr(pledge.amount)}</b><span>${fr.id} · ${fr.title}</span></div>
+        ${pledge.status === 'received' ? '<span class="stamp stamp-validated">Received</span>' : '<span class="stamp stamp-pending">Pledged</span>'}
+      </div>`).join('')
+    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No personal contributions recorded yet.</p>'}`;
+});
+</script>
+</body>
+</html>

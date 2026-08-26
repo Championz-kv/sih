@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+.auth-body{ min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(700px 340px at 12% -8%, rgba(232,162,0,.12), transparent 60%),
+    var(--paper); }
+html[data-theme="dark"] .auth-body{
+  background:
+    radial-gradient(700px 340px at 12% -8%, rgba(255,212,0,.08), transparent 60%),
+    var(--paper); }
+.auth-wrap{ width:min(440px, calc(100vw - 32px)); margin:40px auto; }
+.auth-card{ background:var(--surface-hi); border:1px solid var(--border);
+  border-radius:var(--radius-l); box-shadow:var(--shadow-md); padding:30px 30px 24px; }
+.auth-brand{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px; }
+.auth-brand .lp-mark{ width:38px; height:38px; border-radius:10px; font-size:18px; }
+.auth-brand b{ font-family:var(--font-display); font-size:20px; color:var(--ink); }
+.auth-title{ font-family:var(--font-display); font-size:22px; color:var(--ink);
+  margin:0 0 4px; text-align:center; }
+.auth-sub{ text-align:center; font-size:12.5px; color:var(--text-faint); margin:0 0 20px; }
+.auth-pane{ display:none; }
+.auth-pane.active{ display:block; animation:fadeIn .25s ease; }
+.auth-alt{ text-align:center; margin-top:20px; font-size:12.5px; color:var(--text-faint); }
+.auth-alt .linklike{ background:none; border:none; cursor:pointer; padding:0;
+  color:var(--setu-2); font-size:12.5px; font-family:var(--font-body); font-weight:600; }
+.auth-alt .linklike:hover{ text-decoration:underline; }
+.auth-err{ display:none; margin:-4px 0 12px; font-size:12px; color:var(--rust);
+  text-align:center; background:rgba(193,58,32,.08); border-radius:8px; padding:7px 10px; }
+.auth-err.show{ display:block; }
+.auth-foot{ text-align:center; margin-top:20px; padding-top:16px;
+  border-top:1px dashed var(--border); font-size:11.5px; color:var(--text-faint); }
+.auth-foot .linklike{ color:var(--setu-2); font-weight:600; }
+.btn-block-full{ width:100%; justify-content:center; }
+</style>
+</head>
+<body data-page="login">
+<button class="icon-btn theme-toggle" id="loginTheme" onclick="toggleThemeLogin()" title="Toggle theme" style="position:fixed; top:16px; left:16px; z-index:50;">
+  <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+</button>
+<div class="auth-body">
+  <div class="auth-wrap">
+
+    <div class="auth-brand">
+      <b>Solve<span style="color:var(--setu);">Samaj</span></b>
+    </div>
+
+    <!-- ================= LOGIN PANE ================= -->
+    <div class="auth-pane active" id="paneLogin">
+      <div class="auth-card">
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="auth-sub">Sign in to report problems, collaborate and track impact.</p>
+
+        <div id="authErr" class="auth-err"></div>
+
+        <form onsubmit="doLogin(); return false;">
+          <div class="field"><label>Account type</label>
+            <select class="input" id="userType">
+              <option value="citizen">Citizen</option>
+              <option value="org">Organization</option>
+              <option value="admin">Government Admin</option>
+            </select>
+          </div>
+          <div class="field"><label>Username</label>
+            <input class="input" id="authUser" placeholder="Your username" autocomplete="username">
+          </div>
+          <div class="field"><label>Password</label>
+            <input class="input" type="password" id="authPass" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary btn-block-full" type="submit">Login</button>
+        </form>
+
+        <div class="auth-alt" style="margin-top:22px;">
+          <button class="linklike" onclick="continueAsGuest()">Continue as guest →</button>
+        </div>
+        <div class="auth-alt" style="margin-top:10px;">
+          No account yet? <button class="linklike" onclick="showRegister()">Register</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= REGISTER PANE ================= -->
+    <div class="auth-pane" id="paneRegister">
+      <div class="auth-card">
+        <h2 class="auth-title">Create your account</h2>
+        <p class="auth-sub">Registration is a demo placeholder — nothing is sent anywhere.</p>
+
+        <div id="regErr" class="auth-err"></div>
+
+        <form onsubmit="doRegister(); return false;">
+          <div class="field"><label>Email</label>
+            <input class="input" type="email" id="regEmail" placeholder="you@example.com">
+          </div>
+          <div class="field"><label>Phone</label>
+            <input class="input" type="tel" id="regPhone" placeholder="+91 …">
+          </div>
+          <div class="field"><label>Username</label>
+            <input class="input" id="regUser" placeholder="Pick a username">
+          </div>
+          <div class="field"><label>Password</label>
+            <input class="input" type="password" id="regPass" placeholder="••••••••">
+          </div>
+          <div class="field"><label>Retype password</label>
+            <input class="input" type="password" id="regPass2" placeholder="••••••••">
+          </div>
+          <button class="btn btn-primary btn-block-full" type="submit">Register</button>
+        </form>
+
+        <div class="auth-alt" style="margin-top:18px;">
+          Already registered? <button class="linklike" onclick="showLogin()">Back to Login</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-foot">
+      Demo authentication — any username/password combination works until a backend is connected.
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+/* ---- auth (demo) — swap with real endpoints later ---- */
+/* toast() comes from app.js below; ChatCore isn't needed on this page. */
+document.documentElement.setAttribute('data-theme', currentTheme());
+
+function showPane(id){
+  document.querySelectorAll('.auth-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showLogin(){ showPane('paneLogin'); }
+function showRegister(){ showPane('paneRegister'); }
+
+function authErr(id, msg){
+  const e = document.getElementById(id);
+  e.textContent = msg;
+  e.classList.add('show');
+  setTimeout(() => e.classList.remove('show'), 2800);
+}
+
+function toggleThemeLogin(){
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  storageSet('ss-theme', next);
+}
+
+/* Role → landing page after sign-in */
+function homeFor(role){
+  return { citizen:'dashboard.html', org:'discover.html', admin:'admin.html' }[role] || 'explore.html';
+}
+
+function doLogin(){
+  const type = document.getElementById('userType').value;
+  const u = document.getElementById('authUser').value.trim();
+  const p = document.getElementById('authPass').value;
+  if(!u || !p){ authErr('authErr', 'Enter your username and password'); return; }
+  storageSet('ss-user', u);
+  storageSet('ss-role', type);
+  go(homeFor(type));
+}
+
+function continueAsGuest(){
+  storageSet('ss-user', '');
+  storageSet('ss-role', 'guest');
+  go('explore.html');
+}
+
+function doRegister(){
+  const u  = document.getElementById('regUser').value.trim();
+  const e1 = document.getElementById('regEmail').value.trim();
+  const p1 = document.getElementById('regPass').value;
+  const p2 = document.getElementById('regPass2').value;
+  if(!u || !e1 || !p1){ authErr('regErr', 'Fill every field to register'); return; }
+  if(p1 !== p2){ authErr('regErr', 'Passwords do not match'); return; }
+  /* demo: registration just signs you in as a Citizen */
+  storageSet('ss-user', u);
+  storageSet('ss-role', 'citizen');
+  go('dashboard.html');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.setAttribute('data-theme', currentTheme());
+
+  /* ?type=org on the URL pre-selects Organization (landing entry cards) */
+  const preset = new URLSearchParams(location.search).get('type');
+  const sel = document.getElementById('userType');
+  if(preset && ['citizen','org','admin'].includes(preset)) sel.value = preset;
+
+  document.getElementById('authUser').focus();
+});
+</script>
+</body>
+</html>

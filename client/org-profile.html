@@ -57,6 +57,15 @@
         <div class="field"><label>State</label><select class="input"><option>Uttar Pradesh</option></select></div>
         <div class="field"><label>District / City</label><input class="input" value="Gorakhpur"></div>
       </div>
+      <div class="field-row">
+        <div class="field"><label>Phone</label><input class="input" type="tel" placeholder="+91 …"></div>
+        <div class="field"><label>Email</label><input class="input" type="email" placeholder="contact@university.ac.in"></div>
+      </div>
+      <div class="field"><label>Address</label><textarea class="input" placeholder="Campus address, block, district, State…"></textarea></div>
+      <div class="field"><label>Links <span style="font-weight:400; color:var(--text-faint);">(website, profiles)</span></label>
+        <div id="orgLinkRows"><div class="link-row"><input class="input" type="url" placeholder="https://university.ac.in"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addOrgLinkRow()">+ Add another link</button>
+      </div>
       <div class="field">
         <label>Available resources</label>
         <div class="chip-select">
@@ -110,9 +119,10 @@
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Projects completed</span><b>6</b></div>
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Active projects</span><b>2</b></div>
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">People impacted</span><b>18,400+</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Donor</span><b id="orgDonorBadge" style="color:var(--ledger);">Yes ✓</b></div>
         </div>
       </div>
-      <div class="card card-pad">
+      <div class="card card-pad" style="margin-top:16px;">
         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Funding footprint</h4>
         <div id="orgFunding"></div>
         <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Verified contributions by MMMUT across the desk — the public record of who funded how much.</p>
@@ -127,7 +137,31 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
-<script>document.addEventListener('DOMContentLoaded', renderShell);</script>
+<script>
+function orgLinkRowHTML(){
+  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+    '<button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
+}
+function addOrgLinkRow(){ document.getElementById('orgLinkRows').insertAdjacentHTML('beforeend', orgLinkRowHTML()); }
+function removeOrgLinkRow(btn){
+  const rows = document.querySelectorAll('#orgLinkRows .link-row');
+  if(rows.length === 1){ rows[0].querySelector('input').value = ''; return; }
+  btn.closest('.link-row').remove();
+}
+</script>
+
+<script>document.addEventListener('DOMContentLoaded', () => { renderShell(); setDonorBadge(); });</script>
+<script>
+/* Donor is non-togglable: it reflects whether MMMUT has made a verified donation */
+function setDonorBadge(){
+  const el = document.getElementById('orgDonorBadge');
+  if(!el) return;
+  const donated = orgDonated('MMMUT') > 0;
+  el.textContent = donated ? 'Yes ✓' : 'No';
+  el.style.color = donated ? 'var(--ledger)' : 'var(--text-faint)';
+}
+</script>
 <script>
 /* Funding footprint for MMMUT (this profile's organization) */
 (function(){
