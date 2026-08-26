@@ -38,12 +38,12 @@
           <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-family:var(--font-mono); font-size:11px;">+3</div>
           <div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>
         </div>
-        <div class="row-flex" style="gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-accent btn-sm" onclick="toast('Marked as supporting this problem')">Support this problem</button>
-          <button class="btn btn-outline btn-sm" onclick="toast('Evidence upload placeholder')">Add evidence</button>
-          <button class="btn btn-outline btn-sm" onclick="toast('Information noted (placeholder)')">Add information</button>
-          <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Request funds</button>
-          <button class="btn btn-primary btn-sm" onclick="openModal('interestModal')">Express Interest</button>
+        <div class="row-flex" style="gap:8px; flex-wrap:wrap;" id="actRow">
+          <button class="btn btn-accent btn-sm" id="actSupport" onclick="toast('Marked as supporting this problem')">Support this problem</button>
+          <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
+          <button class="btn btn-outline btn-sm" id="actCommunity" onclick="document.getElementById('communityPanel').scrollIntoView({behavior:'smooth'})">💬 Community</button>
+          <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Request funds</button>
+          <button class="btn btn-primary btn-sm" id="actInterest" onclick="openModal('interestModal')">Express Interest</button>
         </div>
       </div>
 
@@ -82,6 +82,23 @@
       <button class="btn btn-outline btn-sm" onclick="openRequestFund('problem', CUR_REF)">+ Request funds for this case</button>
     </div>
     <div id="fundList"></div>
+  </div>
+
+  <!-- ============ COMMUNITY DISCUSSION ============ -->
+  <div class="card card-pad" style="margin-top:16px;" id="communityPanel">
+    <div class="section-head">
+      <h2>Community <span class="count-pill" id="cmCount"></span></h2>
+      <span class="sub">Locals, solvers &amp; officials discussing this case</span>
+    </div>
+
+    <div class="cm-compose">
+      <textarea class="input" id="cmText" rows="3" placeholder="Add to the discussion — keep it respectful & useful."></textarea>
+      <div class="row-flex" style="justify-content:flex-end; margin-top:8px;">
+        <button class="btn btn-primary btn-sm" type="button" id="cmPostBtn" onclick="postComment()">Post comment</button>
+      </div>
+    </div>
+
+    <div id="commentList"></div>
   </div>
 </main>
 
@@ -141,6 +158,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.CUR_REF = id;
 
+  /* Guests get a view-only case page */
+  const GUEST = currentRole() === 'guest';
+  if(GUEST){
+    ['actSupport','actEvidence','actFund'].forEach(x => {
+      const b = document.getElementById(x);
+      if(b) b.style.display = 'none';
+    });
+    const ei = document.getElementById('actInterest');
+    if(ei){
+      ei.textContent = 'Sign in to express interest';
+      ei.onclick = () => openModal('loginModal');
+    }
+    const hint = document.createElement('span');
+    hint.className = 'tag';
+    hint.style.marginLeft = 'auto';
+    hint.textContent = '👀 Viewing as guest — sign in to interact';
+    document.getElementById('actRow').appendChild(hint);
+
+    const ct = document.getElementById('cmText');
+    if(ct){ ct.readOnly = true; ct.placeholder = 'Sign in to join the discussion'; }
+    const pb = document.getElementById('cmPostBtn');
+    if(pb) pb.style.display = 'none';
+  }
+
   window.renderFunding = function(){
     const list = FUND_REQUESTS.filter(f => f.kind === 'problem' && f.ref === id);
     document.getElementById('fundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
@@ -168,6 +209,58 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>`;
   };
   window.renderFunding();
+
+  /* ---------- community discussion ---------- */
+  const cmList = ((typeof COMMENTS !== 'undefined' && COMMENTS[id]) || [])
+                   .map(c => Object.assign({}, c, { my:0 }));   // visitor vote: 1/-1/0
+  const cmListEl = document.getElementById('commentList');
+  const cmScore = c => c.up - c.down;
+  const cmEsc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  function cmRender(){
+    cmList.sort((a,b) => cmScore(b) - cmScore(a));
+    document.getElementById('cmCount').textContent = '(' + cmList.length + ')';
+    document.getElementById('commentList').innerHTML = cmList.map((c, idx) => `
+      <div class="cm-item">
+        <div class="cm-votes">
+          <button title="Upvote" onclick="cmVote(${idx}, 1)">▲</button>
+          <span class="score">${cmScore(c)}</span>
+          <button title="Downvote" onclick="cmVote(${idx}, -1)">▼</button>
+        </div>
+        <div class="cm-body">
+          <div class="cm-meta"><b>${cmEsc(c.by)}</b><span class="cm-role">${cmEsc(c.role)}</span><span class="cm-when">${cmEsc(c.when)}</span></div>
+          <p class="cm-text">${cmEsc(c.text)}</p>
+        </div>
+      </div>`).join("")
+      || '<div class="empty" style="padding:22px;"><h4>No comments yet</h4><p>Start the conversation — locals and solvers can discuss this case right here.</p></div>';
+  }
+
+  window.cmVote = function(idx, dir){
+    const c = cmList[idx];
+    if(!c) return;
+    if(c.my === dir){                       // undo
+      if(dir === 1) c.up--; else c.down--;
+      c.my = 0;
+    } else {                                // switch or fresh vote
+      if(c.my === 1) c.up--;
+      if(c.my === -1) c.down--;
+      if(dir === 1) c.up++; else c.down++;
+      c.my = dir;
+    }
+    cmRender();
+  };
+
+  window.postComment = function(){
+    const t = document.getElementById('cmText').value.trim();
+    if(!t){ toast('Write something first'); return; }
+    const c = { by:'You', role:'Citizen', text:t, up:0, down:0, my:0, when:'just now' };
+    cmList.push(c);
+    document.getElementById('cmText').value = '';
+    cmRender();
+    toast('Comment posted to the community thread');
+  };
+
+  cmRender();
 });
 </script>
 </body>

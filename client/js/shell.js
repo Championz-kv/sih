@@ -28,8 +28,8 @@ const NAV = [
   ]},
   { group:null, label:'Collaboration', items:[
     { page:'projects', href:'projects.html', label:'Projects', icon:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' },
-    { page:'requests', href:'requests.html', label:'Collaboration Requests', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', count:3 },
-    { page:'funding', href:'funding.html', label:'Funding', icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', count:FUND_REQUESTS.filter(f => !fundIsFunded(f)).length },
+    { page:'requests', href:'requests.html', label:'Collaboration Requests', roles:['org'], icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', count:3 },
+    { page:'funding', href:'funding.html', label:'Funding', roles:['citizen','org','admin'], icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', count:FUND_REQUESTS.filter(f => !fundIsFunded(f)).length },
   ]},
   { group:null, label:'Insights', items:[
     { page:'analytics', href:'analytics.html', label:'Public Analytics', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
@@ -40,7 +40,7 @@ const NAV = [
     { page:'review', href:'review.html', label:'Problem Review', icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>', count:REVIEW_QUEUE.length },
   ]},
   { group:null, items:[
-    { page:'notifications', href:'notifications.html', label:'Notifications', icon:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', count:NOTIFICATIONS.length },
+    { page:'notifications', href:'notifications.html', label:'Notifications', roles:['citizen','org','admin'], icon:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', count:NOTIFICATIONS.length },
     { page:'chatbot', href:'chatbot.html', label:'AI Assistant', icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
     { page:'team', href:'team.html', label:'About & Team', icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>' },
   ]},
@@ -68,6 +68,7 @@ function renderTopbar(){
           ${svgIcon('<polyline points="6 9 12 15 18 9"/>')}
         </button>
         <div class="role-menu" id="roleMenu">
+          <button data-role="guest" onclick="setRole('guest')"><b>Guest</b><small>Browse without an account</small></button>
           <button data-role="citizen" onclick="setRole('citizen')"><b>Citizen</b><small>Report &amp; track problems</small></button>
           <button data-role="org" onclick="setRole('org')"><b>Organization</b><small>University · NGO · Industry</small></button>
           <button data-role="admin" onclick="setRole('admin')"><b>Government Admin</b><small>Review &amp; monitor</small></button>
@@ -81,10 +82,6 @@ function renderTopbar(){
         <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
       </button>
-      <button class="avatar-btn" onclick="openModal('loginModal')">
-        <span class="avatar" id="avatarInit">GD</span>
-        <span id="avatarName">Guest Desk</span>
-      </button>
     </div>
   </header>`;
 }
@@ -93,7 +90,9 @@ function renderSidebar(activePage){
   const groups = NAV.map(g => {
     const attr = g.group ? ` data-role-group="${g.group}" style="display:none;"` : '';
     const label = g.label ? `<div class="nav-group-label">${g.label}</div>` : '';
-    const items = g.items.map(it => {
+    const items = g.items
+      .filter(it => !it.roles || it.roles.includes(currentRole()))
+      .map(it => {
       const active = it.page === activePage ? ' active' : '';
       const count = (it.count !== undefined && it.count !== null) ? `<span class="count">${it.count}</span>` : '';
       return `<a class="nav-item${active}" data-page="${it.page}" href="${it.href}${paramStr()}">${svgIcon(it.icon)}${it.label}${count}</a>`;
@@ -284,15 +283,15 @@ function submitFundRequest(){
 function toggleRoleMenu(){ document.getElementById('roleMenu').classList.toggle('open'); }
 function setRole(role){
   storageSet('ss-role', role);
-  const home = { citizen:'dashboard.html', org:'discover.html', admin:'admin.html' };
+  const home = { citizen:'dashboard.html', guest:'explore.html', org:'discover.html', admin:'admin.html' };
   go(home[role], { role: role });
 }
 function applyRoleUI(role){
   document.querySelectorAll('.role-menu button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
-  const labels = { citizen:'Viewing as Citizen', org:'Viewing as Organization', admin:'Viewing as Gov. Admin' };
+  const labels = { citizen:'Viewing as Citizen', org:'Viewing as Organization', admin:'Viewing as Gov. Admin', guest:'Browsing as Guest' };
   const lbl = document.getElementById('roleLabel'); if(lbl) lbl.textContent = labels[role];
   document.querySelectorAll('[data-role-group]').forEach(g => g.style.display = (g.dataset.roleGroup === role) ? 'flex' : 'none');
-  const avatars = { citizen:['GD','Guest Desk'], org:['MU','MMMUT Desk'], admin:['AD','Admin Desk'] };
+  const avatars = { citizen:['GD','Guest Desk'], guest:['GU','Guest'], org:['MU','MMMUT Desk'], admin:['AD','Admin Desk'] };
   const ai = document.getElementById('avatarInit'), an = document.getElementById('avatarName');
   if(ai) ai.textContent = avatars[role][0];
   if(an) an.textContent = avatars[role][1];

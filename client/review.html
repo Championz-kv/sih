@@ -31,6 +31,9 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
+function declineProblem(id){
+  toast('Problem #' + id + ' declined (placeholder — it stays in this demo list)');
+}
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   document.getElementById('pageCount').textContent = REVIEW_QUEUE.length;
@@ -41,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>${categoryTagHTML(r.category)}</td>
       <td>${r.flag!=='—' ? `<span class="stamp stamp-duplicate">${r.flag}</span>` : '<span style="color:var(--text-faint); font-size:12px;">—</span>'}</td>
       <td class="mono" style="color:var(--text-faint);">${r.date}</td>
-      <td><div class="row-flex" style="gap:6px;"><button class="btn btn-outline btn-sm" onclick="toast('Sent back for more info (placeholder)')">Needs info</button><button class="btn btn-primary btn-sm" onclick="toast('Problem #${r.id} validated (placeholder)')">Validate</button></div></td>
+      <td><div class="row-flex" style="gap:6px;"><button class="btn btn-outline btn-sm" onclick="go('problem.html', {id:${r.id}})">View</button><button class="btn btn-outline btn-sm" style="color:var(--rust);" onclick="declineProblem(${r.id})">Decline</button><button class="btn btn-outline btn-sm" onclick="toast('Sent back for more info (placeholder)')">Needs info</button><button class="btn btn-primary btn-sm" onclick="toast('Problem #${r.id} validated (placeholder)')">Validate</button></div></td>
     </tr>`).join("");
 });
 </script>

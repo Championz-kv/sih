@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.renderFunding = function(){
+  const GUEST = currentRole() === 'guest';
   /* ---- ledger strip totals ---- */
   const requested = FUND_REQUESTS.reduce((s,f) => s + f.target, 0);
   const received  = FUND_REQUESTS.reduce((s,f) => s + fundRaised(f), 0);
@@ -100,7 +101,9 @@ window.renderFunding = function(){
         ${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}
       </div>
       ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:6px 0;">No contributions yet.</p>'}
-      ${fundIsFunded(fr) ? '' : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
+      ${fundIsFunded(fr) ? '' : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;">${GUEST
+        ? '<button class="btn btn-outline btn-sm" onclick="openModal(\'loginModal\')">Sign in to contribute</button>'
+        : `<button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button>`}</div>`}
     </div>`;
   }).join("");
 

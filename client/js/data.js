@@ -185,6 +185,40 @@ const TEAM = {
    raised  = sum of verified ('received') pledges
    pledged = sum of pledges still awaiting verification
    ------------------------------------------------------------------- */
+/* -------------------------------------------------------------------
+   COMMUNITY — per-case discussion shown on problem pages.
+   Flat comment threads with up/down scores (Reddit-style).
+   The visitor's own vote is tracked at runtime via my:1|-1|0 and is
+   NOT part of the persisted demo numbers.
+   ------------------------------------------------------------------- */
+const COMMENTS = {
+  1042: [
+    { by:"Sunita Devi",   role:"Resident",      text:"The school van takes a 12km detour during peak monsoon. Kids end up missing almost a month of classes every year.", up:34, down:2,  when:"3d ago" },
+    { by:"MMMUT",         role:"Organization",  text:"Our civil engineering department surveyed the channel last week — average silt depth is around 90cm. The feasibility report has been added to the case file.", up:28, down:1, when:"2d ago" },
+    { by:"Imran Khan",    role:"Resident",      text:"This has been happening since 2019. Every year before elections someone promises a permanent drain.", up:19, down:0,  when:"2d ago" },
+    { by:"Civica NGO",    role:"Organization",  text:"We can mobilize volunteer labour for desilting if the block office approves equipment support.", up:11, down:0,  when:"1d ago" },
+  ],
+  1108: [
+    { by:"Dr. A. Minz",   role:"PHC Officer",   text:"Chromium levels are roughly 4x the permissible limit. We're already seeing skin lesions in children from three hamlets.", up:52, down:1,  when:"6h ago" },
+    { by:"Meena Gupta",   role:"Individual",    text:"Shared this case with our district WhatsApp group — 40+ new supporters joined overnight.", up:17, down:0,  when:"1d ago" },
+    { by:"NIT Jamshedpur",role:"Organization",  text:"Our environmental lab can process the water samples at cost. Sending the sampling protocol to the case owner today.", up:31, down:0,  when:"2d ago" },
+    { by:"Anonymous",     role:"Resident",      text:"The tannery owners know about this. Please check the outflow point behind the old brick kiln early morning.", up:24, down:3,  when:"3d ago" },
+  ],
+  1156: [
+    { by:"Ramesh Sahu",   role:"Farmer",        text:"Middlemen pay ₹8-10/kg at the farm gate. Same tomatoes sell at ₹30 in Ranchi. Cold storage changes everything.", up:41, down:0,  when:"4d ago" },
+    { by:"AgroLink Startup", role:"Organization", text:"Prototype enclosure design is done — the funding request covers insulated panels and the first field trial.", up:26, down:1,  when:"3d ago" },
+    { by:"Kiran Devi",    role:"Farmer",        text:"Last season half my crop rotted on the way to market. Even one storage unit in the block would help hundreds of us.", up:33, down:1,  when:"2d ago" },
+  ],
+  1201: [
+    { by:"Sushma Lakra",  role:"ASHA Worker",   text:"Two high-risk pregnancies were referred to Bokaro district hospital last month — both families couldn't afford the travel.", up:29, down:0,  when:"1d ago" },
+    { by:"Dr. A. Minz",   role:"PHC Officer",   text:"A rented portable unit costs about ₹9,000/month including the technician. Even 6 months of coverage would catch the high-risk cases.", up:22, down:0,  when:"20h ago" },
+  ],
+  1305: [
+    { by:"Sahyog NGO",    role:"Organization",  text:"Ramp completed and inspected — sharing photos in the evidence section. Thanks to everyone who supported this case.", up:44, down:0,  when:"1w ago" },
+    { by:"Prakash Munda", role:"Resident",      text:"My father visited the OPD independently for the first time in years. This is what solved looks like.", up:38, down:1,  when:"6d ago" },
+  ],
+};
+
 const FUND_REQUESTS = [
   { id:'FR-2401', kind:'problem', ref:1108, title:'Water testing kits & lab analysis',
     desc:'Chromium test kits for four hamlets plus NIT Jamshedpur lab analysis fees.',

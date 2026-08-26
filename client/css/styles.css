@@ -479,6 +479,33 @@ html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi);
 .check-row.dimmed{ opacity:.45; }
 .tag-more{ color:var(--text-faint); background:transparent; border-style:dashed; }
 
+/* ---- Community discussion on problem pages ---- */
+.cm-compose textarea{ min-height:84px; margin-bottom:8px; }
+.cm-compose{ margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:16px; }
+.cm-item{ display:flex; gap:12px; padding:12px 0; border-bottom:1px dashed var(--border); }
+.cm-item:last-child{ border-bottom:none; }
+.cm-votes{
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  width:30px; flex:none; margin-top:2px;
+}
+.cm-votes button{
+  border:none; background:none; cursor:pointer; color:var(--text-faint);
+  font-size:11px; padding:1px 4px; line-height:1;
+}
+.cm-votes button:hover{ color:var(--setu-2); }
+.cm-votes .score{ font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--ink); }
+.cm-votes button.on-up{ color:var(--ledger); }
+.cm-votes button.on-down{ color:var(--rust); }
+.cm-body{ flex:1; min-width:0; }
+.cm-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px; }
+.cm-role{
+  font-size:10px; padding:1px 7px; border-radius:10px;
+  background:rgba(156,107,0,.12); color:var(--setu-2);
+}
+html[data-theme="dark"] .cm-role{ background:rgba(255,212,0,.10); color:var(--sky); }
+.cm-when{ font-family:var(--font-mono); font-size:10px; color:var(--text-faint); }
+.cm-text{ font-size:12.5px; color:var(--text); margin:0; line-height:1.55; }
+
 /* ---- Report-a-Problem wizard ---- */
 .wz-steps{ display:flex; gap:10px; margin-bottom:20px; }
 .wz-tab{

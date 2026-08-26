@@ -26,10 +26,23 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
+function refreshVerifyCount(){
+  const n = document.querySelectorAll('#verifyList > .card').length;
+  document.getElementById('pageCount').textContent = n ? n + ' pending' : '0 pending';
+}
+function decideOrg(name, btn, approved){
+  const card = btn.closest('.card');
+  card.style.transition = 'opacity .18s ease';
+  card.style.opacity = '.3';
+  setTimeout(() => card.remove(), 180);
+  refreshVerifyCount();
+  toast(approved ? name + ' marked Verified (placeholder)' : name + '\u2019s registration declined (placeholder)');
+}
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  document.getElementById('pageCount').textContent = ORGS.filter(o=>!o.verified).length + ' pending';
-  document.getElementById('verifyList').innerHTML = ORGS.map(o => `
+  const pending = ORGS.filter(o => !o.verified);
+  document.getElementById('pageCount').textContent = pending.length + ' pending';
+  document.getElementById('verifyList').innerHTML = pending.length ? pending.map(o => `
     <div class="card card-pad" style="margin-bottom:12px; display:flex; align-items:center; gap:16px;">
       <div class="av" style="width:44px; height:44px; font-size:14px; background:${avatarColor(o.name)}; color:#fff;">${initials(o.name)}</div>
       <div style="flex:1;">
@@ -37,10 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <span style="font-size:12px; color:var(--text-faint);">${o.full} · ${o.type} · ${o.location}</span>
         <div class="pcard-tags" style="margin-top:8px;">${o.expertise.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
       </div>
-      ${o.verified
-        ? `<span class="stamp stamp-validated">Verified</span>`
-        : `<div class="row-flex" style="gap:8px;"><button class="btn btn-outline btn-sm" onclick="toast('Marked for further documentation (placeholder)')">Request docs</button><button class="btn btn-primary btn-sm" onclick="toast('${o.name} marked Verified (placeholder)')">Approve</button></div>`}
-    </div>`).join("");
+      <div class="row-flex" style="gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="toast('Marked for further documentation (placeholder)')">Request docs</button>
+        <button class="btn btn-primary btn-sm" onclick="decideOrg('${o.name}', this, true)">Approve</button>
+        <button class="btn btn-outline btn-sm" style="color:var(--rust);" onclick="decideOrg('${o.name}', this, false)">Decline</button>
+      </div>
+    </div>`).join("")
+  : `<div class="empty"><h4>Queue is clear 🎉</h4><p>No organization registrations are waiting for verification right now.</p></div>`;
 });
 </script>
 </body>

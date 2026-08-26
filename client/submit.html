@@ -384,6 +384,14 @@ function buildCategoryPanels(){
 
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
+
+  /* Guests browse only — reporting needs a Citizen account */
+  if(currentRole() === 'guest'){
+    toast('Reporting needs a Citizen account — you\u2019re currently browsing as a Guest.');
+    setTimeout(() => go('explore.html'), 1300);
+    return;
+  }
+
   buildCategoryPanels();
   goStep(1);
   document.getElementById('chkTerms').addEventListener('change', updatePostBtn);
