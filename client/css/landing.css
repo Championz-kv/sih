@@ -1,4 +1,4 @@
-﻿/* =========================================================================
+/* =========================================================================
    SolveSamaj — public LANDING page (index.html only)
    Layout inspired by the CivicSolve reference; colors come from the shared
    tokens in styles.css (light = bright yellow-orange on white, dark = black & yellow).
@@ -74,11 +74,10 @@ html[data-theme="dark"] .lp-notice{ background:#0b0b0c; }
 .lp-notice-marquee::after{
   content:attr(data-text);
   display:inline-block;
-  margin-left:24px;
 }
 @keyframes lp-marquee{
   0%   { transform:translateX(0); }
-  100% { transform:translateX(-100%); }
+  100% { transform:translateX(-50%); }
 }
 @media (prefers-reduced-motion: reduce){
   .lp-notice-marquee{ animation:none !important; transform:none !important; }

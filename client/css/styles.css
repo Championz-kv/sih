@@ -196,25 +196,11 @@ html[data-theme="dark"] .theme-toggle .icon-moon{ display:block; }
 }
 .avatar-btn span{ font-size:12.5px; color:var(--ink); font-weight:500; }
 
-/* ---- Guest account glow: traveling ring + breathing pulse ---- */
+/* ---- Guest account glow: breathing pulse only (no rotating rectangle) ---- */
 .avatar-btn.guest-glow{
   position:relative;
   border-color:var(--setu-2);
   animation:glow-pulse 2s ease-in-out infinite;
-}
-.avatar-btn.guest-glow::before{
-  content:'';
-  position:absolute;
-  inset:-2px;
-  border-radius:calc(var(--radius-m) + 2px);
-  border:2px solid;
-  border-image:conic-gradient(from 0deg, var(--setu), var(--violet), var(--ochre), var(--sky), var(--setu)) 1;
-  animation:border-travel 3.4s linear infinite;
-  pointer-events:none;
-}
-@keyframes border-travel{
-  0%{ transform:rotate(0deg); }
-  100%{ transform:rotate(360deg); }
 }
 @keyframes glow-pulse{
   0%,100%{ box-shadow:0 0 0 2px rgba(255,162,0,.32), 0 0 8px 4px rgba(255,162,0,.14); }
