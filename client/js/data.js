@@ -81,7 +81,7 @@ const PROBLEM_CATEGORY_GROUPS = [
     "Industrial Accident Safety","Fire Safety in Public Spaces","Road Accident Hotspots"] },
   { name:"Social Issues", color:"#4552B8", tags:[
     "Caste Discrimination","Gender-Based Violence","Child Marriage","Trafficking & Exploitation",
-    "Accessibility for Persons with Disabilities","Elderly Care & Abandonment"] },
+    "Accessibility for Persons with Disabilities","Elderly Care & Abandonment", "Donation for Needy"] },
 ];
 
 /* Register every heading + sub-tag into CATEGORY_COLORS so categoryColor()

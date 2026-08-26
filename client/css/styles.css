@@ -479,6 +479,48 @@ html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi);
 .check-row.dimmed{ opacity:.45; }
 .tag-more{ color:var(--text-faint); background:transparent; border-style:dashed; }
 
+/* ---- Report-a-Problem wizard ---- */
+.wz-steps{ display:flex; gap:10px; margin-bottom:20px; }
+.wz-tab{
+  flex:1; display:flex; align-items:center; gap:10px;
+  padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius-m);
+  background:var(--surface); opacity:.5; transition:opacity .2s ease, border-color .2s ease;
+}
+.wz-tab .n{
+  width:26px; height:26px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:12px; font-weight:600;
+  background:var(--paper-2); color:var(--text-faint); border:1.5px solid var(--border-2);
+}
+.wz-tab b{ display:block; font-size:13px; color:var(--ink); line-height:1.2; }
+.wz-tab span{ font-size:10.5px; color:var(--text-faint); }
+.wz-sep{ align-self:center; width:18px; height:1.5px; background:var(--border-2); flex:none; }
+.wz-tab.current{ opacity:1; border-color:var(--setu); }
+.wz-tab.current .n{ background:var(--setu); border-color:var(--setu); color:#33270A; }
+html[data-theme="dark"] .wz-tab.current .n{ color:#171400; }
+.wz-tab.done{ opacity:1; }
+.wz-tab.done .n{ background:var(--ledger); border-color:var(--ledger); color:#fff; }
+html[data-theme="dark"] .wz-tab.done .n{ color:#171400; }
+.wz-pane{ display:none; }
+.wz-pane.active{ display:block; animation:fadeIn .25s ease; }
+.link-row{ display:flex; gap:8px; margin-bottom:8px; }
+.link-row input{ flex:1; min-width:0; }
+.link-del{
+  width:36px; height:36px; border-radius:8px; border:1px solid var(--border-2);
+  background:var(--surface); color:var(--text-faint); cursor:pointer; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  transition:color .15s ease, border-color .15s ease;
+}
+.link-del:hover{ color:var(--rust); border-color:var(--rust); }
+.note{
+  border-radius:var(--radius-m); padding:12px 14px;
+  font-size:12.5px; line-height:1.55; display:flex; gap:10px; align-items:flex-start;
+}
+.note.ok{ background:rgba(88,123,42,.10); border-left:3px solid var(--ledger); }
+html[data-theme="dark"] .note.ok{ background:rgba(191,210,68,.08); border-left-color:var(--ledger); }
+.note.warn{ background:rgba(240,138,0,.10); border-left:3px solid var(--ochre); }
+html[data-theme="dark"] .note.warn{ background:rgba(255,212,0,.08); border-left-color:var(--ochre); }
+
 /* ---- Floating Sahayak widget (bottom-left, every page) ---- */
 .cw-btn{
   position:fixed; right:18px; bottom:18px; z-index:940;
