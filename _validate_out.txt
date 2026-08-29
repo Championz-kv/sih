@@ -1,0 +1,29 @@
+OK   syntax: js/supabase-client.js
+OK   syntax: login.html inline #1 (6578 chars)
+OK   syntax: auth/callback.html inline #1 (2740 chars)
+OK   CDN bundle loads before supabase-client.js
+OK   two Google buttons (login + register)
+OK   Google SVG present twice
+OK   or-divider twice
+OK   merged field label "Email or Phone Number"
+OK   spec placeholder twice
+OK   signInWithPassword used
+OK   signUp passes role citizen in options.data
+OK   full_name in signUp metadata
+OK   username availability check via profiles
+OK   oauth redirectTo callback
+OK   role redirect map (citizen→index, org_member→discover, admin→admin)
+OK   success message
+OK   no leftover account-type select
+OK   no leftover separate phone field
+OK   callback: links ../css/styles.css
+OK   callback: loads ../js/supabase-client.js after CDN bundle
+OK   callback: listens to onAuthStateChange
+OK   callback: redirects by role
+OK   callback: shows "Signing you in…"
+OK   callback: profiles role lookup
+OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
+REST probe profiles → HTTP 500
+     body: {"code":"42P17","details":null,"hint":null,"message":"infinite recursion detected in policy for relation \"profiles\""}
+
+ALL CHECKS PASSED

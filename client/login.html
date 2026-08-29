@@ -39,6 +39,22 @@ html[data-theme="dark"] .auth-body{
   border-top:1px dashed var(--border); font-size:11.5px; color:var(--text-faint); }
 .auth-foot .linklike{ color:var(--setu-2); font-weight:600; }
 .btn-block-full{ width:100%; justify-content:center; }
+/* Google OAuth button (full width, white bg, #3c4043 text, #dadce0 border) */
+.btn-google{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  background:#fff; color:#3c4043; border:1px solid #dadce0; border-radius:6px;
+  font-family:var(--font-body); font-size:13px; font-weight:600; letter-spacing:.01em;
+  padding:10px 16px; cursor:pointer; transition:background .15s ease;
+}
+.btn-google:hover{ background:#f8f9fa; }
+.btn-google:active{ transform:translateY(1px); }
+.btn-google svg{ flex:none; }
+.auth-divider{ display:flex; align-items:center; gap:10px; margin:14px 0 16px;
+  font-size:11.5px; color:var(--text-faint); }
+.auth-divider::before, .auth-divider::after{ content:''; flex:1; height:1px; background:var(--border); }
+.auth-ok{ display:none; margin:-4px 0 12px; font-size:12px; color:#1a7f37; text-align:center;
+  background:rgba(34,139,84,.10); border-radius:8px; padding:7px 10px; }
+.auth-ok.show{ display:block; }
 </style>
 </head>
 <body data-page="login">
@@ -59,23 +75,27 @@ html[data-theme="dark"] .auth-body{
         <h2 class="auth-title">Welcome back</h2>
         <p class="auth-sub">Sign in to report problems, collaborate and track impact.</p>
 
+        <button class="btn-google" type="button" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider">or</div>
+
         <div id="authErr" class="auth-err"></div>
 
         <form onsubmit="doLogin(); return false;">
-          <div class="field"><label>Account type</label>
-            <select class="input" id="userType">
-              <option value="citizen">Citizen</option>
-              <option value="org">Organization</option>
-              <option value="admin">Government Admin</option>
-            </select>
-          </div>
-          <div class="field"><label>Username</label>
-            <input class="input" id="authUser" placeholder="Your username" autocomplete="username">
+          <div class="field"><label>Email or Phone Number</label>
+            <input class="input" id="authUser" placeholder="Enter your email or 10-digit mobile number" autocomplete="username">
           </div>
           <div class="field"><label>Password</label>
             <input class="input" type="password" id="authPass" placeholder="••••••••" autocomplete="current-password">
           </div>
-          <button class="btn btn-primary btn-block-full" type="submit">Login</button>
+          <button class="btn btn-primary btn-block-full" type="submit" id="loginSubmitBtn">Login</button>
         </form>
 
         <div class="auth-alt" style="margin-top:22px;">
@@ -91,27 +111,39 @@ html[data-theme="dark"] .auth-body{
     <div class="auth-pane" id="paneRegister">
       <div class="auth-card">
         <h2 class="auth-title">Create your account</h2>
-        <p class="auth-sub">Registration is a demo placeholder — nothing is sent anywhere.</p>
+        <p class="auth-sub">Report problems, collaborate on solutions and track impact.</p>
+
+        <button class="btn-google" type="button" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider">or</div>
 
         <div id="regErr" class="auth-err"></div>
+        <div id="regOk" class="auth-ok"></div>
 
         <form onsubmit="doRegister(); return false;">
-          <div class="field"><label>Email</label>
-            <input class="input" type="email" id="regEmail" placeholder="you@example.com">
-          </div>
-          <div class="field"><label>Phone</label>
-            <input class="input" type="tel" id="regPhone" placeholder="+91 …">
+          <div class="field"><label>Email or Phone Number</label>
+            <input class="input" id="regEmail" placeholder="Enter your email or 10-digit mobile number" autocomplete="username">
           </div>
           <div class="field"><label>Username</label>
-            <input class="input" id="regUser" placeholder="Pick a username">
+            <input class="input" id="regUser" placeholder="Pick a username" autocomplete="username">
+          </div>
+          <div class="field"><label>Full Name</label>
+            <input class="input" id="regFullName" placeholder="e.g. Aarav Sharma" autocomplete="name">
           </div>
           <div class="field"><label>Password</label>
-            <input class="input" type="password" id="regPass" placeholder="••••••••">
+            <input class="input" type="password" id="regPass" placeholder="••••••••" autocomplete="new-password">
           </div>
-          <div class="field"><label>Retype password</label>
-            <input class="input" type="password" id="regPass2" placeholder="••••••••">
+          <div class="field"><label>Confirm Password</label>
+            <input class="input" type="password" id="regPass2" placeholder="••••••••" autocomplete="new-password">
           </div>
-          <button class="btn btn-primary btn-block-full" type="submit">Register</button>
+          <button class="btn btn-primary btn-block-full" type="submit" id="regSubmitBtn">Register</button>
         </form>
 
         <div class="auth-alt" style="margin-top:18px;">
@@ -121,16 +153,23 @@ html[data-theme="dark"] .auth-body{
     </div>
 
     <div class="auth-foot">
-      Demo authentication — any username/password combination works until a backend is connected.
+      Secured by Supabase Auth — sign in with email, 10-digit mobile number or Google.
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
-/* ---- auth (demo) — swap with real endpoints later ---- */
-/* toast() comes from app.js below; ChatCore isn't needed on this page. */
+/* ---- auth (Supabase) ----
+   One identifier field accepts email OR 10-digit phone. Phones are
+   converted to the placeholder email phone_91XXXXXXXXXX@solvesamaj.in
+   before hitting Supabase Auth. `supabase` comes from js/supabase-client.js. */
 document.documentElement.setAttribute('data-theme', currentTheme());
+
+const PHONE_EMAIL_DOMAIN = 'solvesamaj.in';
+const OAUTH_REDIRECT = 'https://sih26kuestl.vercel.app/auth/callback.html';
 
 function showPane(id){
   document.querySelectorAll('.auth-pane').forEach(p => p.classList.remove('active'));
@@ -139,11 +178,17 @@ function showPane(id){
 function showLogin(){ showPane('paneLogin'); }
 function showRegister(){ showPane('paneRegister'); }
 
+/* Inline errors stay visible until the next submit attempt — real auth
+   messages (Supabase errors) are too important to auto-dismiss. */
 function authErr(id, msg){
   const e = document.getElementById(id);
   e.textContent = msg;
   e.classList.add('show');
-  setTimeout(() => e.classList.remove('show'), 2800);
+}
+function authClear(id){
+  const e = document.getElementById(id);
+  e.textContent = '';
+  e.classList.remove('show');
 }
 
 function toggleThemeLogin(){
@@ -152,19 +197,133 @@ function toggleThemeLogin(){
   storageSet('ss-theme', next);
 }
 
-/* Role → landing page after sign-in */
-function homeFor(role){
-  return { citizen:'dashboard.html', org:'discover.html', admin:'admin.html' }[role] || 'explore.html';
+/* ---- Email/phone unification ----
+   Contains '@' → email. Otherwise strip non-digits (tolerating +91 / 0
+   prefixes); exactly 10 digits → { email:'phone_91XXXXXXXXXX@solvesamaj.in', isPhone:true }.
+   Returns null when the value is neither a valid email nor a 10-digit number. */
+function identifierToEmail(raw){
+  const v = (raw || '').trim();
+  if(!v) return null;
+  if(v.includes('@')) return { email: v, isPhone: false };
+  let digits = v.replace(/\D/g, '');
+  if(digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  if(digits.length === 11 && digits.startsWith('0'))  digits = digits.slice(1);
+  if(/^\d{10}$/.test(digits)){
+    return { email: `phone_91${digits}@${PHONE_EMAIL_DOMAIN}`, isPhone: true, phone: `+91${digits}` };
+  }
+  return null;
 }
 
-function doLogin(){
-  const type = document.getElementById('userType').value;
-  const u = document.getElementById('authUser').value.trim();
-  const p = document.getElementById('authPass').value;
-  if(!u || !p){ authErr('authErr', 'Enter your username and password'); return; }
-  storageSet('ss-user', u);
-  storageSet('ss-role', type);
-  go(homeFor(type));
+/* Profile role → landing page: citizen → index, org_member → discover, admin → admin */
+function homeFor(role){
+  return { citizen:'index.html', org_member:'discover.html', admin:'admin.html' }[role] || 'index.html';
+}
+/* shell.js role vocabulary uses 'org' for organization accounts */
+function shellRoleFor(role){ return role === 'org_member' ? 'org' : role; }
+
+async function fetchProfile(userId){
+  try{
+    const { data, error } = await supabase.from('profiles')
+      .select('id, username, role').eq('id', userId).maybeSingle();
+    if(error) console.warn('[auth] profile lookup failed:', error.message);
+    return data || null;
+  }catch(e){
+    console.warn('[auth] profile lookup failed:', e);
+    return null;
+  }
+}
+
+function setBusy(btnId, busy, label){
+  const b = document.getElementById(btnId);
+  if(!b) return;
+  b.disabled = busy;
+  if(label) b.textContent = label;
+}
+
+/* ---------------- LOGIN ---------------- */
+async function doLogin(){
+  authClear('authErr');
+  const raw = document.getElementById('authUser').value;
+  const p   = document.getElementById('authPass').value;
+  const id  = identifierToEmail(raw);
+  if(!id){ authErr('authErr', 'Enter a valid email address or 10-digit mobile number'); return; }
+  if(!p){   authErr('authErr', 'Enter your password'); return; }
+
+  setBusy('loginSubmitBtn', true, 'Signing in…');
+  try{
+    const { data, error } = await supabase.auth.signInWithPassword({ email: id.email, password: p });
+    if(error){ authErr('authErr', error.message); return; }
+
+    const profile = await fetchProfile(data.user.id);
+    const role = (profile && profile.role) || 'citizen';
+    storageSet('ss-user', (profile && profile.username) || (id.isPhone ? raw.trim() : raw.trim().split('@')[0]));
+    storageSet('ss-role', shellRoleFor(role));
+    go(homeFor(role));
+  } finally {
+    setBusy('loginSubmitBtn', false, 'Login');
+  }
+}
+
+/* ---------------- REGISTER ---------------- */
+async function doRegister(){
+  authClear('regErr'); authClear('regOk');
+  const raw      = document.getElementById('regEmail').value;
+  const u        = document.getElementById('regUser').value.trim();
+  const fullName = document.getElementById('regFullName').value.trim();
+  const p1       = document.getElementById('regPass').value;
+  const p2       = document.getElementById('regPass2').value;
+  const id       = identifierToEmail(raw);
+
+  if(!id){       authErr('regErr', 'Enter a valid email address or 10-digit mobile number'); return; }
+  if(!u){        authErr('regErr', 'Pick a username'); return; }
+  if(!fullName){ authErr('regErr', 'Enter your full name'); return; }
+  if(!p1){       authErr('regErr', 'Choose a password'); return; }
+  if(p1 !== p2){ authErr('regErr', 'Passwords do not match'); return; }
+
+  setBusy('regSubmitBtn', true, 'Creating account…');
+  try{
+    /* Username availability — checked against the profiles table
+       (a unique index on profiles.username still guards any race). */
+    const { data: taken, error: uErr } = await supabase.from('profiles')
+      .select('username').eq('username', u).maybeSingle();
+    if(uErr){ authErr('regErr', 'Could not verify username: ' + uErr.message); return; }
+    if(taken){ authErr('regErr', 'Username taken'); return; }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: id.email,
+      password: p1,
+      options: {
+        data: {
+          username: u,
+          full_name: fullName,
+          phone: id.isPhone ? id.phone : null,
+          role: 'citizen'
+        }
+      }
+    });
+    if(error){ authErr('regErr', error.message); return; }
+
+    if(data.session){
+      /* Email confirmation disabled → signed in immediately */
+      storageSet('ss-user', u);
+      storageSet('ss-role', 'citizen');
+      go('index.html');
+      return;
+    }
+    const ok = document.getElementById('regOk');
+    ok.textContent = 'Account created! Check your email to confirm.';
+    ok.classList.add('show');
+  } finally {
+    setBusy('regSubmitBtn', false, 'Register');
+  }
+}
+
+/* ---------------- GOOGLE OAUTH ---------------- */
+function signInWithGoogle(){
+  supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: OAUTH_REDIRECT }
+  });
 }
 
 function continueAsGuest(){
@@ -173,27 +332,8 @@ function continueAsGuest(){
   go('explore.html');
 }
 
-function doRegister(){
-  const u  = document.getElementById('regUser').value.trim();
-  const e1 = document.getElementById('regEmail').value.trim();
-  const p1 = document.getElementById('regPass').value;
-  const p2 = document.getElementById('regPass2').value;
-  if(!u || !e1 || !p1){ authErr('regErr', 'Fill every field to register'); return; }
-  if(p1 !== p2){ authErr('regErr', 'Passwords do not match'); return; }
-  /* demo: registration just signs you in as a Citizen */
-  storageSet('ss-user', u);
-  storageSet('ss-role', 'citizen');
-  go('dashboard.html');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.setAttribute('data-theme', currentTheme());
-
-  /* ?type=org on the URL pre-selects Organization (landing entry cards) */
-  const preset = new URLSearchParams(location.search).get('type');
-  const sel = document.getElementById('userType');
-  if(preset && ['citizen','org','admin'].includes(preset)) sel.value = preset;
-
   document.getElementById('authUser').focus();
 });
 </script>

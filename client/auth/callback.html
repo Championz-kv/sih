@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing you in — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+<style>
+/* Minimal, centered hand-off screen — reuses site CSS variables from styles.css */
+body{ min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:var(--paper); margin:0; }
+.callback-wrap{ text-align:center; padding:24px; }
+.callback-spin{ width:34px; height:34px; margin:0 auto 16px; border:3px solid var(--border);
+  border-top-color:var(--setu-2); border-radius:50%; animation:cb-spin .8s linear infinite; }
+@keyframes cb-spin{ to{ transform:rotate(360deg); } }
+.callback-wrap h2{ font-family:var(--font-display); font-size:20px; color:var(--ink); margin:0 0 6px; }
+.callback-wrap p{ font-size:12.5px; color:var(--text-faint); margin:0; }
+.callback-err{ display:none; margin-top:14px; font-size:12px; color:var(--rust); text-align:center;
+  background:rgba(193,58,32,.08); border-radius:8px; padding:7px 12px; max-width:360px; }
+.callback-err.show{ display:inline-block; }
+</style>
+</head>
+<body data-page="callback">
+  <div class="callback-wrap">
+    <div class="callback-spin" id="cbSpin"></div>
+    <h2>Signing you in…</h2>
+    <p>You will be redirected in a moment.</p>
+    <div class="callback-err" id="cbErr"></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/app.js"></script>
+<script>
+/* ---- OAuth / magic-link hand-off ----
+   Google redirects back here (see redirectTo on the login page).
+   Wait for the session, read the profile role from `profiles`, then
+   route to the role's landing page. */
+
+const ROLE_REDIRECTS = {
+  citizen:    '../index.html',     /* spec: /index.html  */
+  org_member: '../discover.html',  /* spec: /discover.html */
+  admin:      '../admin.html'      /* spec: /admin.html  */
+};
+
+let didRoute = false;
+
+function showCallbackError(msg){
+  const spin = document.getElementById('cbSpin');
+  if(spin) spin.style.display = 'none';
+  const e = document.getElementById('cbErr');
+  e.textContent = msg;
+  e.classList.add('show');
+}
+
+/* shell.js role vocabulary uses 'org' for organization accounts */
+function shellRoleFor(role){ return role === 'org_member' ? 'org' : role; }
+
+async function routeUser(user){
+  if(didRoute) return;
+  didRoute = true;
+
+  let role = 'citizen';                       /* default when no profile row yet */
+  try{
+    const { data, error } = await supabase.from('profiles')
+      .select('id, username, role').eq('id', user.id).maybeSingle();
+    if(error) console.warn('[callback] profile lookup failed:', error.message);
+    if(data){
+      if(data.role) role = data.role;
+      if(data.username) storageSet('ss-user', data.username);
+    }
+    if(!storageGet('ss-user') && user.email){
+      storageSet('ss-user', user.email.split('@')[0]);
+    }
+  }catch(e){
+    console.warn('[callback] profile lookup failed:', e);
+  }
+
+  storageSet('ss-role', shellRoleFor(role));
+  go(ROLE_REDIRECTS[role] || ROLE_REDIRECTS.citizen);
+}
+
+(async function initCallback(){
+  /* OAuth errors arrive in the URL hash (e.g. #error=access_denied) */
+  const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if(hash.get('error')){
+    showCallbackError(hash.get('error_description') || ('Sign-in failed: ' + hash.get('error')));
+    return;
+  }
+
+  try{
+    /* Session may already be persisted (implicit/PKCE hash exchange) */
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session && session.user){ routeUser(session.user); return; }
+
+    /* Otherwise wait for the SDK to finish the hash exchange */
+    supabase.auth.onAuthStateChange((event, s) => {
+      if(s && s.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')){
+        routeUser(s.user);
+      }
+    });
+
+    /* Don't hang forever if no session ever arrives */
+    setTimeout(() => {
+      if(!didRoute) showCallbackError('Sign-in did not complete. Please try logging in again.');
+    }, 15000);
+  }catch(e){
+    showCallbackError('Sign-in failed: ' + (e && e.message ? e.message : e));
+  }
+})();
+</script>
+</body>
+</html>
