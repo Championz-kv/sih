@@ -77,6 +77,10 @@ OK   team: photos loaded from img/team/<letter>.jpg
 OK   team: initials fallback when photo file missing
 OK   team: square-crop + size styles present
 OK   team: photo folder doc exists
+OK   temp-ui: login: sample-ids tile present (temp)
+OK   temp-ui: login: tile clearly marked removable
+OK   temp-ui: index: github link in footer
+OK   temp-ui: team: github link at bottom
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 200
      sample row: [{"id":"291fbb7f-7437-44c1-b9ba-5d398216bc77","username":"spirit","role":"org_member"}]

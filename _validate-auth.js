@@ -205,6 +205,19 @@ for(const [name, pass] of teamChecks){
   if(!pass) ok = false;
 }
 
+/* 4g. temp demo-ids tile + github links */
+const ghLink = 'github.com/Championz-kv/sih';
+const tempChecks = [
+  ['login: sample-ids tile present (temp)', login.includes('class="demo-ids"') && login.includes('citizen@gmail.com') && login.includes('admin@gmail.com')],
+  ['login: tile clearly marked removable', login.includes('TEMP: sample-ids tile')],
+  ['index: github link in footer', idx.includes(ghLink)],
+  ['team: github link at bottom', teamHtml.includes(ghLink)],
+];
+for(const [name, pass] of tempChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'temp-ui: ' + name);
+  if(!pass) ok = false;
+}
+
 /* 5. live probes */
 const SUPA = 'https://chwvtrcxnfqfkwlaxxbo.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNod3Z0cmN4bmZxZmt3bGF4eGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDczNjUsImV4cCI6MjEwMzI4MzM2NX0.RS5UcZDMG4hYV4ksztZvxDIO51LJVP9GkRjpJQD1ZoY';
