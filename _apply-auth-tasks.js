@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, 'client');
 
+// hello
+
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>\n<script src="js/supabase-client.js"></script>\n';
 const DATA_TAG = '<script src="js/data.js"></script>';
 const AUTH_PAGES = ['my-problems.html','submit.html','org-profile.html','discover.html','interests.html',
