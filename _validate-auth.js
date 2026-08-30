@@ -13,11 +13,22 @@ function extractInlineScripts(htmlPath){
   return out;
 }
 
-/* 1. external shared client syntax */
+/* 1. external shared client syntax + contract */
 try{
   new Function(fs.readFileSync(path.join(root, 'js', 'supabase-client.js'), 'utf8'));
   console.log('OK   syntax: js/supabase-client.js');
 }catch(e){ console.error('FAIL js/supabase-client.js:', e.message); ok = false; }
+
+const sc = fs.readFileSync(path.join(root, 'js', 'supabase-client.js'), 'utf8');
+const scChecks = [
+  ['client created as sbClient (not supabase)', /const sbClient = window\.supabase\.createClient\(SUPABASE_URL, SUPABASE_ANON_KEY\)/.test(sc)],
+  ['no client const named supabase', !/const supabase\s*=/.test(sc)],
+  ['ready log present', sc.includes("console.log('Supabase client ready:', typeof sbClient.from)")],
+];
+for(const [name, pass] of scChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'supabase-client.js: ' + name);
+  if(!pass) ok = false;
+}
 
 /* 2. inline scripts */
 for(const rel of ['login.html', 'auth/callback.html']){
@@ -41,7 +52,7 @@ const loginChecks = [
   ['or-divider twice', (login.match(/class="auth-divider"/g) || []).length === 2],
   ['merged field label "Email or Phone Number"', (login.match(/Email or Phone Number/g) || []).length === 2],
   ['spec placeholder twice', (login.match(/Enter your email or 10-digit mobile number/g) || []).length === 2],
-  ['signInWithPassword used', login.includes('supabase.auth.signInWithPassword')],
+  ['signInWithPassword used via sbClient', login.includes('sbClient.auth.signInWithPassword')],
   ['signUp passes role citizen in options.data', /options:\s*\{[\s\S]*?role:\s*'citizen'[\s\S]*?\}/.test(login)],
   ['full_name in signUp metadata', login.includes('full_name: fullName')],
   ['username availability check via profiles', /from\('profiles'\)[\s\S]{0,80}eq\('username', u\)/.test(login)],
@@ -50,6 +61,15 @@ const loginChecks = [
   ['success message', login.includes('Account created! Check your email to confirm.')],
   ['no leftover account-type select', !login.includes('id="userType"')],
   ['no leftover separate phone field', !login.includes('id="regPhone"')],
+  ['no bare supabase.* client calls (namespace conflict gone)', !/\bsupabase\.(from|auth)\./.test(login)],
+  ['sbClient used for every client call', login.includes('sbClient.auth.signInWithPassword') && login.includes('sbClient.auth.signUp') && login.includes('sbClient.auth.signInWithOAuth') && login.includes("sbClient.from('profiles')")],
+  ['order: CDN bundle < supabase-client.js < app.js', (() => {
+    const a = login.indexOf('cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+    const b = login.indexOf('js/supabase-client.js');
+    const c = login.indexOf('js/app.js');
+    return a > -1 && a < b && b < c;
+  })()],
+  ['inline page script comes last', login.lastIndexOf('<script>') > login.indexOf('js/app.js')],
 ];
 for(const [name, pass] of loginChecks){
   console.log((pass ? 'OK   ' : 'FAIL ') + name);
@@ -64,7 +84,9 @@ const cbChecks = [
   ['listens to onAuthStateChange', cb.includes('onAuthStateChange')],
   ['redirects by role', cb.includes("'../index.html'") && cb.includes("'../discover.html'") && cb.includes("'../admin.html'")],
   ['shows "Signing you in…"', cb.includes('Signing you in')],
-  ['profiles role lookup', cb.includes("from('profiles')")],
+  ['profiles role lookup', /from\('profiles'\)/.test(cb)],
+  ['no bare supabase.* client calls (namespace conflict gone)', !/\bsupabase\.(from|auth)\./.test(cb)],
+  ['sbClient used for every client call', cb.includes("sbClient.from('profiles')") && cb.includes('sbClient.auth.getSession') && cb.includes('sbClient.auth.onAuthStateChange')],
 ];
 for(const [name, pass] of cbChecks){
   console.log((pass ? 'OK   ' : 'FAIL ') + 'callback: ' + name);

@@ -165,7 +165,7 @@ html[data-theme="dark"] .auth-body{
 /* ---- auth (Supabase) ----
    One identifier field accepts email OR 10-digit phone. Phones are
    converted to the placeholder email phone_91XXXXXXXXXX@solvesamaj.in
-   before hitting Supabase Auth. `supabase` comes from js/supabase-client.js. */
+   before hitting Supabase Auth. `sbClient` comes from js/supabase-client.js. */
 document.documentElement.setAttribute('data-theme', currentTheme());
 
 const PHONE_EMAIL_DOMAIN = 'solvesamaj.in';
@@ -223,7 +223,7 @@ function shellRoleFor(role){ return role === 'org_member' ? 'org' : role; }
 
 async function fetchProfile(userId){
   try{
-    const { data, error } = await supabase.from('profiles')
+    const { data, error } = await sbClient.from('profiles')
       .select('id, username, role').eq('id', userId).maybeSingle();
     if(error) console.warn('[auth] profile lookup failed:', error.message);
     return data || null;
@@ -251,7 +251,7 @@ async function doLogin(){
 
   setBusy('loginSubmitBtn', true, 'Signing in…');
   try{
-    const { data, error } = await supabase.auth.signInWithPassword({ email: id.email, password: p });
+    const { data, error } = await sbClient.auth.signInWithPassword({ email: id.email, password: p });
     if(error){ authErr('authErr', error.message); return; }
 
     const profile = await fetchProfile(data.user.id);
@@ -284,12 +284,12 @@ async function doRegister(){
   try{
     /* Username availability — checked against the profiles table
        (a unique index on profiles.username still guards any race). */
-    const { data: taken, error: uErr } = await supabase.from('profiles')
+    const { data: taken, error: uErr } = await sbClient.from('profiles')
       .select('username').eq('username', u).maybeSingle();
     if(uErr){ authErr('regErr', 'Could not verify username: ' + uErr.message); return; }
     if(taken){ authErr('regErr', 'Username taken'); return; }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await sbClient.auth.signUp({
       email: id.email,
       password: p1,
       options: {
@@ -320,7 +320,7 @@ async function doRegister(){
 
 /* ---------------- GOOGLE OAUTH ---------------- */
 function signInWithGoogle(){
-  supabase.auth.signInWithOAuth({
+  sbClient.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: OAUTH_REDIRECT }
   });

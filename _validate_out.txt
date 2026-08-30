@@ -1,4 +1,7 @@
 OK   syntax: js/supabase-client.js
+OK   supabase-client.js: client created as sbClient (not supabase)
+OK   supabase-client.js: no client const named supabase
+OK   supabase-client.js: ready log present
 OK   syntax: login.html inline #1 (6578 chars)
 OK   syntax: auth/callback.html inline #1 (2740 chars)
 OK   CDN bundle loads before supabase-client.js
@@ -7,7 +10,7 @@ OK   Google SVG present twice
 OK   or-divider twice
 OK   merged field label "Email or Phone Number"
 OK   spec placeholder twice
-OK   signInWithPassword used
+OK   signInWithPassword used via sbClient
 OK   signUp passes role citizen in options.data
 OK   full_name in signUp metadata
 OK   username availability check via profiles
@@ -16,12 +19,18 @@ OK   role redirect map (citizen→index, org_member→discover, admin→admin)
 OK   success message
 OK   no leftover account-type select
 OK   no leftover separate phone field
+OK   no bare supabase.* client calls (namespace conflict gone)
+OK   sbClient used for every client call
+OK   order: CDN bundle < supabase-client.js < app.js
+OK   inline page script comes last
 OK   callback: links ../css/styles.css
 OK   callback: loads ../js/supabase-client.js after CDN bundle
 OK   callback: listens to onAuthStateChange
 OK   callback: redirects by role
 OK   callback: shows "Signing you in…"
 OK   callback: profiles role lookup
+OK   callback: no bare supabase.* client calls (namespace conflict gone)
+OK   callback: sbClient used for every client call
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 500
      body: {"code":"42P17","details":null,"hint":null,"message":"infinite recursion detected in policy for relation \"profiles\""}

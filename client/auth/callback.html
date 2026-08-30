@@ -65,7 +65,7 @@ async function routeUser(user){
 
   let role = 'citizen';                       /* default when no profile row yet */
   try{
-    const { data, error } = await supabase.from('profiles')
+    const { data, error } = await sbClient.from('profiles')
       .select('id, username, role').eq('id', user.id).maybeSingle();
     if(error) console.warn('[callback] profile lookup failed:', error.message);
     if(data){
@@ -93,11 +93,11 @@ async function routeUser(user){
 
   try{
     /* Session may already be persisted (implicit/PKCE hash exchange) */
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sbClient.auth.getSession();
     if(session && session.user){ routeUser(session.user); return; }
 
     /* Otherwise wait for the SDK to finish the hash exchange */
-    supabase.auth.onAuthStateChange((event, s) => {
+    sbClient.auth.onAuthStateChange((event, s) => {
       if(s && s.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')){
         routeUser(s.user);
       }
