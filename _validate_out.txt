@@ -50,6 +50,9 @@ OK   shell: topbar: avatar tinted via avatarColor + initials(full_name)
 OK   shell: topbar: @username mono handle
 OK   shell: topbar: Sign in button for guests
 OK   shell: demo role-switcher removed from topbar
+OK   shell: renderTopbar defines signedIn before use
+OK   shell: shell sections render in try/catch (one failure cannot blank chrome)
+OK   shell: getSession raced with timeout
 OK   shell: dropdown: My Profile + Sign out
 OK   shell: logout calls sbClient.auth.signOut()
 OK   shell: logout clears profile + goes to index.html

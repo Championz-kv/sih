@@ -1,0 +1,17 @@
+OK   renderTopbar() executes (no ReferenceError)
+OK   topbar: signed-in account area rendered
+OK   topbar: @username shown
+OK   topbar: avatar initials present
+OK   topbar: no Sign in button while signed in
+OK   topbar: My Profile + Sign out present
+OK   topbar: guest gets Sign in button
+OK   topbar: no account area for guest
+OK   renderSidebar() executes
+OK   initAuthSession returns cached profile (session present)
+OK   applyRoleUI(citizen, profile) executes
+OK   applyRoleUI tolerates unmapped role
+OK   auth-required + no session redirects to login.html — lastNav=login.html
+OK   public page + no session stays (guest)
+OK   missing sbClient degrades gracefully on public page
+
+ALL SMOKE TESTS PASSED

@@ -58,6 +58,7 @@ function renderTopbar(){
      profile in sessionStorage by the time this runs — a profile here means the
      user is signed in; guests get a "Sign in" button instead of the avatar. */
   const profile = getSessionProfile();
+  const signedIn = !!profile;
   const uname = profile ? (profile.username || (profile.full_name || '').trim().split(/\s+/)[0] || '') : '';
   const fullName = profile ? ((profile.full_name || '').trim() || uname || 'Account') : '';
   return `
@@ -335,15 +336,24 @@ async function initAuthSession(){
   const required = document.body.dataset.auth === 'required';
   let profile = getSessionProfile();
 
-  if(typeof sbClient === 'undefined' || !sbClient){
-    /* Supabase bundle unavailable (offline / CDN blocked) — degrade to the
-       cached profile so public pages still render. */
-    if(!profile && required) go('login.html');
-    return profile;
-  }
   try{
-    const { data } = await sbClient.auth.getSession();
-    const session = data && data.session;
+    if(typeof sbClient === 'undefined' || !sbClient){
+      /* Supabase bundle unavailable (offline / CDN blocked) — degrade to the
+         cached profile so public pages still render. */
+      if(!profile && required) go('login.html');
+      return profile;
+    }
+    /* Race a timeout so a hung auth request can never stall the shell —
+       on timeout we keep whatever the cache holds and never redirect. */
+    const raced = await Promise.race([
+      sbClient.auth.getSession(),
+      new Promise(res => setTimeout(() => res(null), 4000))
+    ]);
+    if(raced === null){
+      console.warn('[shell] getSession timed out — using cached profile');
+      return profile;
+    }
+    const session = raced && raced.data && raced.data.session;
     if(session && session.user){
       /* Tab was reopened: session exists but ss_profile is gone → refetch */
       if(!profile || profile.id !== session.user.id){
@@ -412,13 +422,14 @@ function switchLoginTab(tab){
 }
 function applyRoleUI(role, profile){
   const avatars = { citizen:['GD','Guest Desk'], guest:['GU','Guest'], org:['MU','MMMUT Desk'], admin:['AD','Admin Desk'] };
+  const fb = avatars[role] || avatars.guest;   /* defensive: unknown role never throws */
   const uname = (profile && profile.username) ? profile.username : storageGet('ss-user');
-  const fullName = (profile && profile.full_name && profile.full_name.trim()) || uname || avatars[role][1];
+  const fullName = (profile && profile.full_name && profile.full_name.trim()) || uname || fb[1];
   const ai = document.getElementById('avatarInit'), an = document.getElementById('avatarName');
   if(ai){
     /* Avatar: initials of the full name (first letter + first letter of the
        second word), tinted with avatarColor(username) from app.js */
-    ai.textContent = profile ? (initials(fullName) || 'U') : (uname ? uname.slice(0,2).toUpperCase() : avatars[role][0]);
+    ai.textContent = profile ? (initials(fullName) || 'U') : (uname ? uname.slice(0,2).toUpperCase() : fb[0]);
     if(profile && typeof avatarColor === 'function'){
       ai.style.background = avatarColor(uname || fullName);
       ai.style.color = '#fff';
@@ -480,9 +491,14 @@ async function renderShell(){
   const topbarMount = document.getElementById('app-topbar');
   const sidebarMount = document.getElementById('app-sidebar');
   const modalMount = document.getElementById('modal-mount');
-  if(topbarMount) topbarMount.outerHTML = renderTopbar();
-  if(sidebarMount) sidebarMount.outerHTML = renderSidebar(activePage);
-  if(modalMount) modalMount.outerHTML = `<div id="modal-mount">${renderModals()}</div>`;
+  /* Each section renders independently — one failure must never blank the
+     whole navigation chrome. */
+  try{ if(topbarMount) topbarMount.outerHTML = renderTopbar(); }
+  catch(e){ console.error('[shell] topbar render failed:', e); }
+  try{ if(sidebarMount) sidebarMount.outerHTML = renderSidebar(activePage); }
+  catch(e){ console.error('[shell] sidebar render failed:', e); }
+  try{ if(modalMount) modalMount.outerHTML = `<div id="modal-mount">${renderModals()}</div>`; }
+  catch(e){ console.error('[shell] modals render failed:', e); }
 
   applyRoleUI(currentRole(), profile);
   wireGlobalSearch();
