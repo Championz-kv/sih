@@ -86,6 +86,9 @@ OK   citizen-profile: link inputs use .link-input (static + dynamic rows)
 OK   citizen-profile: username/email readonly with notes
 OK   citizen-profile: email editable and saved
 OK   citizen-profile: loads profile with full column list
+OK   citizen-profile: falls back to select(*) when a column is missing
+OK   citizen-profile: missing row → auto-created via upsert
+OK   citizen-profile: load errors surfaced via toast
 OK   citizen-profile: no session redirects to login
 OK   citizen-profile: save uses sbClient update on profiles
 OK   citizen-profile: uses link_other column (not link_others)

@@ -131,12 +131,36 @@ async function loadProfile(){
     if(!session || !session.user){ go('login.html'); return; }
     const user = session.user;
 
-    const { data: profile, error } = await sbClient.from('profiles')
+    /* Full column list first; if any column is missing in the DB (schema not
+       migrated yet), retry with select('*') so existing table data still
+       renders. maybeSingle() → null instead of an error when no row exists. */
+    let profile = null;
+    const full = await sbClient.from('profiles')
       .select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')
       .eq('id', user.id)
-      .single();
-    if(error) console.warn('[profile] load failed:', error.message);
-    const p = profile || minimalFromAuth(user);
+      .maybeSingle();
+    if(full.error){
+      console.warn('[profile] full select failed, falling back to select(*) —', full.error.message);
+      const star = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if(star.error){ toast('Could not load profile — ' + star.error.message); return; }
+      profile = star.data;
+    } else {
+      profile = full.data;
+    }
+
+    /* No row yet (signed up before the trigger existed) → create it from the
+       auth user, then read back so anything already in the table renders. */
+    if(!profile){
+      const md = user.user_metadata || {};
+      const local = (user.email || '').split('@')[0] || '';
+      await sbClient.from('profiles').upsert(
+        { id: user.id, username: local.replace(/^phone_91/, ''), full_name: md.full_name || md.name || '', email: user.email || '', role: md.role || 'citizen' },
+        { onConflict: 'id', ignoreDuplicates: true }
+      );
+      const again = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      profile = again.data || minimalFromAuth(user);
+    }
+    const p = profile;
 
     $('#cName').value = p.full_name || '';
     $('#cUser').value = p.username || '';
