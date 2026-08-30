@@ -84,9 +84,11 @@ OK   temp-ui: team: github link at bottom
 OK   citizen-profile: about field has id cAbout
 OK   citizen-profile: link inputs use .link-input (static + dynamic rows)
 OK   citizen-profile: username/email readonly with notes
+OK   citizen-profile: email editable and saved
 OK   citizen-profile: loads profile with full column list
 OK   citizen-profile: no session redirects to login
 OK   citizen-profile: save uses sbClient update on profiles
+OK   citizen-profile: uses link_other column (not link_others)
 OK   citizen-profile: links joined as newline string on save
 OK   citizen-profile: ss_profile synced after save
 OK   citizen-profile: civic counts via head:true

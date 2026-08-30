@@ -23,7 +23,7 @@
         <div class="field"><label>Username</label><input class="input" id="cUser" value="guest" readonly><div class="hint">(username cannot be changed)</div></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com" readonly><div class="hint">(email cannot be changed)</div></div>
+        <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com"></div>
         <div class="field"><label>Phone</label><input class="input" type="tel" id="cPhone" placeholder="+91 …"></div>
       </div>
       <div class="field"><label>About</label><textarea class="input" id="cAbout" placeholder="Tell people a little about yourself…"></textarea></div>
@@ -84,7 +84,7 @@ function removeLinkRow(btn){
   btn.closest('.link-row').remove();
 }
 
-/* Newline-separated link_others → one filled row per non-empty link */
+/* Newline-separated link_other → one filled row per non-empty link */
 function fillLinkRows(linkOthers){
   const wrap = document.getElementById('linkRows');
   wrap.innerHTML = '';
@@ -132,7 +132,7 @@ async function loadProfile(){
     const user = session.user;
 
     const { data: profile, error } = await sbClient.from('profiles')
-      .select('id, username, full_name, email, phone, about, address, link_others, funding_verified, funding_awaited')
+      .select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')
       .eq('id', user.id)
       .single();
     if(error) console.warn('[profile] load failed:', error.message);
@@ -142,11 +142,10 @@ async function loadProfile(){
     $('#cUser').value = p.username || '';
     $('#cUser').readOnly = true;
     $('#cEmail').value = p.email || user.email || '';
-    $('#cEmail').readOnly = true;
     $('#cPhone').value = p.phone || '';
     $('#cAbout').value = p.about || '';
     $('#cAddr').value = p.address || '';
-    fillLinkRows(p.link_others);
+    fillLinkRows(p.link_other);
 
     const av = document.getElementById('cAvatar');
     av.textContent = initials(p.full_name) || (p.username || 'U').slice(0, 2).toUpperCase();
@@ -178,10 +177,11 @@ async function saveProfile(){
 
   const payload = {
     full_name: document.getElementById('cName').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
     phone: document.getElementById('cPhone').value.trim(),
     about: document.getElementById('cAbout').value.trim(),
     address: document.getElementById('cAddr').value.trim(),
-    link_others: [...document.querySelectorAll('.link-input')]
+    link_other: [...document.querySelectorAll('.link-input')]
       .map(i => i.value.trim()).filter(Boolean).join('\n')
   };
   if(!payload.full_name){ toast('Full name is required'); return; }
