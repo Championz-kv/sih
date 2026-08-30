@@ -192,6 +192,19 @@ for(const [name, pass] of idxChecks){
   if(!pass) ok = false;
 }
 
+/* 4f. team page — photo avatars with initials fallback */
+const teamHtml = fs.readFileSync(path.join(root, 'team.html'), 'utf8');
+const teamChecks = [
+  ['photos loaded from img/team/<letter>.jpg', /src="img\/team\/\$\{letter\}\.jpg"/.test(teamHtml)],
+  ['initials fallback when photo file missing', teamHtml.includes('onerror="this.remove()"') && teamHtml.includes('team-photo')],
+  ['square-crop + size styles present', teamHtml.includes('object-fit:cover') && teamHtml.includes('width:88px')],
+  ['photo folder doc exists', fs.existsSync(path.join(root, 'img', 'team', 'README.txt'))],
+];
+for(const [name, pass] of teamChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'team: ' + name);
+  if(!pass) ok = false;
+}
+
 /* 5. live probes */
 const SUPA = 'https://chwvtrcxnfqfkwlaxxbo.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNod3Z0cmN4bmZxZmt3bGF4eGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDczNjUsImV4cCI6MjEwMzI4MzM2NX0.RS5UcZDMG4hYV4ksztZvxDIO51LJVP9GkRjpJQD1ZoY';

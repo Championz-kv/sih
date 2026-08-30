@@ -73,6 +73,10 @@ OK   index: both Explore Problems buttons go straight to explore.html
 OK   index: exploreGate helper removed (guests go straight in)
 OK   index: hero Report a Problem goes to submit.html
 OK   index: no direct go(login) on Explore buttons
+OK   team: photos loaded from img/team/<letter>.jpg
+OK   team: initials fallback when photo file missing
+OK   team: square-crop + size styles present
+OK   team: photo folder doc exists
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 200
      sample row: [{"id":"291fbb7f-7437-44c1-b9ba-5d398216bc77","username":"spirit","role":"org_member"}]
