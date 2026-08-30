@@ -2,15 +2,17 @@ OK   syntax: js/supabase-client.js
 OK   supabase-client.js: client created as sbClient (not supabase)
 OK   supabase-client.js: no client const named supabase
 OK   supabase-client.js: ready log present
-OK   syntax: login.html inline #1 (8079 chars)
+OK   syntax: login.html inline #1 (7205 chars)
 OK   syntax: auth/callback.html inline #1 (3260 chars)
 OK   CDN bundle loads before supabase-client.js
 OK   one Google button (login pane only)
 OK   Google button sits in the login pane (not register)
 OK   Google SVG present once
 OK   or-divider once (login pane only)
-OK   merged field label "Email or Phone Number"
-OK   spec placeholder twice
+OK   email-only field label (no phone)
+OK   email placeholders on both panes
+OK   phone sign-in fully removed
+OK   X close button → landing page
 OK   signInWithPassword used via sbClient
 OK   signUp passes role in options.data
 OK   full_name in signUp metadata
@@ -61,7 +63,7 @@ OK   shell: shell sections render in try/catch (one failure cannot blank chrome)
 OK   shell: getSession raced with timeout
 OK   shell: dropdown: My Profile + Sign out
 OK   shell: logout calls sbClient.auth.signOut()
-OK   shell: logout clears profile + goes to index.html
+OK   shell: logout clears profile + goes to login.html
 OK   shell: citizen My Profile → my-problems.html, org → org-profile.html
 OK   shell: org_member → org mapping for shell UI
 OK   shell: profile fetch uses full column list
@@ -73,6 +75,6 @@ OK   index: hero Report a Problem goes to submit.html
 OK   index: no direct go(login) on Explore buttons
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 200
-     sample row: []
+     sample row: [{"id":"291fbb7f-7437-44c1-b9ba-5d398216bc77","username":"spirit","role":"org_member"}]
 
 ALL CHECKS PASSED

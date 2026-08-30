@@ -419,7 +419,7 @@ async function logout(){
   storageSet('ss-user', '');
   storageSet('ss-role', 'guest');
   if(window.ChatCore){ try{ ChatCore.clear(); }catch(e){} }
-  go('index.html');
+  go('login.html');
 }
 document.addEventListener('click', (e) => {
   const m = document.getElementById('acctMenu');
