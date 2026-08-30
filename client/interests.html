@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body data-page="interests">
+<body data-page="interests" data-auth="required">
 <div id="app-topbar"></div>
 <div id="app-sidebar"></div>
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
@@ -27,6 +27,8 @@
 <div id="modal-mount"></div>
 <div class="toast-wrap" id="toastWrap"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>

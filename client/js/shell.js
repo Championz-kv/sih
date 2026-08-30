@@ -49,7 +49,17 @@ const NAV = [
 
 function svgIcon(paths){ return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${paths}</svg>`; }
 
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function renderTopbar(){
+  /* initAuthSession() has already resolved the Supabase session and cached the
+     profile in sessionStorage by the time this runs — a profile here means the
+     user is signed in; guests get a "Sign in" button instead of the avatar. */
+  const profile = getSessionProfile();
+  const uname = profile ? (profile.username || (profile.full_name || '').trim().split(/\s+/)[0] || '') : '';
+  const fullName = profile ? ((profile.full_name || '').trim() || uname || 'Account') : '';
   return `
   <header class="topbar">
     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">${svgIcon('<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>')}</button>
@@ -63,18 +73,6 @@ function renderTopbar(){
     </div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
-      <div class="role-switch">
-        <button class="role-btn" id="roleBtn" onclick="toggleRoleMenu()">
-          <span class="dot"></span> <span id="roleLabel">Viewing as Citizen</span>
-          ${svgIcon('<polyline points="6 9 12 15 18 9"/>')}
-        </button>
-        <div class="role-menu" id="roleMenu">
-          <button data-role="guest" onclick="setRole('guest')"><b>Guest</b><small>Browse without an account</small></button>
-          <button data-role="citizen" onclick="setRole('citizen')"><b>Citizen</b><small>Report &amp; track problems</small></button>
-          <button data-role="org" onclick="setRole('org')"><b>Organization</b><small>University · NGO · Industry</small></button>
-          <button data-role="admin" onclick="setRole('admin')"><b>Government Admin</b><small>Review &amp; monitor</small></button>
-        </div>
-      </div>
       <button class="icon-btn" onclick="go('notifications.html')" title="Notifications">
         ${svgIcon('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>')}
         <span class="ping" id="topbarPing">${NOTIFICATIONS.length}</span>
@@ -83,21 +81,24 @@ function renderTopbar(){
         <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
       </button>
+      ${signedIn ? `
       <div class="acct-wrap">
         <button class="avatar-btn" id="acctBtn" onclick="toggleAcctMenu()" title="Account">
-          <span class="avatar" id="avatarInit">GD</span>
-          <span id="avatarName">Guest Desk</span>
+          <span class="avatar" id="avatarInit" style="background:${avatarColor(uname || fullName)}; color:#fff;">${esc(initials(fullName))}</span>
+          <span id="avatarName">${esc(fullName)}</span>
+          <span class="acct-handle mono" id="acctHandle">${uname ? '@' + esc(uname) : ''}</span>
           ${svgIcon('<polyline points="6 9 12 15 18 9"/>')}
         </button>
         <div class="acct-menu" id="acctMenu">
           <div class="acct-id">
-            <b id="acctName">Guest Desk</b>
-            <span id="acctRoleLbl">Citizen account</span>
+            <b id="acctName">${esc(fullName)}</b>
+            <span id="acctRoleLbl">Account</span>
           </div>
-          <button id="acctProfileBtn" onclick="acctProfile()">View profile</button>
-          <button class="danger" onclick="logout()">Log out</button>
+          <button id="acctProfileBtn" onclick="acctProfile()">My Profile</button>
+          <button class="danger" onclick="logout()">Sign out</button>
         </div>
-      </div>
+      </div>` : `
+      <button class="btn btn-primary" onclick="go('login.html')">Sign in</button>`}
     </div>
   </header>`;
 }
@@ -295,24 +296,100 @@ function submitFundRequest(){
   if(window.renderFunding) window.renderFunding();
 }
 
+/* ---------------- session / profile handling ----------------
+   The Supabase session itself persists in localStorage (supabase-js v2
+   default). The profile row is cached in sessionStorage under 'ss_profile'
+   and rehydrated from the profiles table whenever the tab was reopened.
+   initAuthSession() runs BEFORE renderShell injects the topbar so the
+   username/role are available when it renders. */
+const SS_PROFILE_KEY = 'ss_profile';
+
+function getSessionProfile(){
+  try{ return JSON.parse(sessionStorage.getItem(SS_PROFILE_KEY) || 'null'); }catch(e){ return null; }
+}
+function saveSessionProfile(p){
+  try{ sessionStorage.setItem(SS_PROFILE_KEY, JSON.stringify(p)); }catch(e){}
+}
+function clearSessionProfile(){
+  try{ sessionStorage.removeItem(SS_PROFILE_KEY); }catch(e){}
+}
+/* profiles.role stores 'org_member'; the shell vocabulary uses 'org' */
+function shellRoleFor(role){ return role === 'org_member' ? 'org' : (role || 'citizen'); }
+
+async function fetchProfileRow(userId){
+  if(typeof sbClient === 'undefined' || !sbClient) return null;
+  try{
+    const { data, error } = await sbClient.from('profiles')
+      .select('id, username, full_name, role, avatar_url, org_id').eq('id', userId).maybeSingle();
+    if(error) console.warn('[shell] profile lookup failed:', error.message);
+    return data || null;
+  }catch(e){
+    console.warn('[shell] profile lookup failed:', e);
+    return null;
+  }
+}
+
+/* Resolve session → profile → role. If the page requires auth
+   (body[data-auth="required"]) and no session exists → login.html. */
+async function initAuthSession(){
+  const required = document.body.dataset.auth === 'required';
+  let profile = getSessionProfile();
+
+  if(typeof sbClient === 'undefined' || !sbClient){
+    /* Supabase bundle unavailable (offline / CDN blocked) — degrade to the
+       cached profile so public pages still render. */
+    if(!profile && required) go('login.html');
+    return profile;
+  }
+  try{
+    const { data } = await sbClient.auth.getSession();
+    const session = data && data.session;
+    if(session && session.user){
+      /* Tab was reopened: session exists but ss_profile is gone → refetch */
+      if(!profile || profile.id !== session.user.id){
+        profile = await fetchProfileRow(session.user.id);
+        if(profile) saveSessionProfile(profile);
+      }
+      if(profile){
+        storageSet('ss-user', profile.username || (profile.full_name || '').trim().split(/\s+/)[0] || '');
+        storageSet('ss-role', shellRoleFor(profile.role));
+      }
+    } else {
+      clearSessionProfile();
+      storageSet('ss-user', '');
+      storageSet('ss-role', 'guest');
+      if(required){ go('login.html'); return null; }
+    }
+  }catch(e){
+    console.warn('[shell] session check failed:', e);
+    if(!profile && required) go('login.html');
+  }
+  return profile;
+}
+
 /* ---------------- role handling ---------------- */
-function toggleRoleMenu(){ document.getElementById('roleMenu').classList.toggle('open'); }
+function toggleRoleMenu(){ const m = document.getElementById('roleMenu'); if(m) m.classList.toggle('open'); }
 
 /* ---- account menu ---- */
-function toggleAcctMenu(){ document.getElementById('acctMenu').classList.toggle('open'); }
+function toggleAcctMenu(){ const m = document.getElementById('acctMenu'); if(m) m.classList.toggle('open'); }
 function closeAcctMenu(){ const m = document.getElementById('acctMenu'); if(m) m.classList.remove('open'); }
 function acctProfile(){
-  const r = currentRole();
-  if(r === 'org'){ closeAcctMenu(); go('org-profile.html'); }
-  else if(r === 'citizen'){ closeAcctMenu(); go('citizen-profile.html'); }
-  else { toast('No profile page for this account type'); }
+  const p = getSessionProfile();
+  const r = p ? shellRoleFor(p.role) : currentRole();
   closeAcctMenu();
+  if(r === 'org'){ go('org-profile.html'); }
+  else if(r === 'citizen'){ go('my-problems.html'); }
+  else { toast('No profile page for this account type'); }
 }
-function logout(){
+async function logout(){
+  try{
+    if(typeof sbClient !== 'undefined' && sbClient){ await sbClient.auth.signOut(); }
+  }catch(e){ console.warn('[shell] signOut failed:', e); }
+  clearSessionProfile();
   storageSet('ss-user', '');
   storageSet('ss-role', 'guest');
   if(window.ChatCore){ try{ ChatCore.clear(); }catch(e){} }
-  go('login.html');
+  go('index.html');
 }
 document.addEventListener('click', (e) => {
   const m = document.getElementById('acctMenu');
@@ -333,19 +410,30 @@ function mockLogin(){
 function switchLoginTab(tab){
   document.querySelectorAll('.tabbar .tabbtn[data-ltab]').forEach(b => b.classList.toggle('active', b.dataset.ltab === tab));
 }
-function applyRoleUI(role){
-  document.querySelectorAll('.role-menu button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
-  const labels = { citizen:'Viewing as Citizen', org:'Viewing as Organization', admin:'Viewing as Gov. Admin', guest:'Browsing as Guest' };
-  const lbl = document.getElementById('roleLabel'); if(lbl) lbl.textContent = labels[role];
+function applyRoleUI(role, profile){
   const avatars = { citizen:['GD','Guest Desk'], guest:['GU','Guest'], org:['MU','MMMUT Desk'], admin:['AD','Admin Desk'] };
+  const uname = (profile && profile.username) ? profile.username : storageGet('ss-user');
+  const fullName = (profile && profile.full_name && profile.full_name.trim()) || uname || avatars[role][1];
   const ai = document.getElementById('avatarInit'), an = document.getElementById('avatarName');
-  const uname = storageGet('ss-user');
-  if(ai) ai.textContent = uname ? uname.slice(0,2).toUpperCase() : avatars[role][0];
-  if(an) an.textContent = uname || avatars[role][1];
+  if(ai){
+    /* Avatar: initials of the full name (first letter + first letter of the
+       second word), tinted with avatarColor(username) from app.js */
+    ai.textContent = profile ? (initials(fullName) || 'U') : (uname ? uname.slice(0,2).toUpperCase() : avatars[role][0]);
+    if(profile && typeof avatarColor === 'function'){
+      ai.style.background = avatarColor(uname || fullName);
+      ai.style.color = '#fff';
+    }
+  }
+  if(an) an.textContent = fullName;
+  const handle = document.getElementById('acctHandle');
+  if(handle){
+    if(uname){ handle.textContent = '@' + uname; handle.style.display = ''; }
+    else{ handle.style.display = 'none'; }
+  }
   const prof = document.getElementById('acctProfileBtn');
   if(prof) prof.style.display = (role === 'admin' || role === 'guest') ? 'none' : '';
   const acctName = document.getElementById('acctName');
-  if(acctName) acctName.textContent = uname || avatars[role][1];
+  if(acctName) acctName.textContent = fullName;
   const acctRoleLbl = document.getElementById('acctRoleLbl');
   if(acctRoleLbl) acctRoleLbl.textContent =
     { citizen:'Citizen account', guest:'Guest session', org:'Organization account', admin:'Administrator account' }[role] || '';
@@ -382,7 +470,10 @@ if((document.body.dataset.page || '') !== 'chatbot'){
   document.body.appendChild(cwWidget);
 }
 
-function renderShell(){
+async function renderShell(){
+  /* Resolve the Supabase session + profile BEFORE injecting the topbar so
+     the username/avatar/role are correct on first paint. */
+  const profile = await initAuthSession();
   const activePage = document.body.dataset.page || '';
   document.documentElement.setAttribute('data-theme', currentTheme());
 
@@ -393,7 +484,7 @@ function renderShell(){
   if(sidebarMount) sidebarMount.outerHTML = renderSidebar(activePage);
   if(modalMount) modalMount.outerHTML = `<div id="modal-mount">${renderModals()}</div>`;
 
-  applyRoleUI(currentRole());
+  applyRoleUI(currentRole(), profile);
   wireGlobalSearch();
 
   const menuToggle = document.getElementById('menuToggle');

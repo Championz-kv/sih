@@ -41,9 +41,9 @@ body{ min-height:100vh; display:flex; align-items:center; justify-content:center
    route to the role's landing page. */
 
 const ROLE_REDIRECTS = {
-  citizen:    '../index.html',     /* spec: /index.html  */
-  org_member: '../discover.html',  /* spec: /discover.html */
-  admin:      '../admin.html'      /* spec: /admin.html  */
+  citizen:    '../dashboard.html',  /* citizens land on their dashboard */
+  org_member: '../discover.html',   /* orgs land on matched problems */
+  admin:      '../admin.html'
 };
 
 let didRoute = false;
@@ -64,21 +64,31 @@ async function routeUser(user){
   didRoute = true;
 
   let role = 'citizen';                       /* default when no profile row yet */
+  let profile = null;
   try{
     const { data, error } = await sbClient.from('profiles')
-      .select('id, username, role').eq('id', user.id).maybeSingle();
+      .select('id, username, full_name, role, avatar_url, org_id').eq('id', user.id).maybeSingle();
     if(error) console.warn('[callback] profile lookup failed:', error.message);
-    if(data){
-      if(data.role) role = data.role;
-      if(data.username) storageSet('ss-user', data.username);
-    }
-    if(!storageGet('ss-user') && user.email){
-      storageSet('ss-user', user.email.split('@')[0]);
-    }
+    if(data) profile = data;
   }catch(e){
     console.warn('[callback] profile lookup failed:', e);
   }
 
+  if(profile && profile.role) role = profile.role;
+  if(!profile){
+    /* Fallback so the shell still has something to render — shell.js will
+       re-fetch the real row (created by the DB trigger) on the next page. */
+    const md = user.user_metadata || {};
+    profile = {
+      id: user.id,
+      username: (user.email || '').split('@')[0] || '',
+      full_name: md.full_name || md.name || '',
+      role: role
+    };
+  }
+
+  try{ sessionStorage.setItem('ss_profile', JSON.stringify(profile)); }catch(e){}
+  storageSet('ss-user', profile.username || (profile.full_name || '').trim().split(/\s+/)[0] || '');
   storageSet('ss-role', shellRoleFor(role));
   go(ROLE_REDIRECTS[role] || ROLE_REDIRECTS.citizen);
 }

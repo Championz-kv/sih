@@ -509,6 +509,9 @@ html[data-theme="dark"] #selectedCats .cat-mirror{ background:var(--surface-hi);
 }
 .acct-menu > button:hover{ background:var(--paper-2); }
 .acct-menu > button.danger:hover{ color:var(--rust); }
+/* @username handle next to the topbar avatar */
+.acct-handle{ font-size:10.5px; color:var(--text-faint); }
+.topbar-right .btn{ flex:none; }
 
 /* ---- Auth (login / register) page ---- */
 .auth-body{ min-height:100vh; display:flex; align-items:center; justify-content:center;

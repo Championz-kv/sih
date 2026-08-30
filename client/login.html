@@ -55,6 +55,19 @@ html[data-theme="dark"] .auth-body{
 .auth-ok{ display:none; margin:-4px 0 12px; font-size:12px; color:#1a7f37; text-align:center;
   background:rgba(34,139,84,.10); border-radius:8px; padding:7px 10px; }
 .auth-ok.show{ display:block; }
+/* Role picker (register) — two pill cards, side by side. No admin option:
+   admins are assigned manually in the database. */
+.role-pills{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.role-pill{
+  display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  padding:10px 12px; cursor:pointer; text-align:left;
+  background:var(--surface); border:1px solid var(--border-2); border-radius:var(--radius-m);
+  font-family:var(--font-body); transition:border-color .15s ease, background .15s ease;
+}
+.role-pill b{ font-size:13px; color:var(--ink); font-weight:600; }
+.role-pill small{ font-size:10.5px; color:var(--text-faint); line-height:1.35; }
+.role-pill:hover{ border-color:var(--setu); }
+.role-pill.sel{ border-color:var(--setu-2); background:rgba(255,162,0,.10); box-shadow:0 0 0 1px var(--setu-2) inset; }
 </style>
 </head>
 <body data-page="login">
@@ -137,6 +150,16 @@ html[data-theme="dark"] .auth-body{
           <div class="field"><label>Full Name</label>
             <input class="input" id="regFullName" placeholder="e.g. Aarav Sharma" autocomplete="name">
           </div>
+          <div class="field"><label>I am registering as</label>
+            <div class="role-pills" id="regRolePills">
+              <button type="button" class="role-pill sel" data-role="citizen" onclick="pickRegRole('citizen')">
+                <b>Citizen</b><small>Report &amp; track problems</small>
+              </button>
+              <button type="button" class="role-pill" data-role="org_member" onclick="pickRegRole('org_member')">
+                <b>Organization</b><small>University · NGO · Industry</small>
+              </button>
+            </div>
+          </div>
           <div class="field"><label>Password</label>
             <input class="input" type="password" id="regPass" placeholder="••••••••" autocomplete="new-password">
           </div>
@@ -170,6 +193,19 @@ document.documentElement.setAttribute('data-theme', currentTheme());
 
 const PHONE_EMAIL_DOMAIN = 'solvesamaj.in';
 const OAUTH_REDIRECT = 'https://sih26kuestl.vercel.app/auth/callback.html';
+
+/* Registration role — Citizen (default) or Organization. Stored in the
+   signUp metadata; the DB trigger propagates it to the profiles table. */
+let regRole = 'citizen';
+function pickRegRole(role){
+  regRole = role;
+  document.querySelectorAll('#regRolePills .role-pill').forEach(b => b.classList.toggle('sel', b.dataset.role === role));
+}
+
+/* Profile cache shared with shell.js (sessionStorage 'ss_profile') */
+function saveSsProfile(p){
+  try{ sessionStorage.setItem('ss_profile', JSON.stringify(p)); }catch(e){}
+}
 
 function showPane(id){
   document.querySelectorAll('.auth-pane').forEach(p => p.classList.remove('active'));
@@ -214,9 +250,9 @@ function identifierToEmail(raw){
   return null;
 }
 
-/* Profile role → landing page: citizen → index, org_member → discover, admin → admin */
+/* Profile role → landing page: citizen → dashboard, org_member → discover, admin → admin */
 function homeFor(role){
-  return { citizen:'index.html', org_member:'discover.html', admin:'admin.html' }[role] || 'index.html';
+  return { citizen:'dashboard.html', org_member:'discover.html', admin:'admin.html' }[role] || 'dashboard.html';
 }
 /* shell.js role vocabulary uses 'org' for organization accounts */
 function shellRoleFor(role){ return role === 'org_member' ? 'org' : role; }
@@ -224,7 +260,7 @@ function shellRoleFor(role){ return role === 'org_member' ? 'org' : role; }
 async function fetchProfile(userId){
   try{
     const { data, error } = await sbClient.from('profiles')
-      .select('id, username, role').eq('id', userId).maybeSingle();
+      .select('id, username, full_name, role, avatar_url, org_id').eq('id', userId).maybeSingle();
     if(error) console.warn('[auth] profile lookup failed:', error.message);
     return data || null;
   }catch(e){
@@ -258,6 +294,7 @@ async function doLogin(){
     const role = (profile && profile.role) || 'citizen';
     storageSet('ss-user', (profile && profile.username) || (id.isPhone ? raw.trim() : raw.trim().split('@')[0]));
     storageSet('ss-role', shellRoleFor(role));
+    if(profile) saveSsProfile(profile);
     go(homeFor(role));
   } finally {
     setBusy('loginSubmitBtn', false, 'Login');
@@ -297,7 +334,7 @@ async function doRegister(){
           username: u,
           full_name: fullName,
           phone: id.isPhone ? id.phone : null,
-          role: 'citizen'
+          role: regRole
         }
       }
     });
@@ -306,8 +343,11 @@ async function doRegister(){
     if(data.session){
       /* Email confirmation disabled → signed in immediately */
       storageSet('ss-user', u);
-      storageSet('ss-role', 'citizen');
-      go('index.html');
+      storageSet('ss-role', shellRoleFor(regRole));
+      /* Minimal cached profile (no id) — shell.js re-fetches the real DB row
+         (created by the trigger) when the landing page loads */
+      saveSsProfile({ username:u, full_name:fullName, role:regRole });
+      go(homeFor(regRole));
       return;
     }
     const ok = document.getElementById('regOk');

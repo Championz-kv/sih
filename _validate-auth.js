@@ -53,11 +53,11 @@ const loginChecks = [
   ['merged field label "Email or Phone Number"', (login.match(/Email or Phone Number/g) || []).length === 2],
   ['spec placeholder twice', (login.match(/Enter your email or 10-digit mobile number/g) || []).length === 2],
   ['signInWithPassword used via sbClient', login.includes('sbClient.auth.signInWithPassword')],
-  ['signUp passes role citizen in options.data', /options:\s*\{[\s\S]*?role:\s*'citizen'[\s\S]*?\}/.test(login)],
+  ['signUp passes role in options.data', /options:\s*\{[\s\S]*?role:\s*regRole[\s\S]*?\}/.test(login)],
   ['full_name in signUp metadata', login.includes('full_name: fullName')],
   ['username availability check via profiles', /from\('profiles'\)[\s\S]{0,80}eq\('username', u\)/.test(login)],
   ['oauth redirectTo callback', login.includes('https://sih26kuestl.vercel.app/auth/callback.html')],
-  ['role redirect map (citizen→index, org_member→discover, admin→admin)', /citizen:'index.html', org_member:'discover.html', admin:'admin.html'/.test(login)],
+  ['role redirect map (citizen→dashboard, org_member→discover, admin→admin)', /citizen:'dashboard.html', org_member:'discover.html', admin:'admin.html'/.test(login)],
   ['success message', login.includes('Account created! Check your email to confirm.')],
   ['no leftover account-type select', !login.includes('id="userType"')],
   ['no leftover separate phone field', !login.includes('id="regPhone"')],
@@ -82,7 +82,7 @@ const cbChecks = [
   ['links ../css/styles.css', cb.includes('../css/styles.css')],
   ['loads ../js/supabase-client.js after CDN bundle', cb.indexOf('cdn.jsdelivr.net/npm/@supabase/supabase-js@2') < cb.indexOf('../js/supabase-client.js')],
   ['listens to onAuthStateChange', cb.includes('onAuthStateChange')],
-  ['redirects by role', cb.includes("'../index.html'") && cb.includes("'../discover.html'") && cb.includes("'../admin.html'")],
+  ['redirects by role', cb.includes("'../dashboard.html'") && cb.includes("'../discover.html'") && cb.includes("'../admin.html'")],
   ['shows "Signing you in…"', cb.includes('Signing you in')],
   ['profiles role lookup', /from\('profiles'\)/.test(cb)],
   ['no bare supabase.* client calls (namespace conflict gone)', !/\bsupabase\.(from|auth)\./.test(cb)],
@@ -90,6 +90,89 @@ const cbChecks = [
 ];
 for(const [name, pass] of cbChecks){
   console.log((pass ? 'OK   ' : 'FAIL ') + 'callback: ' + name);
+  if(!pass) ok = false;
+}
+
+/* 4b. Task set 2 — registration role picker */
+const pillChecks = [
+  ['two role pills (citizen + org_member)', /data-role="citizen"/.test(login) && /data-role="org_member"/.test(login)],
+  ['no admin option in the picker', !/regRolePills[\s\S]{0,600}admin/i.test(login)],
+  ['pills sit between Full Name and Password', login.indexOf('regFullName') < login.indexOf('regRolePills') && login.indexOf('regRolePills') < login.indexOf('id="regPass"')],
+  ['pickRegRole defined', login.includes('function pickRegRole(')],
+  ['signUp passes role: regRole', /role:\s*regRole/.test(login)],
+  ['profile cached to ss_profile on login', login.includes("saveSsProfile(profile)")],
+  ['immediate-session reg caches minimal profile', /saveSsProfile\(\{\s*username:u,\s*full_name:fullName,\s*role:regRole\s*\}\)/.test(login)],
+  ['full profile columns fetched', login.includes("select('id, username, full_name, role, avatar_url, org_id')")],
+];
+for(const [name, pass] of pillChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'register: ' + name);
+  if(!pass) ok = false;
+}
+
+/* 4c. Task set 2 — shell session/UI integration */
+const shell = fs.readFileSync(path.join(root, 'js', 'shell.js'), 'utf8');
+try{ new Function(shell); console.log('OK   syntax: js/shell.js'); }
+catch(e){ console.error('FAIL js/shell.js:', e.message); ok = false; }
+
+const shellChecks = [
+  ['ss_profile sessionStorage cache used', shell.includes("'ss_profile'") && shell.includes('getSessionProfile') && shell.includes('saveSessionProfile') && shell.includes('clearSessionProfile')],
+  ['initAuthSession checks getSession()', shell.includes('sbClient.auth.getSession()')],
+  ['profile refetch when cache missing (tab reopen)', shell.includes("profile.id !== session.user.id")],
+  ['auth guard via body[data-auth="required"]', shell.includes("document.body.dataset.auth === 'required'")],
+  ['renderShell awaits session before rendering', /async function renderShell\(\)\s*\{[\s\S]{0,200}await initAuthSession\(\)/.test(shell)],
+  ['renderShell passes profile to applyRoleUI', shell.includes('applyRoleUI(currentRole(), profile)')],
+  ['topbar: avatar tinted via avatarColor + initials(full_name)', shell.includes('avatarColor(uname || fullName)') && shell.includes('initials(fullName)')],
+  ['topbar: @username mono handle', shell.includes('acct-handle mono')],
+  ['topbar: Sign in button for guests', shell.includes(">Sign in</button>")],
+  ['demo role-switcher removed from topbar', !shell.includes('class="role-switch"')],
+  ['dropdown: My Profile + Sign out', shell.includes("onclick=\"acctProfile()\">My Profile</button>") && shell.includes('onclick="logout()">Sign out</button>')],
+  ['logout calls sbClient.auth.signOut()', shell.includes('await sbClient.auth.signOut()')],
+  ['logout clears profile + goes to index.html', /clearSessionProfile\(\);[\s\S]{0,200}go\('index.html'\)/.test(shell)],
+  ['citizen My Profile → my-problems.html, org → org-profile.html', shell.includes("go('my-problems.html')") && shell.includes("go('org-profile.html')")],
+  ['org_member → org mapping for shell UI', shell.includes("role === 'org_member' ? 'org'")],
+  ['profile fetch uses full column list', shell.includes("select('id, username, full_name, role, avatar_url, org_id')")],
+];
+for(const [name, pass] of shellChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'shell: ' + name);
+  if(!pass) ok = false;
+}
+
+/* 4d. Task set 2 — page coverage: supabase tags + data-auth */
+const AUTH_REQUIRED = ['my-problems.html','submit.html','org-profile.html','discover.html','interests.html',
+  'projects.html','requests.html','notifications.html','admin.html','verify.html','review.html'];
+const PUBLIC_PAGES = ['index.html','explore.html','problem.html','analytics.html','organizations.html','team.html'];
+let pageFail = 0;
+for(const f of fs.readdirSync(root)){
+  if(!f.endsWith('.html') || f === 'login.html') continue;
+  const html = fs.readFileSync(path.join(root, f), 'utf8');
+  const hasTags = html.includes('supabase-js@2') && html.includes('supabase-client.js');
+  const tagOrder = hasTags ? html.indexOf('supabase-js@2') < html.indexOf('supabase-client.js') : false;
+  const needsAuth = AUTH_REQUIRED.includes(f);
+  const hasAuth = html.includes('data-auth="required"');
+  if(!hasTags || !tagOrder || (needsAuth && !hasAuth) || (!needsAuth && PUBLIC_PAGES.includes(f) && hasAuth)){
+    console.log(`FAIL page: ${f}` + (!hasTags ? ' — missing supabase tags' : '') + (!tagOrder ? ' — CDN/client order wrong' : '') + ((needsAuth && !hasAuth) ? ' — missing data-auth' : '') + ((!needsAuth && PUBLIC_PAGES.includes(f) && hasAuth) ? ' — public page should not have data-auth' : ''));
+    pageFail++;
+  }
+}
+if(pageFail === 0) console.log('OK   pages: supabase tags + data-auth coverage correct on all shell pages');
+else ok = false;
+
+/* 4e. Task set 2 — index.html explore gate */
+const idx = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+try{ 
+  extractInlineScripts(path.join(root, 'index.html')).forEach((code, i) => {
+    new Function(code);
+    console.log(`OK   syntax: index.html inline #${i + 1}`);
+  });
+}catch(e){ console.error('FAIL index.html inline:', e.message); ok = false; }
+const idxChecks = [
+  ['exploreGate defined', idx.includes('async function exploreGate()')],
+  ['exploreGate checks ss_profile + getSession', idx.includes("sessionStorage.getItem('ss_profile')") && idx.includes('sbClient.auth.getSession()')],
+  ['both Explore Problems buttons gated', (idx.match(/onclick="exploreGate\(\)">Explore Problems/g) || []).length === 2],
+  ['no direct go(login) on Explore buttons', !/go\('login\.html'\)">Explore Problems/.test(idx)],
+];
+for(const [name, pass] of idxChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'index: ' + name);
   if(!pass) ok = false;
 }
 
