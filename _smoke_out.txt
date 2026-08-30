@@ -4,6 +4,7 @@ OK   topbar: @username shown
 OK   topbar: avatar initials present
 OK   topbar: no Sign in button while signed in
 OK   topbar: My Profile + Sign out present
+OK   topbar: brand links to landing page
 OK   topbar: guest gets Sign in button
 OK   topbar: no account area for guest
 OK   renderSidebar() executes

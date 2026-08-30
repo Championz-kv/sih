@@ -64,7 +64,7 @@ function renderTopbar(){
   return `
   <header class="topbar">
     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">${svgIcon('<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>')}</button>
-    <a class="brand" href="dashboard.html${paramStr()}" style="text-decoration:none;">
+    <a class="brand" href="index.html${paramStr()}" style="text-decoration:none;">
       <div class="brand-mark">S</div>
       <div class="brand-text"><b>SolveSamaj</b><span>Innovation Portal</span></div>
     </a>

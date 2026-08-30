@@ -5,9 +5,10 @@ OK   supabase-client.js: ready log present
 OK   syntax: login.html inline #1 (7409 chars)
 OK   syntax: auth/callback.html inline #1 (3212 chars)
 OK   CDN bundle loads before supabase-client.js
-OK   two Google buttons (login + register)
-OK   Google SVG present twice
-OK   or-divider twice
+OK   one Google button (login pane only)
+OK   Google button sits in the login pane (not register)
+OK   Google SVG present once
+OK   or-divider once (login pane only)
 OK   merged field label "Email or Phone Number"
 OK   spec placeholder twice
 OK   signInWithPassword used via sbClient
@@ -51,6 +52,7 @@ OK   shell: topbar: @username mono handle
 OK   shell: topbar: Sign in button for guests
 OK   shell: demo role-switcher removed from topbar
 OK   shell: renderTopbar defines signedIn before use
+OK   shell: brand logo links to landing page (index.html)
 OK   shell: shell sections render in try/catch (one failure cannot blank chrome)
 OK   shell: getSession raced with timeout
 OK   shell: dropdown: My Profile + Sign out
@@ -61,9 +63,9 @@ OK   shell: org_member → org mapping for shell UI
 OK   shell: profile fetch uses full column list
 OK   pages: supabase tags + data-auth coverage correct on all shell pages
 OK   syntax: index.html inline #1
-OK   index: exploreGate defined
-OK   index: exploreGate checks ss_profile + getSession
-OK   index: both Explore Problems buttons gated
+OK   index: both Explore Problems buttons go straight to explore.html
+OK   index: exploreGate helper removed (guests go straight in)
+OK   index: hero Report a Problem goes to submit.html
 OK   index: no direct go(login) on Explore buttons
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 200

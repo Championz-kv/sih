@@ -47,9 +47,10 @@ for(const rel of ['login.html', 'auth/callback.html']){
 const login = fs.readFileSync(path.join(root, 'login.html'), 'utf8');
 const loginChecks = [
   ['CDN bundle loads before supabase-client.js', login.indexOf('cdn.jsdelivr.net/npm/@supabase/supabase-js@2') > -1 && login.indexOf('cdn.jsdelivr.net/npm/@supabase/supabase-js@2') < login.indexOf('js/supabase-client.js')],
-  ['two Google buttons (login + register)', (login.match(/class="btn-google"/g) || []).length === 2],
-  ['Google SVG present twice', (login.match(/viewBox="0 0 48 48"/g) || []).length === 2],
-  ['or-divider twice', (login.match(/class="auth-divider"/g) || []).length === 2],
+  ['one Google button (login pane only)', (login.match(/class="btn-google"/g) || []).length === 1],
+  ['Google button sits in the login pane (not register)', login.indexOf('class="btn-google"') > -1 && login.indexOf('class="btn-google"') < login.indexOf('id="regErr"') && login.indexOf('class="btn-google"') === login.lastIndexOf('class="btn-google"')],
+  ['Google SVG present once', (login.match(/viewBox="0 0 48 48"/g) || []).length === 1],
+  ['or-divider once (login pane only)', (login.match(/class="auth-divider"/g) || []).length === 1],
   ['merged field label "Email or Phone Number"', (login.match(/Email or Phone Number/g) || []).length === 2],
   ['spec placeholder twice', (login.match(/Enter your email or 10-digit mobile number/g) || []).length === 2],
   ['signInWithPassword used via sbClient', login.includes('sbClient.auth.signInWithPassword')],
@@ -126,6 +127,7 @@ const shellChecks = [
   ['topbar: Sign in button for guests', shell.includes(">Sign in</button>")],
   ['demo role-switcher removed from topbar', !shell.includes('class="role-switch"')],
   ['renderTopbar defines signedIn before use', /const signedIn = !!profile/.test(shell)],
+  ['brand logo links to landing page (index.html)', shell.includes('href="index.html${paramStr()}"')],
   ['shell sections render in try/catch (one failure cannot blank chrome)', (shell.match(/catch\(e\)\{ console\.error\('\[shell\] (topbar|sidebar|modals) render failed/g) || []).length === 3],
   ['getSession raced with timeout', shell.includes('Promise.race')],
   ['dropdown: My Profile + Sign out', shell.includes("onclick=\"acctProfile()\">My Profile</button>") && shell.includes('onclick="logout()">Sign out</button>')],
@@ -169,9 +171,9 @@ try{
   });
 }catch(e){ console.error('FAIL index.html inline:', e.message); ok = false; }
 const idxChecks = [
-  ['exploreGate defined', idx.includes('async function exploreGate()')],
-  ['exploreGate checks ss_profile + getSession', idx.includes("sessionStorage.getItem('ss_profile')") && idx.includes('sbClient.auth.getSession()')],
-  ['both Explore Problems buttons gated', (idx.match(/onclick="exploreGate\(\)">Explore Problems/g) || []).length === 2],
+  ['both Explore Problems buttons go straight to explore.html', (idx.match(/onclick="go\('explore\.html'\)">Explore Problems<\/button>/g) || []).length === 2],
+  ['exploreGate helper removed (guests go straight in)', !idx.includes('exploreGate')],
+  ['hero Report a Problem goes to submit.html', /go\('submit\.html'\)"[^>]*><i class="fa-solid fa-bullhorn"><\/i> Report a Problem</.test(idx)],
   ['no direct go(login) on Explore buttons', !/go\('login\.html'\)">Explore Problems/.test(idx)],
 ];
 for(const [name, pass] of idxChecks){
