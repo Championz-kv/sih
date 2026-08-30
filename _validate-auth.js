@@ -218,6 +218,25 @@ for(const [name, pass] of tempChecks){
   if(!pass) ok = false;
 }
 
+/* 4h. citizen profile ↔ Supabase */
+const cp = fs.readFileSync(path.join(root, 'citizen-profile.html'), 'utf8');
+const cpChecks = [
+  ['about field has id cAbout', /textarea class="input" id="cAbout"/.test(cp)],
+  ['link inputs use .link-input (static + dynamic rows)', (cp.match(/class="input link-input"/g) || []).length === 2],
+  ['username/email readonly with notes', cp.includes('id="cUser" value="guest" readonly') && cp.includes('(username cannot be changed)') && cp.includes('(email cannot be changed)')],
+  ['loads profile with full column list', cp.includes("select('id, username, full_name, email, phone, about, address, link_others, funding_verified, funding_awaited')")],
+  ['no session redirects to login', cp.includes("go('login.html')")],
+  ['save uses sbClient update on profiles', /from\('profiles'\)[\s\S]{0,40}\.update\(payload\)/.test(cp)],
+  ['links joined as newline string on save', cp.includes(".join('\\n')")],
+  ['ss_profile synced after save', cp.includes("sessionStorage.getItem('ss_profile')")],
+  ['civic counts via head:true', (cp.match(/count:'exact', head:true/g) || []).length === 2],
+  ['page requires auth via body flag', cp.includes('data-auth="required"')],
+];
+for(const [name, pass] of cpChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'citizen-profile: ' + name);
+  if(!pass) ok = false;
+}
+
 /* 5. live probes */
 const SUPA = 'https://chwvtrcxnfqfkwlaxxbo.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNod3Z0cmN4bmZxZmt3bGF4eGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDczNjUsImV4cCI6MjEwMzI4MzM2NX0.RS5UcZDMG4hYV4ksztZvxDIO51LJVP9GkRjpJQD1ZoY';

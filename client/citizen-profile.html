@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body data-page="citizenprofile">
+<body data-page="citizenprofile" data-auth="required">
 <div id="app-topbar"></div>
 <div id="app-sidebar"></div>
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
@@ -20,16 +20,16 @@
     <div class="card card-pad">
       <div class="field-row">
         <div class="field"><label>Full name</label><input class="input" id="cName" value="Guest Citizen"></div>
-        <div class="field"><label>Username</label><input class="input" id="cUser" value="guest"></div>
+        <div class="field"><label>Username</label><input class="input" id="cUser" value="guest" readonly><div class="hint">(username cannot be changed)</div></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com" readonly><div class="hint">(email cannot be changed)</div></div>
         <div class="field"><label>Phone</label><input class="input" type="tel" id="cPhone" placeholder="+91 …"></div>
       </div>
-      <div class="field"><label>About</label><textarea class="input" placeholder="Tell people a little about yourself…"></textarea></div>
+      <div class="field"><label>About</label><textarea class="input" id="cAbout" placeholder="Tell people a little about yourself…"></textarea></div>
       <div class="field"><label>Address</label><textarea class="input" id="cAddr" placeholder="Block, District, State…"></textarea></div>
       <div class="field"><label>Links <span style="font-weight:400; color:var(--text-faint);">(personal sites, profiles)</span></label>
-        <div id="linkRows"><div class="link-row"><input class="input" type="url" id="cLink" placeholder="https://…"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <div id="linkRows"><div class="link-row"><input class="input link-input" type="url" placeholder="https://…"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
         <button class="btn btn-ghost btn-sm" type="button" onclick="addLinkRow()">+ Add another link</button>
       </div>
       <div class="row-flex" style="justify-content:flex-end;">
@@ -67,8 +67,11 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
+/* ---- Profile ↔ Supabase (profiles table) ----
+   Loads the signed-in citizen's profile + live civic counts, saves edits,
+   and keeps the topbar in sync through the ss_profile cache. */
 function profileLinkRowHTML(){
-  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+  return '<div class="link-row"><input class="input link-input" type="url" placeholder="https://…">' +
     '<button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeLinkRow(this)">' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
 }
@@ -80,40 +83,134 @@ function removeLinkRow(btn){
   if(rows.length === 1){ rows[0].querySelector('input').value = ''; return; }
   btn.closest('.link-row').remove();
 }
-function saveProfile(){
-  toast('Profile saved (placeholder — nothing sent)');
+
+/* Newline-separated link_others → one filled row per non-empty link */
+function fillLinkRows(linkOthers){
+  const wrap = document.getElementById('linkRows');
+  wrap.innerHTML = '';
+  const list = (linkOthers || '').split('\n').map(s => s.trim()).filter(Boolean);
+  (list.length ? list : ['']).forEach(v => {
+    wrap.insertAdjacentHTML('beforeend', profileLinkRowHTML());
+    wrap.lastElementChild.querySelector('input').value = v;
+  });
 }
+
+function statRowHTML(label, value){
+  return '<div class="row-flex" style="justify-content:space-between; font-size:12.5px;">' +
+    '<span style="color:var(--text-faint);">' + label + '</span><b>' + value + '</b></div>';
+}
+
+/* Minimal stand-in if the profiles row is missing so the page still works */
+function minimalFromAuth(user){
+  const md = user.user_metadata || {};
+  const local = (user.email || '').split('@')[0] || '';
+  return {
+    username: local.replace(/^phone_91/, ''),
+    full_name: md.full_name || md.name || '',
+    email: user.email || ''
+  };
+}
+
+function renderFundingCard(p){
+  document.getElementById('citizenFunding').innerHTML =
+    '<div class="grid grid-2" style="margin-bottom:12px;">' +
+      '<div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">₹' + (p.funding_verified ?? 0) + '</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>' +
+      '<div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">₹' + (p.funding_awaited ?? 0) + '</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>' +
+    '</div>' +
+    '<p style="font-size:12px; color:var(--text-faint); margin:0;">Funding pledges will appear here once the funding module is connected to Supabase.</p>';
+}
+
+async function currentSession(){
+  const { data } = await sbClient.auth.getSession();
+  return (data && data.session) || null;
+}
+
+async function loadProfile(){
+  try{
+    const session = await currentSession();
+    if(!session || !session.user){ go('login.html'); return; }
+    const user = session.user;
+
+    const { data: profile, error } = await sbClient.from('profiles')
+      .select('id, username, full_name, email, phone, about, address, link_others, funding_verified, funding_awaited')
+      .eq('id', user.id)
+      .single();
+    if(error) console.warn('[profile] load failed:', error.message);
+    const p = profile || minimalFromAuth(user);
+
+    $('#cName').value = p.full_name || '';
+    $('#cUser').value = p.username || '';
+    $('#cUser').readOnly = true;
+    $('#cEmail').value = p.email || user.email || '';
+    $('#cEmail').readOnly = true;
+    $('#cPhone').value = p.phone || '';
+    $('#cAbout').value = p.about || '';
+    $('#cAddr').value = p.address || '';
+    fillLinkRows(p.link_others);
+
+    const av = document.getElementById('cAvatar');
+    av.textContent = initials(p.full_name) || (p.username || 'U').slice(0, 2).toUpperCase();
+    av.style.background = avatarColor(p.username || p.full_name);
+    document.getElementById('pvName').textContent = p.full_name || p.username || 'Profile';
+
+    /* live counts — head:true transfers the count only, no rows */
+    const posted = await sbClient.from('problems')
+      .select('id', { count:'exact', head:true }).eq('submitted_by', user.id);
+    const supported = await sbClient.from('problem_support')
+      .select('problem_id', { count:'exact', head:true }).eq('user_id', user.id);
+    if(posted.error) console.warn('[profile] problems count failed:', posted.error.message);
+    if(supported.error) console.warn('[profile] support count failed:', supported.error.message);
+
+    document.getElementById('civicStats').innerHTML =
+      statRowHTML('Problems Posted', posted.count ?? 0) +
+      statRowHTML('Cases Supported', supported.count ?? 0) +
+      statRowHTML('Funding Verified', '₹' + (p.funding_verified ?? 0)) +
+      statRowHTML('Funding Awaited', '₹' + (p.funding_awaited ?? 0));
+
+    renderFundingCard(p);
+  }catch(e){
+    console.error('[profile] load error:', e);
+  }
+}
+async function saveProfile(){
+  const session = await currentSession();
+  if(!session || !session.user){ go('login.html'); return; }
+
+  const payload = {
+    full_name: document.getElementById('cName').value.trim(),
+    phone: document.getElementById('cPhone').value.trim(),
+    about: document.getElementById('cAbout').value.trim(),
+    address: document.getElementById('cAddr').value.trim(),
+    link_others: [...document.querySelectorAll('.link-input')]
+      .map(i => i.value.trim()).filter(Boolean).join('\n')
+  };
+  if(!payload.full_name){ toast('Full name is required'); return; }
+
+  const { error } = await sbClient.from('profiles')
+    .update(payload)
+    .eq('id', session.user.id);
+
+  if(error){ toast('Failed to save — ' + error.message); return; }
+  toast('Profile saved successfully');
+
+  /* keep the topbar in sync without a reload */
+  try{
+    const stored = JSON.parse(sessionStorage.getItem('ss_profile') || '{}');
+    stored.full_name = payload.full_name;
+    sessionStorage.setItem('ss_profile', JSON.stringify(stored));
+    applyRoleUI(currentRole(), stored);
+  }catch(e){}
+
+  document.getElementById('pvName').textContent = payload.full_name;
+  const av = document.getElementById('cAvatar');
+  av.textContent = initials(payload.full_name) || 'U';
+  av.style.background = avatarColor(document.getElementById('cUser').value);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   $ = id => document.getElementById(id);
-  /* prefill from the signed-in session */
-  const uname = storageGet('ss-user') || '';
-  if(uname){ $('cUser').value = uname; $('cName').value = uname; $('pvName').textContent = uname; }
-  $('cAvatar').textContent = (uname || 'Guest Citizen').slice(0,2).toUpperCase();
-  const citizenName = uname || 'Ravi Sharma';
-  const citizenRows = [];
-  FUND_REQUESTS.forEach(fr => fr.pledges.forEach(p => {
-    if(p.type === 'individual' && p.by === citizenName) citizenRows.push({ fr, pledge:p });
-  }));
-  const received = citizenRows.filter(r => r.pledge.status === 'received').reduce((sum,r) => sum + r.pledge.amount, 0);
-  const pledged = citizenRows.filter(r => r.pledge.status === 'pledged').reduce((sum,r) => sum + r.pledge.amount, 0);
-  const donated = received > 0;
-  $('civicStats').innerHTML =
-    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Donated</span><b style="color:${donated?'var(--ledger)':'var(--text-faint)'};">${donated?'Yes ✓':'No'}</b></div>` +
-    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Problems posted</span><b>${PROBLEMS.filter(p=>p.orgs.length===0).length||0}</b></div>` +
-    `<div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Supported cases</span><b>${Math.min(PROBLEMS.length, 2)}</b></div>`;
-  $('citizenFunding').innerHTML = `
-    <div class="grid grid-2" style="margin-bottom:12px;">
-      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(received)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
-      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(pledged)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
-    </div>
-    ${citizenRows.length ? citizenRows.map(({fr, pledge}) => `
-      <div class="person-row">
-        <div class="av" style="border-radius:6px;">₹</div>
-        <div style="flex:1;"><b>${inr(pledge.amount)}</b><span>${fr.id} · ${fr.title}</span></div>
-        ${pledge.status === 'received' ? '<span class="stamp stamp-validated">Received</span>' : '<span class="stamp stamp-pending">Pledged</span>'}
-      </div>`).join('')
-    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No personal contributions recorded yet.</p>'}`;
+  loadProfile();
 });
 </script>
 </body>

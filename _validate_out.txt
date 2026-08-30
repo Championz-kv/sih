@@ -2,7 +2,7 @@ OK   syntax: js/supabase-client.js
 OK   supabase-client.js: client created as sbClient (not supabase)
 OK   supabase-client.js: no client const named supabase
 OK   supabase-client.js: ready log present
-OK   syntax: login.html inline #1 (7205 chars)
+OK   syntax: login.html inline #1 (7400 chars)
 OK   syntax: auth/callback.html inline #1 (3260 chars)
 OK   CDN bundle loads before supabase-client.js
 OK   one Google button (login pane only)
@@ -81,6 +81,16 @@ OK   temp-ui: login: sample-ids tile present (temp)
 OK   temp-ui: login: tile clearly marked removable
 OK   temp-ui: index: github link in footer
 OK   temp-ui: team: github link at bottom
+OK   citizen-profile: about field has id cAbout
+OK   citizen-profile: link inputs use .link-input (static + dynamic rows)
+OK   citizen-profile: username/email readonly with notes
+OK   citizen-profile: loads profile with full column list
+OK   citizen-profile: no session redirects to login
+OK   citizen-profile: save uses sbClient update on profiles
+OK   citizen-profile: links joined as newline string on save
+OK   citizen-profile: ss_profile synced after save
+OK   citizen-profile: civic counts via head:true
+OK   citizen-profile: page requires auth via body flag
 OK   anon key decodes → role: anon, ref: chwvtrcxnfqfkwlaxxbo
 REST probe profiles → HTTP 200
      sample row: [{"id":"291fbb7f-7437-44c1-b9ba-5d398216bc77","username":"spirit","role":"org_member"}]
