@@ -88,6 +88,7 @@ const cbChecks = [
   ['profiles role lookup', /from\('profiles'\)/.test(cb)],
   ['no bare supabase.* client calls (namespace conflict gone)', !/\bsupabase\.(from|auth)\./.test(cb)],
   ['sbClient used for every client call', cb.includes("sbClient.from('profiles')") && cb.includes('sbClient.auth.getSession') && cb.includes('sbClient.auth.onAuthStateChange')],
+  ['callback: fallback profile marked _minimal', cb.includes('_minimal: true')],
 ];
 for(const [name, pass] of cbChecks){
   console.log((pass ? 'OK   ' : 'FAIL ') + 'callback: ' + name);
@@ -102,6 +103,7 @@ const pillChecks = [
   ['pickRegRole defined', login.includes('function pickRegRole(')],
   ['signUp passes role: regRole', /role:\s*regRole/.test(login)],
   ['profile cached to ss_profile on login', login.includes("saveSsProfile(profile)")],
+  ['login caches minimal profile when row missing', /fetchProfile\(data\.user\.id\) \|\| minimalProfile\(data\.user\)/.test(login)],
   ['immediate-session reg caches minimal profile', /saveSsProfile\(\{\s*username:u,\s*full_name:fullName,\s*role:regRole\s*\}\)/.test(login)],
   ['full profile columns fetched', login.includes("select('id, username, full_name, role, avatar_url, org_id')")],
 ];
@@ -119,6 +121,7 @@ const shellChecks = [
   ['ss_profile sessionStorage cache used', shell.includes("'ss_profile'") && shell.includes('getSessionProfile') && shell.includes('saveSessionProfile') && shell.includes('clearSessionProfile')],
   ['initAuthSession checks getSession()', shell.includes('sbClient.auth.getSession()')],
   ['profile refetch when cache missing (tab reopen)', shell.includes("profile.id !== session.user.id")],
+  ['minimal profile fallback when profiles row missing', shell.includes('_minimal') && shell.includes('minimalProfileFromUser')],
   ['auth guard via body[data-auth="required"]', shell.includes("document.body.dataset.auth === 'required'")],
   ['renderShell awaits session before rendering', /async function renderShell\(\)\s*\{[\s\S]{0,200}await initAuthSession\(\)/.test(shell)],
   ['renderShell passes profile to applyRoleUI', shell.includes('applyRoleUI(currentRole(), profile)')],

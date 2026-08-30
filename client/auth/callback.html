@@ -76,14 +76,15 @@ async function routeUser(user){
 
   if(profile && profile.role) role = profile.role;
   if(!profile){
-    /* Fallback so the shell still has something to render — shell.js will
-       re-fetch the real row (created by the DB trigger) on the next page. */
+    /* Fallback so the shell still has something to render — marked _minimal
+       so shell.js keeps re-fetching the real row on later page loads. */
     const md = user.user_metadata || {};
     profile = {
       id: user.id,
-      username: (user.email || '').split('@')[0] || '',
+      username: ((user.email || '').split('@')[0] || '').replace(/^phone_91/, ''),
       full_name: md.full_name || md.name || '',
-      role: role
+      role: role,
+      _minimal: true
     };
   }
 

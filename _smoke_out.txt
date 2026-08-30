@@ -11,6 +11,8 @@ OK   topbar: no account area for guest
 OK   topbar: notifications bell hidden for guests
 OK   renderSidebar() executes
 OK   initAuthSession returns cached profile (session present)
+OK   no profiles row → minimal profile built from session
+OK   topbar: account area renders with minimal profile
 OK   applyRoleUI(citizen, profile) executes
 OK   applyRoleUI tolerates unmapped role
 OK   auth-required + no session redirects to login.html — lastNav=login.html

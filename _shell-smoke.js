@@ -51,12 +51,15 @@ global.renderModals = () => '<div id="loginModal"></div>';
 /* ---- fake supabase client ---- */
 const profRow = { id:'u1', username:'aarav', full_name:'Aarav Sharma', role:'citizen', avatar_url:null, org_id:null };
 global.__fakeSession = true;
+global.__fakeRow = profRow;   /* set to null to simulate a missing profiles row */
 global.sbClient = {
   auth: {
-    getSession: async () => ({ data:{ session: global.__fakeSession ? { user:{ id:'u1' } } : null } }),
+    getSession: async () => ({ data:{ session: global.__fakeSession ? {
+      user:{ id:'u1', email:'aarav@example.com', user_metadata:{ full_name:'Aarav Sharma', role:'citizen' } }
+    } : null } }),
     signOut: async () => {}
   },
-  from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: profRow }) }) }) })
+  from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: global.__fakeRow }) }) }) })
 };
 
 /* ---- RUNNER APPENDED BELOW ---- */
@@ -93,6 +96,18 @@ const runner = `
     sessionStorage.setItem('ss_profile', JSON.stringify({ id:'u1', username:'aarav', full_name:'Aarav Sharma', role:'citizen' }));
     const p = await initAuthSession();
     check('initAuthSession returns cached profile (session present)', !!p && p.username === 'aarav');
+
+    /* missing profiles row → minimal profile keeps the account area alive */
+    global.__fakeRow = null;
+    sessionStorage.removeItem('ss_profile');
+    const mp = await initAuthSession();
+    check('no profiles row → minimal profile built from session',
+      !!mp && mp._minimal === true && mp.username === 'aarav' && mp.role === 'citizen');
+    sessionStorage.setItem('ss_profile', JSON.stringify(mp));
+    const mh = renderTopbar();
+    check('topbar: account area renders with minimal profile',
+      mh.indexOf('acct-wrap') !== -1 && mh.indexOf('Sign in</button>') === -1 && mh.indexOf('@aarav') !== -1);
+    global.__fakeRow = profRow;
 
     /* role UI against stub DOM */
     try{ applyRoleUI('citizen', p); check('applyRoleUI(citizen, profile) executes', true); }

@@ -2,8 +2,8 @@ OK   syntax: js/supabase-client.js
 OK   supabase-client.js: client created as sbClient (not supabase)
 OK   supabase-client.js: no client const named supabase
 OK   supabase-client.js: ready log present
-OK   syntax: login.html inline #1 (7409 chars)
-OK   syntax: auth/callback.html inline #1 (3212 chars)
+OK   syntax: login.html inline #1 (8079 chars)
+OK   syntax: auth/callback.html inline #1 (3260 chars)
 OK   CDN bundle loads before supabase-client.js
 OK   one Google button (login pane only)
 OK   Google button sits in the login pane (not register)
@@ -32,18 +32,21 @@ OK   callback: shows "Signing you in…"
 OK   callback: profiles role lookup
 OK   callback: no bare supabase.* client calls (namespace conflict gone)
 OK   callback: sbClient used for every client call
+OK   callback: callback: fallback profile marked _minimal
 OK   register: two role pills (citizen + org_member)
 OK   register: no admin option in the picker
 OK   register: pills sit between Full Name and Password
 OK   register: pickRegRole defined
 OK   register: signUp passes role: regRole
 OK   register: profile cached to ss_profile on login
+OK   register: login caches minimal profile when row missing
 OK   register: immediate-session reg caches minimal profile
 OK   register: full profile columns fetched
 OK   syntax: js/shell.js
 OK   shell: ss_profile sessionStorage cache used
 OK   shell: initAuthSession checks getSession()
 OK   shell: profile refetch when cache missing (tab reopen)
+OK   shell: minimal profile fallback when profiles row missing
 OK   shell: auth guard via body[data-auth="required"]
 OK   shell: renderShell awaits session before rendering
 OK   shell: renderShell passes profile to applyRoleUI

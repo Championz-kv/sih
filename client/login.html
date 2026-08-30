@@ -196,6 +196,21 @@ function saveSsProfile(p){
   try{ sessionStorage.setItem('ss_profile', JSON.stringify(p)); }catch(e){}
 }
 
+/* Fallback profile built from the auth user when the profiles row is missing
+   (no trigger / row deleted) — keeps the topbar account area working and
+   self-heals once the real row appears (shell.js re-fetches _minimal ones). */
+function minimalProfile(user){
+  const md = user.user_metadata || {};
+  const local = (user.email || '').split('@')[0] || '';
+  return {
+    id: user.id,
+    username: local.replace(/^phone_91/, ''),
+    full_name: md.full_name || md.name || '',
+    role: md.role || 'citizen',
+    _minimal: true
+  };
+}
+
 function showPane(id){
   document.querySelectorAll('.auth-pane').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -279,11 +294,13 @@ async function doLogin(){
     const { data, error } = await sbClient.auth.signInWithPassword({ email: id.email, password: p });
     if(error){ authErr('authErr', error.message); return; }
 
-    const profile = await fetchProfile(data.user.id);
-    const role = (profile && profile.role) || 'citizen';
-    storageSet('ss-user', (profile && profile.username) || (id.isPhone ? raw.trim() : raw.trim().split('@')[0]));
+    /* Real profile row when it exists; otherwise a minimal one built from the
+       auth user so the account area renders on every page. */
+    const profile = await fetchProfile(data.user.id) || minimalProfile(data.user);
+    const role = profile.role || 'citizen';
+    storageSet('ss-user', profile.username || (id.isPhone ? raw.trim() : raw.trim().split('@')[0]));
     storageSet('ss-role', shellRoleFor(role));
-    if(profile) saveSsProfile(profile);
+    saveSsProfile(profile);
     go(homeFor(role));
   } finally {
     setBusy('loginSubmitBtn', false, 'Login');

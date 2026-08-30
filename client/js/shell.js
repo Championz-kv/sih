@@ -331,6 +331,23 @@ async function fetchProfileRow(userId){
   }
 }
 
+/* Fallback profile built from the auth user when the profiles row is missing
+   (trigger not created / row deleted). Marked _minimal so the shell keeps
+   re-fetching the real row on later page loads — self-healing. */
+function minimalProfileFromUser(user, prev){
+  const md = user.user_metadata || {};
+  const local = (user.email || '').split('@')[0] || '';
+  return {
+    id: user.id,
+    username: (prev && prev.username) || local.replace(/^phone_91/, ''),
+    full_name: (prev && prev.full_name) || md.full_name || md.name || '',
+    role: (prev && prev.role) || md.role || 'citizen',
+    avatar_url: (prev && prev.avatar_url) || null,
+    org_id: (prev && prev.org_id) || null,
+    _minimal: true
+  };
+}
+
 /* Resolve session → profile → role. If the page requires auth
    (body[data-auth="required"]) and no session exists → login.html. */
 async function initAuthSession(){
@@ -356,10 +373,12 @@ async function initAuthSession(){
     }
     const session = raced && raced.data && raced.data.session;
     if(session && session.user){
-      /* Tab was reopened: session exists but ss_profile is gone → refetch */
-      if(!profile || profile.id !== session.user.id){
-        profile = await fetchProfileRow(session.user.id);
-        if(profile) saveSessionProfile(profile);
+      /* Reopen or missing row: refetch. When the profiles row doesn't exist
+         (trigger not created / row deleted), fall back to a minimal profile
+         built from the auth user so the account area still renders. */
+      if(!profile || profile.id !== session.user.id || profile._minimal){
+        profile = await fetchProfileRow(session.user.id) || minimalProfileFromUser(session.user, profile);
+        saveSessionProfile(profile);
       }
       if(profile){
         storageSet('ss-user', profile.username || (profile.full_name || '').trim().split(/\s+/)[0] || '');
