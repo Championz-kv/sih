@@ -4,9 +4,11 @@ OK   topbar: @username shown
 OK   topbar: avatar initials present
 OK   topbar: no Sign in button while signed in
 OK   topbar: My Profile + Sign out present
+OK   topbar: notifications bell shown when signed in
 OK   topbar: brand links to landing page
 OK   topbar: guest gets Sign in button
 OK   topbar: no account area for guest
+OK   topbar: notifications bell hidden for guests
 OK   renderSidebar() executes
 OK   initAuthSession returns cached profile (session present)
 OK   applyRoleUI(citizen, profile) executes

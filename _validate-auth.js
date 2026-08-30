@@ -128,6 +128,12 @@ const shellChecks = [
   ['demo role-switcher removed from topbar', !shell.includes('class="role-switch"')],
   ['renderTopbar defines signedIn before use', /const signedIn = !!profile/.test(shell)],
   ['brand logo links to landing page (index.html)', shell.includes('href="index.html${paramStr()}"')],
+  ['notifications bell only rendered for signed-in users', (() => {
+    const bell = shell.indexOf("go('notifications.html')");
+    const ternary = shell.indexOf('${signedIn ?');
+    const theme = shell.indexOf('theme-toggle');
+    return bell > -1 && ternary > -1 && bell > ternary && bell < theme;
+  })()],
   ['shell sections render in try/catch (one failure cannot blank chrome)', (shell.match(/catch\(e\)\{ console\.error\('\[shell\] (topbar|sidebar|modals) render failed/g) || []).length === 3],
   ['getSession raced with timeout', shell.includes('Promise.race')],
   ['dropdown: My Profile + Sign out', shell.includes("onclick=\"acctProfile()\">My Profile</button>") && shell.includes('onclick="logout()">Sign out</button>')],

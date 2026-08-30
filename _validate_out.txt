@@ -53,6 +53,7 @@ OK   shell: topbar: Sign in button for guests
 OK   shell: demo role-switcher removed from topbar
 OK   shell: renderTopbar defines signedIn before use
 OK   shell: brand logo links to landing page (index.html)
+OK   shell: notifications bell only rendered for signed-in users
 OK   shell: shell sections render in try/catch (one failure cannot blank chrome)
 OK   shell: getSession raced with timeout
 OK   shell: dropdown: My Profile + Sign out

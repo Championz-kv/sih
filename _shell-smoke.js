@@ -75,6 +75,7 @@ const runner = `
     check('topbar: avatar initials present', html.indexOf('AS') !== -1);
     check('topbar: no Sign in button while signed in', html.indexOf('Sign in</button>') === -1);
     check('topbar: My Profile + Sign out present', html.indexOf('My Profile</button>') !== -1 && html.indexOf('Sign out</button>') !== -1);
+    check('topbar: notifications bell shown when signed in', html.indexOf("go('notifications.html')") !== -1);
     check('topbar: brand links to landing page', html.indexOf('href="index.html') !== -1);
 
     /* guest topbar */
@@ -82,6 +83,7 @@ const runner = `
     html = renderTopbar();
     check('topbar: guest gets Sign in button', html.indexOf('Sign in</button>') !== -1);
     check('topbar: no account area for guest', html.indexOf('acct-wrap') === -1);
+    check('topbar: notifications bell hidden for guests', html.indexOf("go('notifications.html')") === -1);
 
     /* sidebar */
     const sb = renderSidebar('overview');
