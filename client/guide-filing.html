@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Issues Are Put Forward — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="guides">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#" onclick="go('dashboard.html');return false;">Overview</a><span>/</span><span>Guide · Putting issues forward</span></div>
+
+  <div class="page-head">
+    <div>
+      <h1>How are the issues put forward</h1>
+      <p class="sub">From a citizen's first report to an open case file that organizations can act on — every step of the filing journey, who acts at each point, and what the platform checks along the way.</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-primary" onclick="go('submit.html')">Report a Problem</button>
+    </div>
+  </div>
+
+  <div class="card card-pad" style="margin-bottom:20px;">
+    <div class="pipeline" style="margin:6px 0 2px;">
+      <div class="pipe-step"><div class="n">1</div><div class="lbl">Identify</div></div>
+      <div class="pipe-step"><div class="n">2</div><div class="lbl">Describe</div></div>
+      <div class="pipe-step"><div class="n">3</div><div class="lbl">File</div></div>
+      <div class="pipe-step"><div class="n">4</div><div class="lbl">Review</div></div>
+      <div class="pipe-step"><div class="n">5</div><div class="lbl">Validate</div></div>
+      <div class="pipe-step"><div class="n">6</div><div class="lbl">Open</div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-3" style="align-items:start;">
+    <div class="card card-pad" style="grid-column: span 2;">
+      <div class="section-head"><h2>Step by step: filing a problem</h2><span class="sub">Six steps between an observation and an actionable case file</span></div>
+      <div class="guide-rail">
+        <div class="gstep">
+          <div class="gn">1</div>
+          <div>
+            <h4>Spot the problem and gather evidence</h4>
+            <p>Notice the failure where it happens: note the exact district and block, who is affected and roughly how many people, and how long it has been going on. A few clear photos or documents make everything faster later.</p>
+            <span class="who">Who · Any citizen</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">2</div>
+          <div>
+            <h4>Describe it once, precisely</h4>
+            <p>Write a title that states the failure, not a solution ("Drainage channel silts up every monsoon", not "Build a wall"). Pick the closest domain category and set severity and urgency honestly — this is what matching runs on.</p>
+            <span class="who">Who · Reporter</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">3</div>
+          <div>
+            <h4>File through the report form</h4>
+            <p>The Report a Problem form captures location, affected count, tags and supporting files. On submission the issue receives a permanent case number (SS/JH/2026/####) and appears on the reporter's My Problems page.</p>
+            <span class="who">Where · Report a Problem</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">4</div>
+          <div>
+            <h4>Automatic checks run first</h4>
+            <p>Before a human reads it, SolveSamaj runs near-duplicate detection — repeat reports of the same issue are merged so supporters combine instead of fragmenting — and proposes a domain classification for reviewers to confirm.</p>
+            <span class="who">Who · The platform</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">5</div>
+          <div>
+            <h4>Admin review</h4>
+            <p>A government administrator checks the report for completeness and genuineness, corrects categorisation if needed, and queries the reporter when information is missing. Nothing enters the public desk unreviewed.</p>
+            <span class="who">Who · Government admin · Status · Under Review</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">6</div>
+          <div>
+            <h4>Validated, backed and opened</h4>
+            <p>Once validated, other citizens can add their support to strengthen the case. With community backing recorded, the file is stamped Open for Solutions and pushed into the queues of organizations whose expertise matches the domain.</p>
+            <span class="who">Status · Validated → Open for Solutions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+<div style="display:flex; flex-direction:column; gap:16px;">
+  <div class="card card-pad">
+    <h4 style="font-size:14px; margin-bottom:10px;">What makes a strong report</h4>
+    <ul style="display:flex; flex-direction:column; gap:8px;">
+      <li class="row-flex" style="font-size:12.5px;">✅&nbsp;Exact location — district and block named</li>
+      <li class="row-flex" style="font-size:12.5px;">✅&nbsp;An honest estimate of people affected</li>
+      <li class="row-flex" style="font-size:12.5px;">✅&nbsp;Photos or documents attached as evidence</li>
+      <li class="row-flex" style="font-size:12.5px;">✅&nbsp;Severity &amp; urgency filled truthfully</li>
+      <li class="row-flex" style="font-size:12.5px;">✅&nbsp;Consequence stated — what breaks if it waits</li>
+    </ul>
+    <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Reports with evidence pass review faster and attract more supporters.</p>
+  </div>
+  <div class="card card-pad">
+    <h4 style="font-size:14px; margin-bottom:10px;">Where a case file travels</h4>
+    <div class="status-rail" id="stageRail"></div>
+    <p style="font-size:11.5px; color:var(--text-faint); margin:14px 0 10px;">Its current stage always shows as a stamp on the problem page:</p>
+    <div id="stampRow" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+  </div>
+</div>
+  </div>
+
+<div class="card card-pad">
+  <div class="row-flex" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+    <div style="max-width:640px;">
+      <h4 style="font-size:15px; margin-bottom:4px;">What happens once a solver picks the case up?</h4>
+      <p style="font-size:12.5px; margin:0;">Universities, NGOs, startups and government teams then collaborate inside joint project workspaces — from expressed interest all the way to measured impact.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex:none;">
+      <button class="btn btn-outline" onclick="go('explore.html')">Browse Problems</button>
+      <button class="btn btn-primary" onclick="go('guide-collaboration.html')">Collaboration guide →</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  document.getElementById('stageRail').innerHTML = STATUS_STAGES.map(([key,label,desc],i) => `
+    <div class="rail-item${i===0 ? ' done' : ''}">
+      <div class="rail-dot"></div>
+      <div class="rail-body"><b>${label}</b><span>${desc}</span></div>
+    </div>`).join('');
+
+  document.getElementById('stampRow').innerHTML =
+    ['validated','open','progress','resolved'].map(s => stampHTML(s)).join(' ');
+});
+</script>
+</body>
+</html>

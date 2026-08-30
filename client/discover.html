@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matched Problems — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="discover" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Matched Problems <span class="count-pill" id="pageCount"></span></h1><p class="sub">Problems SolveSamaj thinks fit your organization's expertise — refine your profile to improve matches.</p></div></div>
+  <div class="problem-grid" id="discoverGrid"></div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  const matched = PROBLEMS.filter(p => ["open","validated","review"].includes(p.status));
+  document.getElementById('pageCount').textContent = matched.length;
+  document.getElementById('discoverGrid').innerHTML = matched.map(problemCardHTML).join("")
+    || `<div class="empty"><h4>No matches right now</h4><p>Widen your organization's expertise tags to see more problems.</p></div>`;
+});
+</script>
+</body>
+</html>

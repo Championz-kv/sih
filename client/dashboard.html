@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Overview — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="overview">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head">
+    <div><h1>Overview</h1><p class="sub">Live snapshot of problems, projects and partners across the SolveSamaj desk.</p></div>
+    <div class="page-head-actions"><button class="btn btn-primary btn-sm" onclick="go('submit.html')">+ Report a Problem</button></div>
+  </div>
+
+  <div class="hero">
+    <svg class="hero-contour" viewBox="0 0 800 300" preserveAspectRatio="none">
+      <path d="M0,180 C150,120 250,220 400,160 C550,100 650,200 800,140" fill="none" stroke="var(--setu)" stroke-width="1.4"/>
+      <path d="M0,220 C150,170 250,260 400,210 C550,150 650,250 800,190" fill="none" stroke="var(--ochre)" stroke-width="1.4"/>
+      <path d="M0,120 C150,70 250,150 400,100 C550,50 650,140 800,90" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+    </svg>
+    <div class="hero-inner" style="display:flex; flex-direction:column; gap:20px; align-items:stretch;">
+      <div>
+        <span class="eyebrow">Government · Academia · Industry</span>
+        <h1 style="max-width:none;">Where societal problems meet the people who can solve them.</h1>
+        <p class="lead" style="max-width:840px;">Citizens file a problem once. SolveSamaj classifies it, routes it to universities, NGOs and industry with the right expertise, and tracks it all the way from case file to deployed solution.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary" onclick="go('submit.html')">File a Problem</button>
+          <button class="btn btn-outline" onclick="go('org-profile.html')">Register as an Organization</button>
+        </div>
+        <div class="hero-guides" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+          <button class="guide-banner gb-violet" onclick="go('guide-filing.html')">
+            <span class="gb-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>
+            <span class="gb-body">
+              <b>How are the issues put forward</b>
+              <span>From a citizen's report to a validated, routed case file — the six-step filing journey.</span>
+            </span>
+            <svg class="gb-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="guide-banner gb-ochre" onclick="go('guide-collaboration.html')">
+            <span class="gb-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="gb-body">
+              <b>How are problems solved with collaboration</b>
+              <span>How matched organizations team up in joint project workspaces until impact is measured.</span>
+            </span>
+            <svg class="gb-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="n">1</div><div class="lbl">Identify</div></div>
+      <div class="pipe-step"><div class="n">2</div><div class="lbl">Validate</div></div>
+      <div class="pipe-step"><div class="n">3</div><div class="lbl">Discover</div></div>
+      <div class="pipe-step"><div class="n">4</div><div class="lbl">Connect</div></div>
+      <div class="pipe-step"><div class="n">5</div><div class="lbl">Collaborate</div></div>
+      <div class="pipe-step"><div class="n">6</div><div class="lbl">Develop</div></div>
+      <div class="pipe-step"><div class="n">7</div><div class="lbl">Implement</div></div>
+      <div class="pipe-step"><div class="n">8</div><div class="lbl">Measure</div></div>
+    </div>
+  </div>
+  <div class="ledger-strip">
+    <div class="ledger-cell"><span class="v">12,482</span><span class="l">Problems Filed</span><span class="d d-up">▲ 4.2% wk</span></div>
+    <div class="ledger-cell"><span class="v">8,931</span><span class="l">Validated</span><span class="d d-up">▲ 2.1% wk</span></div>
+    <div class="ledger-cell"><span class="v">1,847</span><span class="l">Active Projects</span><span class="d d-up">▲ 6.0% wk</span></div>
+    <div class="ledger-cell"><span class="v">642</span><span class="l">Resolved</span><span class="d d-up">▲ 1.3% wk</span></div>
+    <div class="ledger-cell"><span class="v">387</span><span class="l">Organizations</span><span class="d d-up">▲ 12 new</span></div>
+    <div class="ledger-cell"><span class="v">62</span><span class="l">Universities</span><span class="d">— steady</span></div>
+  </div>
+
+  <div class="card card-pad" style="margin-bottom:22px;">
+    <div class="section-head">
+      <h2>Funding snapshot</h2>
+      <a href="#" onclick="go('funding.html');return false;" class="mono" style="font-size:11.5px;">View all fund requests →</a>
+    </div>
+    <div class="grid grid-4" id="fundSnap" style="gap:12px;"></div>
+  </div>
+
+  <div class="grid grid-3" style="align-items:start; margin-bottom:22px;">
+    <div class="card card-pad" style="grid-column: span 2;">
+      <div class="section-head"><h2>Recently filed</h2><a href="#" onclick="go('explore.html');return false;" class="mono" style="font-size:11.5px;">View all →</a></div>
+      <div id="overviewRecent"></div>
+    </div>
+    <div class="card card-pad">
+      <div class="section-head"><h2>Top domains</h2></div>
+      <div class="barlist" id="overviewDomains"></div>
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <div class="section-head">
+      <h2>Participating organizations</h2>
+      <span class="sub">A sample of universities, NGOs, startups and industry partners already on the desk</span>
+    </div>
+    <div class="grid grid-4" id="overviewOrgs"></div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  document.getElementById('overviewRecent').innerHTML = PROBLEMS.slice(0,4).map(p => `
+    <div class="notif-item" style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
+      <span class="notif-dot" style="background:${categoryColor(p.category)};"></span>
+      <div style="flex:1;"><p><b class="mono" style="font-weight:600;">#${p.id}</b> ${p.title}</p><span>${p.district} · ${formatDate(p.date)}</span></div>
+      ${stampHTML(p.status)}
+    </div>`).join("");
+
+  const domainCounts = {};
+  PROBLEMS.forEach(p => problemCats(p).forEach(c => domainCounts[c] = (domainCounts[c]||0)+1));
+  const total = Object.values(domainCounts).reduce((s,n)=>s+n, 0); /* total tag instances */
+  const domains = Object.entries(domainCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('overviewDomains').innerHTML = domains.map(([name,count]) => {
+    const pct = Math.round(count/total*100);
+    const c = categoryColor(name);
+    return `<div class="row"><span class="name">${name}</span><div class="track"><div class="fill" style="width:${pct}%; background:${c};"></div></div><span class="pct">${pct}%</span></div>`;
+  }).join("");
+
+  document.getElementById('overviewOrgs').innerHTML = ORGS.slice(0,4).map(o => `
+    <div class="card card-pad" style="text-align:center; padding:16px 10px; cursor:pointer;" onclick="go('organizations.html')">
+      <div class="av" style="margin:0 auto 8px; width:38px; height:38px; font-size:13px; background:${avatarColor(o.name)}; color:#fff;">${initials(o.name)}</div>
+      <b style="font-size:12.5px; display:block; margin-bottom:2px;">${o.name}</b>
+      <span style="font-size:11px; color:var(--text-faint);">${o.type}</span>
+    </div>`).join("");
+});
+</script>
+<script>
+/* Funding snapshot */
+(function(){
+  const requested = FUND_REQUESTS.reduce((s,f) => s + f.target, 0);
+  const received  = FUND_REQUESTS.reduce((s,f) => s + fundRaised(f), 0);
+  const awaiting  = FUND_REQUESTS.reduce((s,f) => s + fundPledged(f), 0);
+  const backers   = new Set(FUND_REQUESTS.flatMap(f => f.pledges.map(p => p.by))).size;
+  document.getElementById('fundSnap').innerHTML = [
+    [inr(requested), 'Requested across ' + FUND_REQUESTS.length + ' needs'],
+    [inr(received),  'Received & verified'],
+    [inr(awaiting),  'Awaiting verification'],
+    [String(backers), 'Backers — orgs + individuals'],
+  ].map(([v, l]) => `
+    <div style="border:1px solid var(--border); border-radius:var(--radius-m); padding:14px;">
+      <span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${v}</span>
+      <span style="font-size:11px; color:var(--text-faint);">${l}</span>
+    </div>`).join('');
+})();
+</script>
+</body>
+</html>

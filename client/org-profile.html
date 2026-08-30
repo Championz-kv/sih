@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organization Profile — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="orgprofile" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Organization Profile</h1><p class="sub">Tell SolveSamaj what your organization can actually do, so relevant problems find you.</p></div>
+    <div class="page-head-actions"><span class="stamp stamp-pending">Pending Verification</span></div>
+  </div>
+  <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+    <div class="card card-pad">
+      <div class="field-row">
+        <div class="field"><label>Organization name</label><input class="input" value="MMMUT — Madan Mohan Malaviya University of Technology"></div>
+        <div class="field"><label>Organization type</label>
+          <select class="input"><option>University / College</option><option>NGO</option><option>Startup</option><option>Industry</option><option>MSME</option><option>Research Institution</option><option>CSR Organization</option><option>Government Organization</option></select>
+        </div>
+      </div>
+      <div class="field"><label>About</label><textarea class="input">A public technical university engaged in applied research, student innovation projects, and rural technology deployment across Uttar Pradesh.</textarea></div>
+      <div class="field">
+        <label>Areas of expertise</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">Civil & Structural Engineering</span>
+          <span class="chip-opt sel">Electrical and Electronics</span>
+          <span class="chip-opt">Mechanical Engineering</span>
+          <span class="chip-opt">Chemical Engineering</span>
+          <span class="chip-opt sel">IT / Computer Science & AI</span>
+          <span class="chip-opt sel">Electronics & Embedded Systems</span>
+          <span class="chip-opt">Environmental solutions</span>
+          <span class="chip-opt">Agricultural technology</span>
+          <span class="chip-opt">Biomedical technology</span>
+          <span class="chip-opt">Life Sciences & Biotechnology</span>
+          <span class="chip-opt">Public Health & Medicine</span>
+          <span class="chip-opt">Environmental & Earth Sciences</span>
+          <span class="chip-opt">Agriculture & Soil Science</span>
+          <span class="chip-opt">Social Work & Community Development</span>
+          <span class="chip-opt">Law & Public Policy</span>
+          <span class="chip-opt">Economics & Development Finance</span>
+          <span class="chip-opt">Education & Pedagogy</span>
+          <span class="chip-opt">Psychology & Behavioral Science</span>
+          <span class="chip-opt">Business, Entrepreneurship & Management</span>
+          <span class="chip-opt sel">Renewable Energy & Clean Technology</span>
+          <span class="chip-opt sel">Funding, Donation and Sponsorships</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>State</label><select class="input"><option>Uttar Pradesh</option></select></div>
+        <div class="field"><label>District / City</label><input class="input" value="Gorakhpur"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Phone</label><input class="input" type="tel" placeholder="+91 …"></div>
+        <div class="field"><label>Email</label><input class="input" type="email" placeholder="contact@university.ac.in"></div>
+      </div>
+      <div class="field"><label>Address</label><textarea class="input" placeholder="Campus address, block, district, State…"></textarea></div>
+      <div class="field"><label>Links <span style="font-weight:400; color:var(--text-faint);">(website, profiles)</span></label>
+        <div id="orgLinkRows"><div class="link-row"><input class="input" type="url" placeholder="https://university.ac.in"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addOrgLinkRow()">+ Add another link</button>
+      </div>
+      <div class="field">
+        <label>Available resources</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">Student Teams</span>
+          <span class="chip-opt sel">Faculty Mentors & Advisors</span>
+          <span class="chip-opt sel">Research Laboratories</span>
+          <span class="chip-opt">Prototyping & Fabrication Facilities</span>
+          <span class="chip-opt sel">Funding / Grants</span>
+          <span class="chip-opt">Field Survey Teams</span>
+          <span class="chip-opt">Legal & Compliance Experts</span>
+          <span class="chip-opt">Incubation & Startup Support</span>
+          <span class="chip-opt">Testing & Quality Assurance</span>
+          <span class="chip-opt">Translation & Language Support</span>
+          <span class="chip-opt">Community Outreach Networks</span>
+          <span class="chip-opt">Medical / Clinical Facilities</span>
+          <span class="chip-opt">Data Centers & Computing Infrastructure</span>
+          <span class="chip-opt">Workshop & Vocational Training Centers</span>
+          <span class="chip-opt">Publishing & Documentation Support</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Collaboration preferences</label>
+        <div class="chip-select">
+          <span class="chip-opt sel">Student Project (academic credit)</span>
+          <span class="chip-opt sel">Research & Publication</span>
+          <span class="chip-opt sel">Prototype Development</span>
+          <span class="chip-opt">Technical Consultation</span>
+          <span class="chip-opt">Policy Advisory</span>
+          <span class="chip-opt">Pilot Program Deployment</span>
+          <span class="chip-opt">Community Workshops & Training</span>
+          <span class="chip-opt">Co-funding / Joint Grants</span>
+          <span class="chip-opt">Internship & Placement</span>
+          <span class="chip-opt">Long-term Partnership</span>
+          <span class="chip-opt">Government Liaison Support</span>
+          <span class="chip-opt">Impact Assessment & Monitoring</span>
+        </div>
+      </div>
+      <div class="row-flex" style="justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="toast('Profile saved (placeholder)')">Save profile</button>
+      </div>
+    </div>
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Verification</h4>
+        <p style="font-size:12.5px;">Admins review your registration documents before granting verified status. Verified organizations appear first in matching results.</p>
+        <button class="btn btn-outline btn-block btn-sm" onclick="toast('Documents submitted for review (placeholder)')">Submit documents</button>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Track record</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Projects completed</span><b>6</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Active projects</span><b>2</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">People impacted</span><b>18,400+</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Donor</span><b id="orgDonorBadge" style="color:var(--ledger);">Yes ✓</b></div>
+        </div>
+      </div>
+      <div class="card card-pad" style="margin-top:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Funding footprint</h4>
+        <div id="orgFunding"></div>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Verified contributions by MMMUT across the desk — the public record of who funded how much.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function orgLinkRowHTML(){
+  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+    '<button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
+}
+function addOrgLinkRow(){ document.getElementById('orgLinkRows').insertAdjacentHTML('beforeend', orgLinkRowHTML()); }
+function removeOrgLinkRow(btn){
+  const rows = document.querySelectorAll('#orgLinkRows .link-row');
+  if(rows.length === 1){ rows[0].querySelector('input').value = ''; return; }
+  btn.closest('.link-row').remove();
+}
+</script>
+
+<script>document.addEventListener('DOMContentLoaded', () => { renderShell(); setDonorBadge(); });</script>
+<script>
+/* Donor is non-togglable: it reflects whether MMMUT has made a verified donation */
+function setDonorBadge(){
+  const el = document.getElementById('orgDonorBadge');
+  if(!el) return;
+  const donated = orgDonated('MMMUT') > 0;
+  el.textContent = donated ? 'Yes ✓' : 'No';
+  el.style.color = donated ? 'var(--ledger)' : 'var(--text-faint)';
+}
+</script>
+<script>
+/* Funding footprint for MMMUT (this profile's organization) */
+(function(){
+  const ORG = 'MMMUT';
+  const rows = [];
+  FUND_REQUESTS.forEach(f => f.pledges.forEach(p => {
+    if(p.by !== ORG) return;
+    rows.push({ fr:f, p:p });
+  }));
+  const received = rows.filter(r => r.p.status === 'received').reduce((s,r) => s + r.p.amount, 0);
+  const pledged  = rows.filter(r => r.p.status === 'pledged').reduce((s,r) => s + r.p.amount, 0);
+  document.getElementById('orgFunding').innerHTML = `
+    <div class="grid grid-2" style="margin-bottom:12px;">
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(received)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(pledged)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
+    </div>
+    ${rows.length ? rows.map(({fr, p}) => `
+      <div class="person-row">
+        <div class="av" style="border-radius:6px;">₹</div>
+        <div style="flex:1;"><b>${inr(p.amount)}</b><span>${fr.id} · ${fr.title}</span></div>
+        ${p.status === 'received' ? '<span class="stamp stamp-validated">Received</span>' : '<span class="stamp stamp-pending">Pledged</span>'}
+      </div>`).join('')
+    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No contributions recorded yet.</p>'}`;
+})();
+</script>
+</body>
+</html>

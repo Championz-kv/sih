@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Problems Are Solved With Collaboration — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="guides">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="#" onclick="go('dashboard.html');return false;">Overview</a><span>/</span><span>Guide · Solving through collaboration</span></div>
+
+  <div class="page-head">
+    <div>
+      <h1>How problems are solved with collaboration</h1>
+      <p class="sub">Once a case file is validated and open, this is how universities, NGOs, startups, industry and government teams turn it into a deployed, measured solution — together.</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-primary" onclick="go('discover.html')">See Matched Problems</button>
+    </div>
+  </div>
+
+  <div class="card card-pad" style="margin-bottom:20px;">
+    <div class="pipeline" style="margin:6px 0 2px;">
+      <div class="pipe-step"><div class="n">1</div><div class="lbl">Discover</div></div>
+      <div class="pipe-step"><div class="n">2</div><div class="lbl">Interest</div></div>
+      <div class="pipe-step"><div class="n">3</div><div class="lbl">Team up</div></div>
+      <div class="pipe-step"><div class="n">4</div><div class="lbl">Develop</div></div>
+      <div class="pipe-step"><div class="n">5</div><div class="lbl">Test</div></div>
+      <div class="pipe-step"><div class="n">6</div><div class="lbl">Deploy</div></div>
+      <div class="pipe-step"><div class="n">7</div><div class="lbl">Measure</div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-3" style="align-items:start;">
+    <div class="card card-pad" style="grid-column: span 2;">
+      <div class="section-head"><h2>From open case file to working solution</h2><span class="sub">Seven steps any verified organization can start today</span></div>
+      <div class="guide-rail">
+        <div class="gstep">
+          <div class="gn">1</div>
+          <div>
+            <h4>Matched discovery</h4>
+            <p>Every registered organization lists its expertise. SolveSamaj matches open case files against those capabilities and domain, so an engineering department sees drainage failures while a public-health NGO sees prenatal-care gaps — instead of everyone scrolling everything.</p>
+            <span class="who">Where · Matched Problems queue</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">2</div>
+          <div>
+            <h4>Express interest with a concrete plan</h4>
+            <p>An organization responds to a case file by stating its proposed approach, the resources it brings (labs, student teams, field staff, funding) and a rough timeline. This goes straight to the problem's owner and administrators — no cold emails, no gatekeepers.</p>
+            <span class="who">Action · "Express Interest" on any open problem</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">3</div>
+          <div>
+            <h4>Team up across institutions</h4>
+            <p>Rarely can one actor solve a societal problem alone. Organizations invite each other as collaborators and join with defined roles — technical partner, implementation partner, funding partner or research partner — until the team covers design, delivery and money.</p>
+            <span class="who">Where · Collaboration Requests</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">4</div>
+          <div>
+            <h4>Work inside a joint project workspace</h4>
+            <p>Accepted interests become a project (e.g. PRJ-0312) with its own page: milestone bars, a task board with owners and due dates, a shared document vault and a discussion thread. Progress is visible to every partner, to the original reporter and to administrators at all times.</p>
+            <span class="who">Where · Projects</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">5</div>
+          <div>
+            <h4>Prototype, then field-test</h4>
+            <p>Solutions move from bench to field deliberately: prototypes are tested with the actual affected community, and feedback flows back into the workspace through the discussion thread before full deployment is attempted.</p>
+            <span class="who">Status · Solution Testing</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">6</div>
+          <div>
+            <h4>Deploy where the problem lives</h4>
+            <p>Implementation partners carry the validated solution to the district and block named in the case file — the same place it was first reported — so impact lands with the people who filed it.</p>
+            <span class="who">Status · Project Active → Impact Verified</span>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gn">7</div>
+          <div>
+            <h4>Measure outcomes &amp; close the loop</h4>
+            <p>Every project records outcome values — post-harvest loss reduced, outage-days avoided, households reached. When outcomes are verified, the case file is stamped Resolved and remains as a public record that others can study and replicate.</p>
+            <span class="who">Stamp · Resolved — surfaced in Public Analytics</span>
+          </div>
+        </div>
+      </div>
+    </div>
+<div style="display:flex; flex-direction:column; gap:16px;">
+  <div class="card card-pad">
+    <h4 style="font-size:14px; margin-bottom:10px;">Roles partners play</h4>
+    <div class="pcard-tags" style="margin-bottom:12px;">
+      <span class="tag tag-domain">Technical partner</span>
+      <span class="tag tag-domain">Implementation partner</span>
+      <span class="tag tag-domain">Funding partner</span>
+      <span class="tag tag-domain">Research partner</span>
+    </div>
+    <p style="font-size:11.5px; color:var(--text-faint); margin:0;">A healthy project pairs at least one technical partner with one implementation partner — someone who can build it, someone who can deliver it on the ground.</p>
+  </div>
+  <div class="card card-pad">
+    <h4 style="font-size:14px; margin-bottom:10px;">Inside a workspace: milestones</h4>
+    <div class="milestone"><div class="mtop"><b>Field survey</b><span>100%</span></div><div class="track"><div class="fill" style="width:100%;"></div></div></div>
+    <div class="milestone"><div class="mtop"><b>Prototype build</b><span>65%</span></div><div class="track"><div class="fill" style="width:65%;"></div></div></div>
+    <div class="milestone pending"><div class="mtop"><b>District deployment</b><span>0%</span></div><div class="track"><div class="fill"></div></div></div>
+    <p style="font-size:11.5px; color:var(--text-faint); margin:10px 0 0;">Milestones, tasks, shared documents and discussion live together on each project's page.</p>
+  </div>
+</div>
+  </div>
+
+<div class="card card-pad">
+  <div class="row-flex" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+    <div style="max-width:640px;">
+      <h4 style="font-size:15px; margin-bottom:4px;">Curious how problems reach the desk at all?</h4>
+      <p style="font-size:12.5px; margin:0;">Citizens put issues forward through a simple six-step filing journey — describe, file, review, validate — before any organization gets involved.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex:none;">
+      <button class="btn btn-outline" onclick="go('projects.html')">View Projects</button>
+      <button class="btn btn-primary" onclick="go('guide-filing.html')">← Filing guide</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+});
+</script>
+</body>
+</html>

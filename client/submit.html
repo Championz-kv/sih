@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report a Problem — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="submit" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Report a Problem</h1><p class="sub">Three quick steps: describe it, let AI help categorize it, agree and post.</p></div></div>
+
+  <div class="card card-pad" style="max-width:860px;">
+    <div class="wz-steps" id="wzSteps">
+      <div class="wz-tab current" data-n="1"><span class="n">1</span><div><b>Details</b><span>The problem itself</span></div></div>
+      <div class="wz-sep"></div>
+      <div class="wz-tab" data-n="2"><span class="n">2</span><div><b>Categorization</b><span>AI-assisted tags</span></div></div>
+      <div class="wz-sep"></div>
+      <div class="wz-tab" data-n="3"><span class="n">3</span><div><b>Agree &amp; Post</b><span>Consent &amp; submit</span></div></div>
+    </div>
+
+    <!-- ============ STEP 1 · DETAILS ============ -->
+    <section class="wz-pane active" data-step="1">
+      <div class="row-flex" style="justify-content:flex-end; margin-bottom:4px;">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="continueDraft()">↺ Continue with draft</button>
+      </div>
+
+      <div class="field"><label>Problem title *</label>
+        <input class="input" id="fTitle" placeholder="e.g. Drainage failure floods school access road every monsoon">
+      </div>
+
+      <div class="field"><label>Detailed description * <span style="font-weight:400; color:var(--text-faint);">(the more detail, the better the AI categorization)</span></label>
+        <textarea class="input" id="fDesc" style="min-height:200px;" placeholder="What exactly is happening? Since when? Who is affected and how badly? What has been tried so far?"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Relevant links <span style="font-weight:400; color:var(--text-faint);">(news articles, videos, government pages…)</span></label>
+        <div id="linkRows"><div class="link-row"><input class="input" type="url" placeholder="https://…"><button class="link-del" type="button" title="Remove this link" onclick="removeLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addLinkRow()">+ Add another link</button>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>State</label>
+          <select class="input" id="stateSelect">
+            <option value="">Select state</option>
+          </select>
+        </div>
+        <div class="field"><label>District</label>
+          <select class="input" id="districtSelect" disabled>
+            <option value="">Select district</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Block / Village / City *</label><input class="input" id="fBlock" placeholder="e.g. Ormanjhi block"></div>
+        <div class="field"><label>Pin exact location</label><button class="btn btn-outline btn-block" onclick="toast('Map picker placeholder')" type="button">Pick on map</button></div>
+      </div>
+
+      <div class="field"><label>Estimated people affected *</label>
+        <input class="input" type="number" id="fAffected" placeholder="e.g. 3000">
+      </div>
+
+      <div class="field"><label>Hashtags <span style="font-weight:400; color:var(--text-faint);">(optional — some posters skip these)</span></label>
+        <input class="input" id="fTags" placeholder="#monsoon #drainage #road (space separated)">
+      </div>
+
+      <div class="field"><label>What's needed</label>
+        <div class="chip-select">
+          <span class="chip-opt">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
+          <span class="chip-opt">Volunteers</span><span class="chip-opt">Equipment</span><span class="chip-opt">Mentorship</span><span class="chip-opt">Government intervention</span>
+        </div>
+      </div>
+
+      <div class="field"><label>Evidence (photos, videos, documents)</label>
+        <div class="upload-zone">Drag files here, or click to browse — placeholder only</div>
+      </div>
+
+      <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
+        <button class="btn btn-ghost" type="button" onclick="clearStep1()">✕ Clear form</button>
+        <span class="row-flex" style="gap:10px;">
+          <button class="btn btn-outline" type="button" onclick="saveDraft()">Save as draft</button>
+          <button class="btn btn-primary" type="button" onclick="nextFrom1()">Next: Categorization →</button>
+        </span>
+      </div>
+    </section>
+
+        <!-- ============ STEP 2 · CATEGORIZATION ============ -->
+    <section class="wz-pane" data-step="2">
+      <div class="row-flex" style="justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
+        <span id="aiBadge"></span>
+        <span style="font-size:11.5px; color:var(--text-faint);">Tags, severity &amp; urgency prefilled by Sahayak AI — adjust anything before continuing.</span>
+      </div>
+      <div id="aiNote" class="note ok" style="margin-bottom:18px;"></div>
+
+      <div class="field" style="margin-bottom:20px;">
+        <label>Category</label>
+        <div class="cat-panel" style="border-color:var(--setu); margin-bottom:12px;">
+          <div class="cat-panel-head">
+            <span class="cat-dot" style="background:var(--setu);"></span>
+            Selected <span class="mono" id="selCount" style="color:var(--text-faint); font-weight:400;">(0)</span>
+          </div>
+          <div class="chip-select" id="selectedCats"></div>
+        </div>
+        <div id="categoryGroups" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <p class="hint">Selected tags are collected in the Selected panel above and stay highlighted in both places.</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field"><label>Severity</label>
+          <select class="input" id="fSev" onchange="refreshAiBadge()">
+            <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+          </select>
+        </div>
+        <div class="field"><label>Urgency</label>
+          <select class="input" id="fUrg" onchange="refreshAiBadge()">
+            <option>Long-term</option><option>Within months</option><option>Within days</option><option>Immediate</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:18px;">
+        <button class="btn btn-ghost" type="button" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" type="button" onclick="nextFrom2()">Next: Agree &amp; Post →</button>
+      </div>
+    </section>
+
+        <!-- ============ STEP 3 · AGREE & POST ============ -->
+    <section class="wz-pane" data-step="3">
+      <div id="routeNote" class="note ok" style="margin-bottom:18px;"></div>
+
+      <div class="card card-pad" style="background:var(--surface-2); border:none; box-shadow:none; margin-bottom:18px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0 0 10px;">Review before posting</h4>
+        <div class="barlist" style="gap:10px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Title</span><b id="sumTitle" style="max-width:60%; text-align:right;">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Categories</span><b id="sumCats" style="max-width:60%; text-align:right;">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Severity</span><b id="sumSev">—</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Urgency</span><b id="sumUrg">—</b></div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field"><label>Email <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="email" id="fEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Phone <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="tel" id="fPhone" placeholder="+91 …"></div>
+      </div>
+
+      <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkTerms"><span>I agree to the <a href="#" onclick="return false;">terms of use</a> and community code of conduct.</span></label>
+      <label class="check-row" style="margin:6px 0 16px;"><input type="checkbox" id="chkConsent"><span>I confirm the information provided is accurate to the best of my knowledge, and I consent to it being published publicly after review.</span></label>
+
+      <div class="row-flex" style="justify-content:space-between; gap:10px;">
+        <button class="btn btn-ghost" type="button" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" type="button" id="postBtn" onclick="postFinal()" disabled>Agree &amp; Post</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/india-districts-fallback.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+/* ==================================================================
+   Report-a-Problem wizard — 3 steps
+   ================================================================== */
+const val = id => (document.getElementById(id)?.value || '').trim();
+let step = 1;
+let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
+let aiVerified = false; // do the user's current choices match the AI?
+
+function goStep(n){
+  step = n;
+  document.querySelectorAll('.wz-pane').forEach(p => p.classList.toggle('active', +p.dataset.step === n));
+  document.querySelectorAll('#wzSteps .wz-tab').forEach(t => {
+    const k = +t.dataset.n;
+    t.classList.toggle('current', k === n);
+    t.classList.toggle('done', k < n);
+  });
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ---------- step 1 → 2 ---------- */
+function nextFrom1(){
+  const need = [];
+  if(!val('fTitle'))    need.push('Problem title');
+  if(!val('fDesc'))     need.push('Detailed description');
+  if(!val('fBlock'))    need.push('Block / Village / City');
+  if(!parseInt(val('fAffected'),10)) need.push('Estimated people affected');
+  if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
+  if(!document.querySelector('#categoryGroups .cat-panel')) buildCategoryPanels();
+  aiAutofill();
+  goStep(2);
+}
+
+/* ---------- step 2 · AI categorization ---------- */
+const CAT_KEYWORDS = {
+  'Healthcare':                 ['health','hospital','clinic','medical','ultrasound','maternal','disease','medicine','patient'],
+  'Water & Sanitation':         ['water','drain','sanitat','toilet','sewage','flood','contamin'],
+  'Agriculture & Food':         ['farm','crop','soil','harvest','pest','grain','dairy','tomato'],
+  'Infrastructure':             ['road','bridge','street','building','railway','transport','light'],
+  'Education':                  ['school','student','teacher','lab ','learning','literacy'],
+  'Environment':                ['pollution','waste','forest','climate','erosion','tree'],
+  'Energy':                     ['power','electric','transformer','energy','feeder'],
+  'Livelihoods & Economy':      ['job','income','employment','business','market','weav','msme'],
+  'Governance & Public Services':['corrupt','scheme','record','legal aid','police','voter','delay'],
+  'Disaster & Safety':          ['earthquake','fire','accident','drought','relief'],
+  'Social Issues':              ['caste','gender','child marriage','traffick','disab','elderly','discrimin'],
+};
+
+function aiAutofill(){
+  const text = (val('fTitle') + ' ' + val('fDesc')).toLowerCase();
+
+  /* pick the best-matching group + tag (placeholder for the real model) */
+  let bestName = null, bestScore = 0, bestTag = null;
+  PROBLEM_CATEGORY_GROUPS.forEach(gr => {
+    let score = 0, tagHit = null;
+    gr.tags.forEach(tag => {
+      const words = tag.toLowerCase().split(/[\s&/]+/).filter(w => w.length > 3);
+      const hits = words.filter(w => text.includes(w)).length;
+      if(hits && !tagHit) tagHit = tag;
+      score += hits;
+    });
+    (CAT_KEYWORDS[gr.name] || []).forEach(k => { if(text.includes(k)) score += 2; });
+    if(score > bestScore){ bestScore = score; bestName = gr.name; bestTag = tagHit || gr.tags[0]; }
+  });
+
+  /* severity & urgency guesses from the description wording */
+  let sev = 'Medium';
+  if(/critical|death|deaths|contaminat|outbreak/.test(text)) sev = 'Critical';
+  else if(/injur|unsafe|harm|danger|urgent/.test(text))       sev = 'High';
+  else if(/minor|cosmetic|long-term/.test(text))              sev = 'Low';
+
+  let urg = 'Within months';
+  if(/immediate|emergency|right now|today/.test(text))        urg = 'Immediate';
+  else if(/urgent|days|every monsoon|every rainy/.test(text)) urg = 'Within days';
+  else if(/long-term|years/.test(text))                       urg = 'Long-term';
+
+  selectedTags.clear();
+  selectedTags.add(bestTag);
+  syncSelection();
+
+  document.getElementById('fSev').value = sev;
+  document.getElementById('fUrg').value = urg;
+
+  aiPick = { tags:[...selectedTags], sev, urg };
+  refreshAiBadge();
+}
+
+function isAiMatch(){
+  if(!aiPick) return false;
+  const sameTags = aiPick.tags.length === selectedTags.size &&
+                   aiPick.tags.every(t => selectedTags.has(t));
+  return sameTags && val('fSev') === aiPick.sev && val('fUrg') === aiPick.urg;
+}
+
+function refreshAiBadge(){
+  if(!aiPick) return;
+  aiVerified = isAiMatch();
+  document.getElementById('aiBadge').innerHTML = aiVerified
+    ? '<span class="stamp stamp-validated">✓ AI Verified</span>'
+    : '<span class="stamp stamp-pending">Will Need Review</span>';
+
+  const note = document.getElementById('routeNote');
+  note.className = 'note ' + (aiVerified ? 'ok' : 'warn');
+  note.innerHTML = aiVerified
+    ? '<b>AI Verified.</b>&nbsp; Categorization matches Sahayak\'s suggestion — it will be posted publicly as soon as you agree below.'
+    : '<b>Goes through manual review.</b>&nbsp; Your categorization differs from the AI suggestion — this case will pass through an additional AI re-check plus a moderator before it appears publicly.';
+}
+
+function nextFrom2(){ fillSummary(); goStep(3); }
+
+/* ---------- step 3 · agree & post ---------- */
+function fillSummary(){
+  document.getElementById('sumTitle').textContent = val('fTitle') || '—';
+  document.getElementById('sumCats').textContent  = [...selectedTags].join(', ') || '—';
+  document.getElementById('sumSev').textContent   = val('fSev') || '—';
+  document.getElementById('sumUrg').textContent   = val('fUrg') || '—';
+}
+function updatePostBtn(){
+  document.getElementById('postBtn').disabled =
+    !(document.getElementById('chkTerms').checked && document.getElementById('chkConsent').checked);
+}
+function postFinal(){
+  toast('Submitted — routed ' + (aiVerified ? 'straight to posting' : 'through AI re-check + manual review') + '. (Demo — nothing saved)');
+}
+
+/* ---------- step 1 helpers ---------- */
+function linkRowHTML(){
+  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+    '<button class="link-del" type="button" title="Remove this link" onclick="removeLinkRow(this)">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+    '</svg></button></div>';
+}
+function addLinkRow(){
+  document.getElementById('linkRows').insertAdjacentHTML('beforeend', linkRowHTML());
+}
+function removeLinkRow(btn){
+  const rows = document.querySelectorAll('#linkRows .link-row');
+  if(rows.length <= 1){
+    rows[0].querySelector('input').value = '';
+    toast('At least one link row stays — cleared it instead');
+    return;
+  }
+  btn.closest('.link-row').remove();
+}
+function clearStep1(){
+  ['fTitle','fDesc','fBlock','fAffected','fTags'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.querySelectorAll('#linkRows .link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
+  toast('Form cleared');
+}
+/* Placeholder until accounts exist — one draft per account will live server-side. */
+function continueDraft(){
+  toast('Draft restore arrives with accounts — no saved draft found yet.');
+}
+function saveDraft(){
+  toast('Draft saved (placeholder) — “Continue with draft” will restore it once accounts are live.');
+}
+
+/* ---- grouped category panels + Selected mirror (step 2) ---- */
+const selectedTags = new Set();
+
+function toggleTag(tag){
+  if(selectedTags.has(tag)) selectedTags.delete(tag);
+  else selectedTags.add(tag);
+  syncSelection();
+}
+
+function syncSelection(){
+  /* highlight the source chips inside their group panels */
+  document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => {
+    el.classList.toggle('sel', selectedTags.has(el.dataset.tag));
+  });
+
+  /* rebuild the Selected mirror */
+  const wrap = document.getElementById('selectedCats');
+  if(!selectedTags.size){
+    wrap.innerHTML = '<span style="font-size:12px; color:var(--text-faint);">Sahayak will suggest tags automatically on Next — or pick them yourself below.</span>';
+  } else {
+    wrap.innerHTML = '';
+    [...selectedTags].forEach(tag => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip-opt sel cat-mirror';
+      b.title = 'Click to remove';
+      b.innerHTML = tag + ' <span style="opacity:.55;">✕</span>';
+      b.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+      wrap.appendChild(b);
+    });
+  }
+  document.getElementById('selCount').textContent = '(' + selectedTags.size + ')';
+  if(typeof refreshAiBadge === 'function') refreshAiBadge();
+}
+
+function buildCategoryPanels(){
+  const groupsWrap = document.getElementById('categoryGroups');
+  PROBLEM_CATEGORY_GROUPS.forEach(gr => {
+    const panel = document.createElement('div');
+    panel.className = 'cat-panel';
+    panel.style.borderColor = gr.color;
+    panel.innerHTML = `<div class="cat-panel-head"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+    gr.tags.forEach(tag => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'chip-opt cat-tag';
+      el.dataset.tag = tag;
+      el.textContent = tag;
+      el.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+      grid.appendChild(el);
+    });
+    groupsWrap.appendChild(panel);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  /* Guests browse only — reporting needs a Citizen account */
+  if(currentRole() === 'guest'){
+    toast('Reporting needs a Citizen account — you\u2019re currently browsing as a Guest.');
+    setTimeout(() => go('explore.html'), 1300);
+    return;
+  }
+
+  buildCategoryPanels();
+  goStep(1);
+  document.getElementById('chkTerms').addEventListener('change', updatePostBtn);
+  document.getElementById('chkConsent').addEventListener('change', updatePostBtn);
+
+  /* ---- State / District dropdowns ----
+     Primary source: js/india-districts-fallback.js (works offline & on file://).
+     When served over HTTP we also refresh from
+     data-resources/india-districts.json so the JSON stays the editable
+     source of truth. */
+  const stateSel = document.getElementById('stateSelect');
+  const distSel  = document.getElementById('districtSelect');
+  let indiaData  = Array.isArray(window.INDIA_DISTRICTS_FALLBACK)
+                 ? window.INDIA_DISTRICTS_FALLBACK.slice() : [];
+
+  function populateStates(){
+    stateSel.innerHTML = '<option value="">Select state</option>';
+    indiaData.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.state;
+      o.textContent = s.state;
+      stateSel.appendChild(o);
+    });
+  }
+  populateStates();
+
+  stateSel.addEventListener('change', () => {
+    distSel.innerHTML = '<option value="">Select district</option>';
+    const st = indiaData.find(s => s.state === stateSel.value);
+    if(st){
+      st.districts.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d;
+        o.textContent = d;
+        distSel.appendChild(o);
+      });
+      distSel.disabled = false;
+    } else {
+      distSel.disabled = true;
+    }
+  });
+
+  /* live refresh when served over HTTP */
+  fetch('data-resources/india-districts.json')
+    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => {
+      const arr = Array.isArray(data) ? data : (data.states || []);
+      if(arr.length && arr.length !== indiaData.length){
+        indiaData = arr;
+        populateStates();
+      }
+    })
+    .catch(() => {});
+});
+</script>
+</body>
+</html>

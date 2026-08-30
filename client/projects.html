@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="projects" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head">
+    <div>
+      <h1>Projects <span class="count-pill" id="pageCount"></span></h1>
+      <p class="sub" id="scopeHint">Shared collaboration projects you're involved in — orgs, funding, support or interest.</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-outline btn-sm" id="allProjBtn" onclick="toggleAllProjects()" aria-pressed="false">Involved projects</button>
+    </div>
+  </div>
+  <div class="grid grid-3" id="projectsGrid"></div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+/* "All projects" toggle — deselected by default (your activity feed).
+   Personalization is a demo stand-in until the accounts module exists:
+   it treats a project as "related to you" when you'd plausibly be
+   connected — org involvement, funding activity, or strong community
+   support on the linked case. */
+let showAllProjects = false;
+
+function toggleAllProjects(){
+  showAllProjects = !showAllProjects;
+  const btn = document.getElementById('allProjBtn');
+  btn.classList.toggle('btn-accent', showAllProjects);
+  btn.classList.toggle('btn-outline', !showAllProjects);
+  btn.setAttribute('aria-pressed', String(showAllProjects));
+  btn.textContent = showAllProjects ? 'All projects' : 'Involved projects';
+  renderProjects();
+}
+
+function demoRelatedProject(pr){
+  const linked = PROBLEMS.find(p => p.id === pr.problem);
+  const hasFundingActivity = FUND_REQUESTS.some(f => f.ref === pr.code && f.pledges.length > 0);
+  return pr.orgs.length > 0 || hasFundingActivity || (linked && linked.supporters >= 100);
+}
+
+function renderProjects(){
+  const list = showAllProjects ? PROJECTS : PROJECTS.filter(demoRelatedProject);
+  document.getElementById('pageCount').textContent = list.length + (showAllProjects ? '' : ' of ' + PROJECTS.length);
+  document.getElementById('scopeHint').textContent = showAllProjects
+    ? 'Every collaboration project on the desk.'
+    : 'Connected to your activity — problems you posted, funded, supported, added evidence to, or expressed interest in; plus projects you\'re involved in. (Demo selection until accounts are live.)';
+
+  document.getElementById('projectsGrid').innerHTML = list.length ? list.map(pr => `
+    <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="go('project.html', {code:'${pr.code}'})">
+      <div class="row-flex" style="justify-content:space-between;">
+        <span class="pcard-id mono">${pr.code}</span>
+        <span class="eyebrow">${pr.stage}</span>
+      </div>
+      <h3 style="font-size:15.5px; margin:0;">${pr.title}</h3>
+      <p style="font-size:12px; margin:0; color:var(--text-faint);">Linked to case #${pr.problem} · lead ${pr.lead}</p>
+      <div class="milestone" style="margin:0;">
+        <div class="mtop"><b>Overall progress</b><span>${pr.progress}%</span></div>
+        <div class="track"><div class="fill" style="width:${pr.progress}%;"></div></div>
+      </div>
+      <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
+        <span>${pr.orgs.length} orgs · ${pr.team} members</span><span class="mono">since ${formatDate(pr.start)}</span>
+      </div>
+    </div>`).join("")
+  : `<div class="empty" style="grid-column:1/-1;">
+      <h4>Nothing connected yet</h4>
+      <p>Once accounts are live, projects tied to your posted, funded, supported or evidence-added problems will appear here. Use “All projects” to browse everything.</p>
+    </div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  renderProjects();
+});
+</script>
+</body>
+</html>
