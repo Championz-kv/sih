@@ -46,12 +46,12 @@
         <button class="btn btn-ghost btn-sm" type="button" onclick="addLinkRow()">+ Add another link</button>
       </div>
       <div class="field-row">
-        <div class="field"><label>State</label>
+        <div class="field"><label>State *</label>
           <select class="input" id="stateSelect">
             <option value="">Select state</option>
           </select>
         </div>
-        <div class="field"><label>District</label>
+        <div class="field"><label>District *</label>
           <select class="input" id="districtSelect" disabled>
             <option value="">Select district</option>
           </select>
@@ -62,7 +62,7 @@
         <div class="field"><label>Pin exact location</label><button class="btn btn-outline btn-block" onclick="toast('Map picker placeholder')" type="button">Pick on map</button></div>
       </div>
 
-      <div class="field"><label>Estimated people affected *</label>
+      <div class="field"><label>Estimated people affected <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
         <input class="input" type="number" id="fAffected" placeholder="e.g. 3000">
       </div>
 
@@ -195,7 +195,8 @@ function nextFrom1(){
   if(!val('fTitle'))    need.push('Problem title');
   if(!val('fDesc'))     need.push('Detailed description');
   if(!val('fBlock'))    need.push('Block / Village / City');
-  if(!parseInt(val('fAffected'),10)) need.push('Estimated people affected');
+  if(!val('stateSelect'))    need.push('State');
+  if(!val('districtSelect')) need.push('District');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
   if(!document.querySelector('#categoryGroups .cat-panel')) buildCategoryPanels();
   aiAutofill();
@@ -246,7 +247,9 @@ function aiAutofill(){
   else if(/long-term|years/.test(text))                       urg = 'Long-term';
 
   selectedTags.clear();
-  selectedTags.add(bestTag);
+  /* only suggest a tag when there is a genuine keyword/tag match —
+     never seed the selection with a null/undefined placeholder */
+  if(bestScore > 0 && bestTag) selectedTags.add(bestTag);
   syncSelection();
 
   document.getElementById('fSev').value = sev;
@@ -380,6 +383,7 @@ function buildCategoryPanels(){
       el.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
       grid.appendChild(el);
     });
+    panel.appendChild(grid);
     groupsWrap.appendChild(panel);
   });
 }
