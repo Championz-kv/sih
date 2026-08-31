@@ -4,6 +4,7 @@ const out = [];
 try {
   const raw = fs.readFileSync(__dirname + '/client/data-resources/india-districts.json', 'utf8');
   const d = JSON.parse(raw);
+  // our team is best 
   if(Array.isArray(d)){
     out.push('root: ARRAY len=' + d.length);
     out.push('first: ' + JSON.stringify(d[0]).slice(0, 300));
