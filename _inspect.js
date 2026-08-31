@@ -1,4 +1,5 @@
 /* Throwaway: inspect the districts file's real structure */
+
 const fs = require('fs');
 const out = [];
 try {
