@@ -169,7 +169,7 @@ async function loadProfile(){
     /* Fresh copy straight from the database. */
     let profile = cached;
     const full = await sbClient.from('profiles')
-      .select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')
+      .select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited, problems_posted, cases_supported')
       .eq('id', user.id)
       .maybeSingle();
     if(full.error){
@@ -200,22 +200,14 @@ async function loadProfile(){
     saveSessionProfile(profile);
     applyProfileToForm(profile, user);
 
-    /* Optional civic counts — a missing table must never block the form. */
-    try{
-      const posted = await sbClient.from('problems')
-        .select('id', { count:'exact', head:true }).eq('submitted_by', user.id);
-      const supported = await sbClient.from('problem_support')
-        .select('problem_id', { count:'exact', head:true }).eq('user_id', user.id);
-      if(posted.error) console.warn('[profile] problems count failed:', posted.error.message);
-      if(supported.error) console.warn('[profile] support count failed:', supported.error.message);
-      document.getElementById('civicStats').innerHTML =
-        statRowHTML('Problems Posted', posted.count ?? 0) +
-        statRowHTML('Cases Supported', supported.count ?? 0) +
-        statRowHTML('Funding Verified', '₹' + (profile.funding_verified ?? 0)) +
-        statRowHTML('Funding Awaited', '₹' + (profile.funding_awaited ?? 0));
-    }catch(e){
-      console.warn('[profile] civic counts failed:', e);
-    }
+    /* Civic counts come straight from the profiles row — the posting and
+       supporting flows (added later) will increment these columns. No
+       separate problems / problem_support table lookups are needed. */
+    document.getElementById('civicStats').innerHTML =
+      statRowHTML('Problems Posted', profile.problems_posted ?? 0) +
+      statRowHTML('Cases Supported', profile.cases_supported ?? 0) +
+      statRowHTML('Funding Verified', '₹' + (profile.funding_verified ?? 0)) +
+      statRowHTML('Funding Awaited', '₹' + (profile.funding_awaited ?? 0));
 
     try{ renderFundingCard(profile); }catch(e){ console.warn('[profile] funding card failed:', e); }
   }catch(e){
