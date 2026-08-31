@@ -19,8 +19,8 @@
   <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
     <div class="card card-pad">
       <div class="field-row">
-        <div class="field"><label>Full name</label><input class="input" id="cName" value="Guest Citizen"></div>
-        <div class="field"><label>Username</label><input class="input" id="cUser" value="guest" readonly><div class="hint">(username cannot be changed)</div></div>
+        <div class="field"><label>Full name</label><input class="input" id="cName" placeholder="Your full name"></div>
+        <div class="field"><label>Username</label><input class="input" id="cUser" placeholder="your-username" readonly><div class="hint">(username cannot be changed)</div></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Email</label><input class="input" type="email" id="cEmail" placeholder="you@example.com"></div>
@@ -40,8 +40,8 @@
       <div class="card card-pad" style="margin-bottom:16px;">
         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">View profile</h4>
         <div class="person-row" style="padding:0; margin-bottom:10px;">
-          <div class="av" id="cAvatar" style="width:44px; height:44px; font-size:15px; background:var(--setu); color:#fff;">GC</div>
-          <div><b id="pvName">Guest Citizen</b></div>
+          <div class="av" id="cAvatar" style="width:44px; height:44px; font-size:15px; background:var(--setu); color:#fff;">…</div>
+          <div><b id="pvName">Loading…</b></div>
         </div>
         <p style="font-size:11.5px; color:var(--text-faint); margin:0;">Public-facing profile details.</p>
       </div>
@@ -125,16 +125,49 @@ async function currentSession(){
   return (data && data.session) || null;
 }
 
-async function loadProfile(){
-  try{
-    const session = await currentSession();
-    if(!session || !session.user){ go('login.html'); return; }
-    const user = session.user;
+/* Apply a profile object to every field of the form. Used for both the
+   instant cached prefill and the fresh database copy, so one code path
+   always fills all entries (name, username, email, phone, about, address,
+   links) and the preview card. Never shows placeholder data. */
+function applyProfileToForm(p, user){
+  const md = (user && user.user_metadata) || {};
+  const full_name = (p && (p.full_name || '').trim()) || md.full_name || md.name || '';
+  const username  = (p && p.username) || '';
 
-    /* Full column list first; if any column is missing in the DB (schema not
-       migrated yet), retry with select('*') so existing table data still
-       renders. maybeSingle() → null instead of an error when no row exists. */
-    let profile = null;
+  $('#cName').value = full_name;
+  $('#cUser').value = username;
+  $('#cUser').readOnly = true;
+  $('#cEmail').value = (p && p.email) || (user && user.email) || '';
+  $('#cPhone').value = (p && p.phone) || '';
+  $('#cAbout').value = (p && p.about) || '';
+  $('#cAddr').value  = (p && p.address) || '';
+  fillLinkRows((p && p.link_other) || '');
+
+  const av = document.getElementById('cAvatar');
+  av.textContent = initials(full_name) || ((username || 'U').slice(0, 2).toUpperCase());
+  av.style.background = avatarColor(username || full_name);
+  document.getElementById('pvName').textContent = full_name || username || 'Profile';
+}
+
+async function loadProfile(){
+  /* The form should never sit on empty/placeholder fields during the DB
+     round-trip. Start filling from the cached profile right away — it was
+     saved into sessionStorage by shell.js from the profiles table at login
+     / callback / any shell render, so it is the signed-in user's real data. */
+  let cached = getSessionProfile();
+  const session = await Promise.race([
+    currentSession(),
+    new Promise(res => setTimeout(() => res(null), 4000))
+  ]);
+  if(!session || !session.user){ go('login.html'); return; }
+  const user = session.user;
+  if(cached && cached.id !== user.id) cached = null;
+
+  try{
+    if(cached) applyProfileToForm(cached, user);
+
+    /* Fresh copy straight from the database. */
+    let profile = cached;
     const full = await sbClient.from('profiles')
       .select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')
       .eq('id', user.id)
@@ -142,7 +175,7 @@ async function loadProfile(){
     if(full.error){
       console.warn('[profile] full select failed, falling back to select(*) —', full.error.message);
       const star = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
-      if(star.error){ toast('Could not load profile — ' + star.error.message); return; }
+      if(star.error) throw new Error(star.error.message);
       profile = star.data;
     } else {
       profile = full.data;
@@ -158,41 +191,38 @@ async function loadProfile(){
         { onConflict: 'id', ignoreDuplicates: true }
       );
       const again = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
-      profile = again.data || minimalFromAuth(user);
+      profile = again.data || profile;
     }
-    const p = profile;
 
-    $('#cName').value = p.full_name || '';
-    $('#cUser').value = p.username || '';
-    $('#cUser').readOnly = true;
-    $('#cEmail').value = p.email || user.email || '';
-    $('#cPhone').value = p.phone || '';
-    $('#cAbout').value = p.about || '';
-    $('#cAddr').value = p.address || '';
-    fillLinkRows(p.link_other);
+    /* Absolute last resort — still per-user auth data, never a fake default. */
+    if(!profile) profile = cached || minimalFromAuth(user);
 
-    const av = document.getElementById('cAvatar');
-    av.textContent = initials(p.full_name) || (p.username || 'U').slice(0, 2).toUpperCase();
-    av.style.background = avatarColor(p.username || p.full_name);
-    document.getElementById('pvName').textContent = p.full_name || p.username || 'Profile';
+    saveSessionProfile(profile);
+    applyProfileToForm(profile, user);
 
-    /* live counts — head:true transfers the count only, no rows */
-    const posted = await sbClient.from('problems')
-      .select('id', { count:'exact', head:true }).eq('submitted_by', user.id);
-    const supported = await sbClient.from('problem_support')
-      .select('problem_id', { count:'exact', head:true }).eq('user_id', user.id);
-    if(posted.error) console.warn('[profile] problems count failed:', posted.error.message);
-    if(supported.error) console.warn('[profile] support count failed:', supported.error.message);
+    /* Optional civic counts — a missing table must never block the form. */
+    try{
+      const posted = await sbClient.from('problems')
+        .select('id', { count:'exact', head:true }).eq('submitted_by', user.id);
+      const supported = await sbClient.from('problem_support')
+        .select('problem_id', { count:'exact', head:true }).eq('user_id', user.id);
+      if(posted.error) console.warn('[profile] problems count failed:', posted.error.message);
+      if(supported.error) console.warn('[profile] support count failed:', supported.error.message);
+      document.getElementById('civicStats').innerHTML =
+        statRowHTML('Problems Posted', posted.count ?? 0) +
+        statRowHTML('Cases Supported', supported.count ?? 0) +
+        statRowHTML('Funding Verified', '₹' + (profile.funding_verified ?? 0)) +
+        statRowHTML('Funding Awaited', '₹' + (profile.funding_awaited ?? 0));
+    }catch(e){
+      console.warn('[profile] civic counts failed:', e);
+    }
 
-    document.getElementById('civicStats').innerHTML =
-      statRowHTML('Problems Posted', posted.count ?? 0) +
-      statRowHTML('Cases Supported', supported.count ?? 0) +
-      statRowHTML('Funding Verified', '₹' + (p.funding_verified ?? 0)) +
-      statRowHTML('Funding Awaited', '₹' + (p.funding_awaited ?? 0));
-
-    renderFundingCard(p);
+    try{ renderFundingCard(profile); }catch(e){ console.warn('[profile] funding card failed:', e); }
   }catch(e){
     console.error('[profile] load error:', e);
+    /* Even a DB failure leaves the cached profile in the form — only the
+       placeholder defaults go away, never the user's own data. */
+    if(cached) applyProfileToForm(cached, null);
   }
 }
 async function saveProfile(){
@@ -232,9 +262,15 @@ async function saveProfile(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderShell();
-  $ = id => document.getElementById(id);
+  /* Selector helper used throughout this page as $('#fieldId'). document
+     getElementById expects the bare id (no '#'), so strip any leading '#'
+     to keep getElementById from returning null and silently failing the
+     whole profile prefill. */
+  $ = id => document.getElementById(String(id).replace(/^#/, ''));
+  /* Prefill FIRST: this page's form is static HTML, so it can load its own
+     data even if the shared shell ever fails to render. */
   loadProfile();
+  renderShell();
 });
 </script>
 </body>
