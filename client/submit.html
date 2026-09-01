@@ -66,10 +66,6 @@
         <input class="input" type="number" id="fAffected" placeholder="e.g. 3000">
       </div>
 
-      <div class="field"><label>Hashtags <span style="font-weight:400; color:var(--text-faint);">(optional — some posters skip these)</span></label>
-        <input class="input" id="fTags" placeholder="#monsoon #drainage #road (space separated)">
-      </div>
-
       <div class="field"><label>What's needed</label>
         <div class="chip-select">
           <span class="chip-opt">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
@@ -109,6 +105,11 @@
         </div>
         <div id="categoryGroups" style="display:flex; flex-direction:column; gap:12px;"></div>
         <p class="hint">Selected tags are collected in the Selected panel above and stay highlighted in both places.</p>
+      </div>
+
+      <div class="field"><label>Hashtags</label>
+        <p class="hint" style="margin-top:2px;">AI-suggested — you can add or remove</p>
+        <input class="input" id="fTags" placeholder="#monsoon #drainage #road (space separated)">
       </div>
 
       <div class="field-row">
