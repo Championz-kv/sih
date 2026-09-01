@@ -37,12 +37,11 @@
 <script src="js/shell.js"></script>
 <script>
 /* ---- My Projects (organisation) ----
-   Projects created by the signed-in organisation. Until per-org projects
-   are persisted in the backend this is a demo stand-in: the demo org
-   (MMMUT) claims projects where it leads or collaborates, padded so the
-   section always demos with two already-created projects. Card markup is
-   identical to the Projects page. */
-const MY_ORG = 'MMMUT';
+   Projects created by the signed-in organisation. Ownership comes from the
+   shared helpers in app.js (MY_ORG / myOrgProjects) — the demo org claims
+   projects where it leads or collaborates, padded so the section always
+   demos with two already-created projects. Card markup is identical to the
+   Projects page. */
 
 /* Projects added through the placeholder Create Project button this session. */
 let demoCreatedProjects = [];
@@ -66,13 +65,6 @@ function openMyProject(code){
   const pr = PROJECTS.find(p => p.code === code);
   if(pr) go('project.html', { code: code });
   else toast('Project workspace for ' + code + ' opens once the backend is live');
-}
-
-function myOrgProjects(){
-  const mine = PROJECTS.filter(pr => pr.lead === MY_ORG || pr.orgs.includes(MY_ORG));
-  return mine.length >= 2
-    ? mine
-    : mine.concat(PROJECTS.filter(pr => !mine.includes(pr)).slice(0, 2 - mine.length));
 }
 
 function renderMyProjects(){
