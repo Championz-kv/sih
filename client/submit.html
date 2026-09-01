@@ -200,64 +200,138 @@ function nextFrom1(){
   if(!val('districtSelect')) need.push('District');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
   if(!document.querySelector('#categoryGroups .cat-panel')) buildCategoryPanels();
-  aiAutofill();
   goStep(2);
+  runAiCategorize();
 }
 
-/* ---------- step 2 · AI categorization ---------- */
-const CAT_KEYWORDS = {
-  'Healthcare':                 ['health','hospital','clinic','medical','ultrasound','maternal','disease','medicine','patient'],
-  'Water & Sanitation':         ['water','drain','sanitat','toilet','sewage','flood','contamin'],
-  'Agriculture & Food':         ['farm','crop','soil','harvest','pest','grain','dairy','tomato'],
-  'Infrastructure':             ['road','bridge','street','building','railway','transport','light'],
-  'Education':                  ['school','student','teacher','lab ','learning','literacy'],
-  'Environment':                ['pollution','waste','forest','climate','erosion','tree'],
-  'Energy':                     ['power','electric','transformer','energy','feeder'],
-  'Livelihoods & Economy':      ['job','income','employment','business','market','weav','msme'],
-  'Governance & Public Services':['corrupt','scheme','record','legal aid','police','voter','delay'],
-  'Disaster & Safety':          ['earthquake','fire','accident','drought','relief'],
-  'Social Issues':              ['caste','gender','child marriage','traffick','disab','elderly','discrimin'],
-};
+/* ---------- step 2 · AI categorization (Gemini via serverless proxy) ---------- */
+let sahayaBusy = false;   // guard against double-submitting the AI call
 
-function aiAutofill(){
-  const text = (val('fTitle') + ' ' + val('fDesc')).toLowerCase();
+const SEVERITY_LABELS = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
 
-  /* pick the best-matching group + tag (placeholder for the real model) */
-  let bestName = null, bestScore = 0, bestTag = null;
-  PROBLEM_CATEGORY_GROUPS.forEach(gr => {
-    let score = 0, tagHit = null;
-    gr.tags.forEach(tag => {
-      const words = tag.toLowerCase().split(/[\s&/]+/).filter(w => w.length > 3);
-      const hits = words.filter(w => text.includes(w)).length;
-      if(hits && !tagHit) tagHit = tag;
-      score += hits;
+/* Map Gemini's 1-10 urgency number onto the form's dropdown options. */
+function urgencyLabel(n){
+  n = Number(n);
+  if(isNaN(n)) return '';
+  if(n >= 9) return 'Immediate';
+  if(n >= 7) return 'Within days';
+  if(n >= 5) return 'Within months';
+  return 'Long-term';
+}
+
+/* Set the badge/note to the "AI Verified" state (kept in sync with aiPick). */
+function setAiVerified(){
+  aiVerified = true;
+  const badge = document.getElementById('aiBadge');
+  if(badge) badge.innerHTML = '<span class="stamp stamp-validated">✓ AI Verified</span>';
+  const note = document.getElementById('routeNote');
+  if(note){
+    note.className = 'note ok';
+    note.innerHTML = '<b>AI Verified.</b>&nbsp; Categorization matches Sahayak\'s suggestion — it will be posted publicly as soon as you agree below.';
+  }
+}
+
+/* Set the badge/note to the "Will Need Review" state. */
+function setNeedsReview(){
+  aiVerified = false;
+  const badge = document.getElementById('aiBadge');
+  if(badge) badge.innerHTML = '<span class="stamp stamp-pending">Will Need Review</span>';
+  const note = document.getElementById('routeNote');
+  if(note){
+    note.className = 'note warn';
+    note.innerHTML = '<b>Goes through manual review.</b>&nbsp; Your categorization differs from the AI suggestion — this case will pass through an additional AI re-check plus a moderator before it appears publicly.';
+  }
+}
+
+/* Show/hide the "reading your problem…" state in step 2 and block interaction. */
+function setSahayaLoading(on){
+  const badge = document.getElementById('aiBadge');
+  const noteEl = document.getElementById('aiNote');
+  if(on){
+    if(badge) badge.innerHTML = '<span style="font-size:12.5px; color:var(--text-faint);">✦ Sahayak is reading your problem…</span>';
+    if(noteEl){ noteEl.className = 'note'; noteEl.innerHTML = ''; }
+  }
+  const pane = document.querySelector('.wz-pane[data-step="2"]');
+  if(pane){
+    pane.style.opacity = on ? '0.7' : '';
+    pane.style.pointerEvents = on ? 'none' : '';
+  }
+}
+
+async function runAiCategorize(){
+  if(sahayaBusy) return;
+  sahayaBusy = true;
+  setSahayaLoading(true);
+
+  const title = val('fTitle');
+  const description = val('fDesc');
+  const district = val('districtSelect');
+  const state = val('stateSelect');
+  const aff = val('fAffected');
+  const affected_count = aff ? parseInt(aff, 10) : null;
+
+  try{
+    const res = await fetch('/api/categorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description, district, state, affected_count })
     });
-    (CAT_KEYWORDS[gr.name] || []).forEach(k => { if(text.includes(k)) score += 2; });
-    if(score > bestScore){ bestScore = score; bestName = gr.name; bestTag = tagHit || gr.tags[0]; }
-  });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const result = await res.json();
+    if(result && result.error) throw new Error(result.error);
 
-  /* severity & urgency guesses from the description wording */
-  let sev = 'Medium';
-  if(/critical|death|deaths|contaminat|outbreak/.test(text)) sev = 'Critical';
-  else if(/injur|unsafe|harm|danger|urgent/.test(text))       sev = 'High';
-  else if(/minor|cosmetic|long-term/.test(text))              sev = 'Low';
+    applyAiResult(result);
+    setAiVerified();
+  }catch(err){
+    console.error('[sahayak] categorize failed:', err);
+    toast('Sahayak could not categorize — please select manually');
+    setNeedsReview();
+    /* Step 2 is already active — the user can pick categories by hand. */
+  }finally{
+    setSahayaLoading(false);
+    sahayaBusy = false;
+  }
+}
 
-  let urg = 'Within months';
-  if(/immediate|emergency|right now|today/.test(text))        urg = 'Immediate';
-  else if(/urgent|days|every monsoon|every rainy/.test(text)) urg = 'Within days';
-  else if(/long-term|years/.test(text))                       urg = 'Long-term';
+function applyAiResult(result){
+  /* Categories — match Gemini strings to chips whose text matches exactly. */
+  const chips = {};
+  document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => { chips[el.textContent.trim()] = el; });
 
+  document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => el.classList.remove('sel'));
   selectedTags.clear();
-  /* only suggest a tag when there is a genuine keyword/tag match —
-     never seed the selection with a null/undefined placeholder */
-  if(bestScore > 0 && bestTag) selectedTags.add(bestTag);
-  syncSelection();
+  (Array.isArray(result.categories) ? result.categories : []).slice(0, 4).forEach(cat => {
+    const chip = chips[cat];
+    if(chip){
+      chip.classList.add('sel');
+      selectedTags.add(cat);
+    }
+  });
+  syncSelection();   // rebuilds the Selected mirror (refreshes badge once aiPick is known)
 
-  document.getElementById('fSev').value = sev;
-  document.getElementById('fUrg').value = urg;
+  /* Severity */
+  const sev = SEVERITY_LABELS[String(result.severity || '').toLowerCase()];
+  if(sev) document.getElementById('fSev').value = sev;
 
-  aiPick = { tags:[...selectedTags], sev, urg };
-  refreshAiBadge();
+  /* Urgency — number 1-10 → dropdown option */
+  const urg = urgencyLabel(result.urgency);
+  if(urg) document.getElementById('fUrg').value = urg;
+
+  /* Hashtags */
+  const fTags = document.getElementById('fTags');
+  if(fTags && Array.isArray(result.hashtags)) fTags.value = result.hashtags.join(' ');
+
+  /* Reasoning below the badge */
+  const noteEl = document.getElementById('aiNote');
+  if(noteEl){
+    noteEl.className = 'note';
+    noteEl.innerHTML = result.reasoning
+      ? '<span style="font-size:11.5px; color:var(--text-faint); font-style:italic; margin-top:4px;">Sahayak: ' + result.reasoning + '</span>'
+      : '';
+  }
+
+  /* Remember the AI suggestion so later user changes flip the badge. */
+  aiPick = { tags: [...selectedTags], sev: val('fSev'), urg: val('fUrg') };
 }
 
 function isAiMatch(){
@@ -269,16 +343,7 @@ function isAiMatch(){
 
 function refreshAiBadge(){
   if(!aiPick) return;
-  aiVerified = isAiMatch();
-  document.getElementById('aiBadge').innerHTML = aiVerified
-    ? '<span class="stamp stamp-validated">✓ AI Verified</span>'
-    : '<span class="stamp stamp-pending">Will Need Review</span>';
-
-  const note = document.getElementById('routeNote');
-  note.className = 'note ' + (aiVerified ? 'ok' : 'warn');
-  note.innerHTML = aiVerified
-    ? '<b>AI Verified.</b>&nbsp; Categorization matches Sahayak\'s suggestion — it will be posted publicly as soon as you agree below.'
-    : '<b>Goes through manual review.</b>&nbsp; Your categorization differs from the AI suggestion — this case will pass through an additional AI re-check plus a moderator before it appears publicly.';
+  if(isAiMatch()) setAiVerified(); else setNeedsReview();
 }
 
 function nextFrom2(){ fillSummary(); goStep(3); }
