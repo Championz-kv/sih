@@ -414,6 +414,20 @@ function urgencyToInt(label){
   }
 }
 
+/* The problems table stores severity lowercase ('low'…'critical' — see the
+   problems_severity_check constraint), while the form's dropdown shows
+   capitalized options. Convert both ways so inserts pass the check and
+   resumed drafts round-trip. */
+const SEVERITIES = ['low', 'medium', 'high', 'critical'];
+function sevToDb(label){
+  const v = String(label || '').trim().toLowerCase();
+  return SEVERITIES.includes(v) ? v : 'medium';
+}
+function sevFromDb(v){
+  const s = String(v || '').trim().toLowerCase();
+  return SEVERITIES.includes(s) ? s.charAt(0).toUpperCase() + s.slice(1) : 'Medium';
+}
+
 /* Read every field of the wizard into one problems-table payload. */
 function collectFormData(){
   const affRaw = val('fAffected');
@@ -431,8 +445,8 @@ function collectFormData(){
     categories: [...document.querySelectorAll('#categoryGroups .chip-opt.sel')]
                   .map(el => el.textContent.trim()),
     hashtags:    val('fTags'),
-    severity:    val('fSev'),
-    urgency:     urgencyToInt(val('fUrg')),
+    severity:    sevToDb(val('fSev')),
+    urgency:     (urgencyToInt(val('fUrg')) ?? 5),
     ai_reviewed: aiVerified === true,
     contact_email: val('fEmail'),
     contact_phone: val('fPhone'),
@@ -519,7 +533,7 @@ function prefillFromDraft(d, applyLocation){
   document.getElementById('fLocation').value = d.location_text || '';
   document.getElementById('fAffected').value = (d.affected_count != null ? d.affected_count : '');
   document.getElementById('fTags').value = d.hashtags || '';
-  document.getElementById('fSev').value = d.severity || 'Medium';
+  document.getElementById('fSev').value = sevFromDb(d.severity);
   if(d.urgency != null){
     const lbl = urgencyLabel(d.urgency);
     if(lbl) document.getElementById('fUrg').value = lbl;
@@ -547,7 +561,7 @@ function prefillFromDraft(d, applyLocation){
 
   /* if the draft was AI-verified, restore that state so the badge matches */
   if(d.ai_reviewed === true){
-    aiPick = { tags: [...selectedTags], sev: d.severity || 'Medium', urg: urgencyLabel(d.urgency != null ? d.urgency : 6) };
+    aiPick = { tags: [...selectedTags], sev: sevFromDb(d.severity), urg: urgencyLabel(d.urgency != null ? d.urgency : 6) };
     setAiVerified();
   }
 }
