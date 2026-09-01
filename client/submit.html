@@ -59,7 +59,10 @@
       </div>
       <div class="field-row">
         <div class="field"><label>Block / Village / City *</label><input class="input" id="fBlock" placeholder="e.g. Ormanjhi block"></div>
-        <div class="field"><label>Pin exact location</label><button class="btn btn-outline btn-block" onclick="toast('Map picker placeholder')" type="button">Pick on map</button></div>
+        <div class="field"><label>Landmark / exact location <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
+          <input class="input" id="fLocation" placeholder="e.g. near Govt school, NH-33 turn">
+          <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="toast('Map picker placeholder')" type="button">Pick on map</button>
+        </div>
       </div>
 
       <div class="field"><label>Estimated people affected <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
@@ -127,7 +130,10 @@
 
       <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:18px;">
         <button class="btn btn-ghost" type="button" onclick="goStep(1)">← Back</button>
-        <button class="btn btn-primary" type="button" onclick="nextFrom2()">Next: Agree &amp; Post →</button>
+        <span class="row-flex" style="gap:10px;">
+          <button class="btn btn-outline" type="button" onclick="saveDraft()">Save as draft</button>
+          <button class="btn btn-primary" type="button" onclick="nextFrom2()">Next: Agree &amp; Post →</button>
+        </span>
       </div>
     </section>
 
@@ -150,6 +156,7 @@
         <div class="field"><label>Phone <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="tel" id="fPhone" placeholder="+91 …"></div>
       </div>
 
+      <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkAnon"><span>Post anonymously — don't show my name on the public page.</span></label>
       <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkTerms"><span>I agree to the <a href="#" onclick="return false;">terms of use</a> and community code of conduct.</span></label>
       <label class="check-row" style="margin:6px 0 16px;"><input type="checkbox" id="chkConsent"><span>I confirm the information provided is accurate to the best of my knowledge, and I consent to it being published publicly after review.</span></label>
 
@@ -178,6 +185,7 @@ const val = id => (document.getElementById(id)?.value || '').trim();
 let step = 1;
 let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
 let aiVerified = false; // do the user's current choices match the AI?
+let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
 
 function goStep(n){
   step = n;
@@ -360,7 +368,77 @@ function updatePostBtn(){
     !(document.getElementById('chkTerms').checked && document.getElementById('chkConsent').checked);
 }
 function postFinal(){
-  toast('Submitted — routed ' + (aiVerified ? 'straight to posting' : 'through AI re-check + manual review') + '. (Demo — nothing saved)');
+  if(!currentUserId){ go('login.html'); return; }
+  const postBtn = document.getElementById('postBtn');
+  postBtn.disabled = true;
+  (async () => {
+    try{
+      const payload = collectFormData();
+      /* AI-verified cases post straight through; anything else needs review. */
+      payload.problem_state = (aiVerified === true) ? 'reviewed' : 'unreviewed';
+
+      const draftId = sessionStorage.getItem('ss_draft_id');
+      let saved;
+      if(draftId){
+        saved = await sbClient.from('problems')
+          .update(payload).eq('id', draftId).select('case_no').single();
+      } else {
+        saved = await sbClient.from('problems')
+          .insert(payload).select('case_no').single();
+      }
+      if(saved.error) throw saved.error;
+
+      sessionStorage.removeItem('ss_draft_id');
+      toast('Problem submitted — Case ' + saved.data.case_no);
+      setTimeout(() => go('my-problems.html'), 1800);
+    }catch(err){
+      console.error('[submit] post failed:', err);
+      toast('Submission failed — ' + err.message);
+      updatePostBtn(); /* re-enable so the user can retry */
+    }
+  })();
+}
+
+/* ---------- Supabase persistence (problems table) ---------- */
+/* Urgency is stored as an integer (1-10) in the problems table; the form
+   shows it as a dropdown. Map both ways so drafts round-trip. */
+function urgencyToInt(label){
+  const n = parseInt(label, 10);
+  if(!isNaN(n)) return n;
+  switch(label){
+    case 'Immediate':    return 10;
+    case 'Within days':  return 8;
+    case 'Within months':return 6;
+    case 'Long-term':    return 3;
+    default:             return null;
+  }
+}
+
+/* Read every field of the wizard into one problems-table payload. */
+function collectFormData(){
+  const affRaw = val('fAffected');
+  const aff = affRaw ? parseInt(affRaw, 10) : NaN;
+  return {
+    title:          val('fTitle'),
+    description:    val('fDesc'),
+    state:          val('stateSelect'),
+    district:       val('districtSelect'),
+    block:          val('fBlock'),
+    location_text:  val('fLocation'),
+    affected_count: (!isNaN(aff) ? aff : null),
+    media_urls: [...document.querySelectorAll('#linkRows .link-row input')]
+                  .map(i => i.value.trim()).filter(Boolean),
+    categories: [...document.querySelectorAll('#categoryGroups .chip-opt.sel')]
+                  .map(el => el.textContent.trim()),
+    hashtags:    val('fTags'),
+    severity:    val('fSev'),
+    urgency:     urgencyToInt(val('fUrg')),
+    ai_reviewed: aiVerified === true,
+    contact_email: val('fEmail'),
+    contact_phone: val('fPhone'),
+    is_anonymous: !!(document.getElementById('chkAnon') && document.getElementById('chkAnon').checked),
+    submitted_by: currentUserId
+  };
 }
 
 /* ---------- step 1 helpers ---------- */
@@ -384,16 +462,94 @@ function removeLinkRow(btn){
   btn.closest('.link-row').remove();
 }
 function clearStep1(){
-  ['fTitle','fDesc','fBlock','fAffected','fTags'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['fTitle','fDesc','fBlock','fAffected','fTags','fLocation'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.querySelectorAll('#linkRows .link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
   toast('Form cleared');
 }
-/* Placeholder until accounts exist — one draft per account will live server-side. */
-function continueDraft(){
-  toast('Draft restore arrives with accounts — no saved draft found yet.');
+/* "Continue with draft" — pull the user's most recent draft row and reload
+   the page so the DOMContentLoaded resume logic pre-fills everything. */
+async function continueDraft(){
+  if(!currentUserId){ go('login.html'); return; }
+  try{
+    const { data, error } = await sbClient.from('problems')
+      .select('id')
+      .eq('submitted_by', currentUserId)
+      .eq('problem_state', 'draft')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if(error) throw error;
+    if(!data){ toast('No saved draft found — start a new report below.'); return; }
+    sessionStorage.setItem('ss_draft_id', data.id);
+    location.reload();
+  }catch(err){
+    console.error('[submit] continueDraft failed:', err);
+    toast('Could not load draft — ' + err.message);
+  }
 }
-function saveDraft(){
-  toast('Draft saved (placeholder) — “Continue with draft” will restore it once accounts are live.');
+/* Save the current wizard state as a draft row in the problems table. */
+async function saveDraft(){
+  if(!currentUserId){ go('login.html'); return; }
+  try{
+    const payload = collectFormData();
+    payload.problem_state = 'draft';
+
+    const draftId = sessionStorage.getItem('ss_draft_id');
+    if(draftId){
+      const { error } = await sbClient.from('problems').update(payload).eq('id', draftId);
+      if(error) throw error;
+    } else {
+      const { data, error } = await sbClient.from('problems')
+        .insert(payload).select('id').single();
+      if(error) throw error;
+      sessionStorage.setItem('ss_draft_id', data.id);
+    }
+    toast('Draft saved');
+  }catch(err){
+    console.error('[submit] saveDraft failed:', err);
+    toast('Could not save draft — ' + err.message);
+  }
+}
+
+/* Pre-fill the whole wizard from a resumed draft row (Task 1). */
+function prefillFromDraft(d, applyLocation){
+  document.getElementById('fTitle').value = d.title || '';
+  document.getElementById('fDesc').value = d.description || '';
+  document.getElementById('fBlock').value = d.block || '';
+  document.getElementById('fLocation').value = d.location_text || '';
+  document.getElementById('fAffected').value = (d.affected_count != null ? d.affected_count : '');
+  document.getElementById('fTags').value = d.hashtags || '';
+  document.getElementById('fSev').value = d.severity || 'Medium';
+  if(d.urgency != null){
+    const lbl = urgencyLabel(d.urgency);
+    if(lbl) document.getElementById('fUrg').value = lbl;
+  }
+  document.getElementById('fEmail').value = d.contact_email || '';
+  document.getElementById('fPhone').value = d.contact_phone || '';
+  const anon = document.getElementById('chkAnon');
+  if(anon) anon.checked = !!d.is_anonymous;
+
+  /* links → media_urls */
+  const rowsWrap = document.getElementById('linkRows');
+  rowsWrap.querySelectorAll('.link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
+  (Array.isArray(d.media_urls) ? d.media_urls : []).filter(Boolean).forEach((u, i) => {
+    if(i === 0){ rowsWrap.querySelector('.link-row input').value = u; }
+    else { addLinkRow(); const rows = rowsWrap.querySelectorAll('.link-row'); rows[rows.length-1].querySelector('input').value = u; }
+  });
+
+  /* state / district (dropdowns must already be populated) */
+  applyLocation(d.state, d.district);
+
+  /* categories */
+  selectedTags.clear();
+  (Array.isArray(d.categories) ? d.categories : []).forEach(t => selectedTags.add(t));
+  syncSelection();
+
+  /* if the draft was AI-verified, restore that state so the badge matches */
+  if(d.ai_reviewed === true){
+    aiPick = { tags: [...selectedTags], sev: d.severity || 'Medium', urg: urgencyLabel(d.urgency != null ? d.urgency : 6) };
+    setAiVerified();
+  }
 }
 
 /* ---- grouped category panels + Selected mirror (step 2) ---- */
@@ -454,7 +610,7 @@ function buildCategoryPanels(){
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   renderShell();
 
   /* Guests browse only — reporting needs a Citizen account */
@@ -463,6 +619,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => go('explore.html'), 1300);
     return;
   }
+
+  /* ---- Supabase session check (problems table writes need a user id) ---- */
+  const { data: sess } = await sbClient.auth.getSession();
+  const sessUser = sess?.session?.user;
+  if(!sessUser){ go('login.html'); return; }
+  currentUserId = sessUser.id;
 
   buildCategoryPanels();
   goStep(1);
@@ -478,6 +640,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const distSel  = document.getElementById('districtSelect');
   let indiaData  = Array.isArray(window.INDIA_DISTRICTS_FALLBACK)
                  ? window.INDIA_DISTRICTS_FALLBACK.slice() : [];
+  let loadedDraft = null; // resumed draft row (for re-applying after option rebuilds)
+
+  /* Select a state + district in the dropdowns (used by draft resume). */
+  function applyLocation(state, district){
+    if(!state) return;
+    stateSel.value = state;
+    const st = indiaData.find(s => s.state === state);
+    distSel.innerHTML = '<option value="">Select district</option>';
+    if(st){
+      st.districts.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d; o.textContent = d;
+        distSel.appendChild(o);
+      });
+      distSel.disabled = false;
+    } else {
+      distSel.disabled = true;
+    }
+    if(district) distSel.value = district;
+  }
 
   function populateStates(){
     stateSel.innerHTML = '<option value="">Select state</option>';
@@ -514,9 +696,29 @@ document.addEventListener('DOMContentLoaded', () => {
       if(arr.length && arr.length !== indiaData.length){
         indiaData = arr;
         populateStates();
+        /* re-apply a resumed draft's location if the refresh rebuilt the options */
+        if(loadedDraft) applyLocation(loadedDraft.state, loadedDraft.district);
       }
     })
     .catch(() => {});
+
+  /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ---- */
+  const draftId = sessionStorage.getItem('ss_draft_id');
+  if(draftId){
+    sessionStorage.removeItem('ss_draft_id');
+    try{
+      const { data: draft, error } = await sbClient.from('problems')
+        .select('*').eq('id', draftId).maybeSingle();
+      if(error) throw error;
+      if(draft && draft.submitted_by === currentUserId){
+        loadedDraft = draft;
+        prefillFromDraft(draft, applyLocation);
+        toast('Draft loaded — continue where you left off.');
+      }
+    }catch(err){
+      console.error('[submit] draft resume failed:', err);
+    }
+  }
 });
 </script>
 </body>
