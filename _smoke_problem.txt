@@ -63,7 +63,7 @@
           <div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>
         </div>
         <div class="row-flex" style="gap:8px; flex-wrap:wrap;" id="actRow">
-          <button class="btn btn-accent btn-sm" id="actSupport" onclick="supportThisProblem()">Support this problem (211)</button>
+          <button class="btn btn-accent btn-sm" id="actSupport" onclick="supportThisProblem()">Support<span class="supp-pill">211</span></button>
           <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
           <button class="btn btn-outline btn-sm" id="actCommunity" onclick="document.getElementById('communityPanel').scrollIntoView({behavior:'smooth'})">💬 Community</button>
           <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Request funds</button>
@@ -345,20 +345,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- live supporter counter (DB-backed: problems.support) ----------
-     The button shows the row's support value, writes +1 through Supabase on
-     click, then locks to "Supported ✓" for the rest of this session. The
-     count itself lives in the DB (survives refresh, same for everyone);
-     only the "already supported" lock is per-session. */
+     The button shows a "Support" label with a count pill on its right edge;
+     the pill always mirrors the row's support value. A successful click
+     writes +1 through Supabase, bumps the pill immediately, and locks the
+     button into its green .btn-supported state for the rest of this
+     session. The count itself lives in the DB (survives refresh, same for
+     everyone); only the green "already supported" lock is per-session. */
   const actSupportBtn = document.getElementById('actSupport');
   let supportCount = p.supporters;
   let supportInFlight = false;
-  const supportLabel   = n => 'Support this problem (' + n + ')';
-  const supportedLabel = n => 'Supported ✓ (' + n + ')';
   function paintSupportButton(){
     if(!actSupportBtn) return;
     const locked = hasSupported(p.id);
     actSupportBtn.disabled = locked;
-    actSupportBtn.textContent = locked ? supportedLabel(supportCount) : supportLabel(supportCount);
+    actSupportBtn.classList.toggle('btn-supported', locked);
+    actSupportBtn.innerHTML = 'Support<span class="supp-pill">' + supportCount + '</span>';
   }
   function paintSupportersField(){
     document.getElementById('detailSupp').textContent = `${supportCount} supporters · ${p.contributors} contributors`;
@@ -367,14 +368,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!actSupportBtn || supportInFlight || hasSupported(p.id)) return;
     supportInFlight = true;
     actSupportBtn.disabled = true;
-    actSupportBtn.textContent = 'Supporting…';
+    actSupportBtn.innerHTML = 'Supporting…<span class="supp-pill">' + supportCount + '</span>';
     try{
       const next = await incrementSupport(p.id);
       supportCount = next;
       p.supporters = next;                       /* keep the in-memory object in sync */
       markSupported(p.id);
-      paintSupportButton();
-      paintSupportersField();
+      paintSupportButton();                      /* green + bumped pill + disabled */
+      paintSupportersField();                    /* CASE FILE Supporters field */
       toast('Thanks — your support was recorded');
     }catch(e){
       console.warn('[support] increment failed:', (e && e.message) || e);

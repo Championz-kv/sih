@@ -225,6 +225,21 @@ html[data-theme="dark"] .theme-toggle .icon-moon{ display:block; }
 .btn-block{ width:100%; justify-content:center; }
 .btn[disabled]{ opacity:.5; cursor:not-allowed; }
 
+/* Support button — success state + live count pill (problem detail page).
+   Green reuses --ledger, the same success green as .stamp-validated. */
+.btn-supported{ background:var(--ledger); color:#fff; }
+.btn-supported:hover{ filter:brightness(1.08); }
+html[data-theme="dark"] .btn-supported{ color:#171400; }
+/* stays vivid after locking (full-strength green IS the confirmation) */
+.btn-supported[disabled]{ opacity:1; cursor:not-allowed; }
+.supp-pill{
+  font-family:var(--font-mono); font-size:11px; font-weight:600; line-height:1;
+  padding:3px 7px; border-radius:999px;
+  background:rgba(0,0,0,.14);
+}
+.btn-supported .supp-pill{ background:rgba(255,255,255,.30); }
+html[data-theme="dark"] .btn-supported .supp-pill{ background:rgba(0,0,0,.14); }
+
 /* ---- Sidebar ---- */
 .sidebar{
   position:fixed; top:58px; bottom:0; left:0; width:230px; z-index:50;
