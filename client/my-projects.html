@@ -43,22 +43,15 @@
    demos with two already-created projects. Card markup is identical to the
    Projects page. */
 
-/* Projects added through the placeholder Create Project button this session. */
+/* Projects saved through the Create Project form (create-project.html) —
+   held in sessionStorage for this session until the backend persists them. */
 let demoCreatedProjects = [];
+try{ demoCreatedProjects = JSON.parse(sessionStorage.getItem('ss_demo_projects') || '[]'); }
+catch(e){ demoCreatedProjects = []; }
 
 function createProject(){
-  /* Placeholder for the real Create Project flow — seeds a demo card so the
-     section demonstrates "created projects show up here" right away. */
-  const n = demoCreatedProjects.length + 1;
-  demoCreatedProjects.unshift({
-    code: 'PRJ-0' + (361 + demoCreatedProjects.length),
-    title: 'New Project ' + n + ' (demo)',
-    problem: null, stage: 'Proposed', lead: MY_ORG,
-    orgs: [MY_ORG], team: 1,
-    start: new Date().toISOString().slice(0, 10), progress: 0
-  });
-  renderMyProjects();
-  toast('Demo project added — the full Create Project flow is coming soon');
+  /* Opens the Create Project form (mirrors the Report-a-Problem interface). */
+  go('create-project.html');
 }
 
 function openMyProject(code){
