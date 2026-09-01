@@ -139,6 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   renderExplore();
+
+  /* Live supporter counts — overlay problems.support from the DB onto the
+     demo list, then re-render so every ♥ on the cards matches the detail
+     page exactly (same column, no duplicate counter). Demo values stay as
+     the offline fallback when Supabase is unreachable. */
+  fetchSupportCounts().then(map => {
+    if(applySupportCounts(map)) renderExplore();
+  });
 });
 </script>
 </body>

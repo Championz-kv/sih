@@ -1,0 +1,508 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No cold-storage access for tomato farmers — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="explore">
+
+  <header class="topbar">
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <a class="brand" href="index.html?role=guest&amp;theme=light" style="text-decoration:none;">
+      <div class="brand-mark">S</div>
+      <div class="brand-text"><b>SolveSamaj</b><span>Innovation Portal</span></div>
+    </a>
+    <div class="topbar-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="globalSearch" placeholder="Search problems, organizations, case no...">
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-right">
+      
+      <button class="icon-btn theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+      </button>
+      
+      <button class="btn btn-primary" onclick="go('login.html')">Sign in</button>
+    </div>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-group"><a class="nav-item" data-page="overview" href="dashboard.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path></svg>Overview</a><a class="nav-item active" data-page="explore" href="explore.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>Explore Problems</a><a class="nav-item" data-page="orgdirectory" href="organizations.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"></circle><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"></path><circle cx="17" cy="8" r="3"></circle><path d="M15.5 14.2c3.4.4 6 2.8 6 5.8"></path></svg>Organization Directory</a></div><div class="nav-group" data-role-group="citizen" style="display:none;"><div class="nav-group-label">Problem Side</div><a class="nav-item" data-page="citizenprofile" href="citizen-profile.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-3.3 3.1-6 8-6s8 2.7 8 6"></path></svg>My Profile</a><a class="nav-item" data-page="submit" href="submit.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Report a Problem</a><a class="nav-item" data-page="myproblems" href="my-problems.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>My Problems<span class="count">5</span></a></div><div class="nav-group" data-role-group="org" style="display:none;"><div class="nav-group-label">Solver Side</div><a class="nav-item" data-page="orgprofile" href="org-profile.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Organization Profile</a><a class="nav-item" data-page="discover" href="discover.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>Matched Problems<span class="count">7</span></a><a class="nav-item" data-page="interests" href="interests.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>Interests<span class="count">5</span></a></div><div class="nav-group"><div class="nav-group-label">Collaboration</div><a class="nav-item" data-page="projects" href="projects.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>Projects</a></div><div class="nav-group"><div class="nav-group-label">Insights</div><a class="nav-item" data-page="analytics" href="analytics.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Public Analytics</a></div><div class="nav-group" data-role-group="admin" style="display:none;"><div class="nav-group-label">Administration</div><a class="nav-item" data-page="admin" href="admin.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>Admin Dashboard</a><a class="nav-item" data-page="verify" href="verify.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>Verification Queue<span class="count">2</span></a><a class="nav-item" data-page="review" href="review.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Problem Review<span class="count">4</span></a></div><div class="nav-group"><a class="nav-item" data-page="chatbot" href="chatbot.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>AI Assistant</a><a class="nav-item" data-page="team" href="team.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>About &amp; Team</a></div>
+    <div class="sidebar-foot"><p class="mono">SolveSamaj v0.2 · Team KUEST-L · Prototype</p></div>
+  </nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="explore.html?role=citizen&amp;theme=light" id="crumbHref">Explore Problems</a> <span>/</span> <span id="detailCaseNo">Case #1156</span></div>
+  <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <div class="pcard-top" style="margin-bottom:10px;">
+          <div>
+            <div class="pcard-id mono" id="detailId">CASE NO. SS/JH/2026/1156</div>
+            <h1 style="font-size:22px; margin:4px 0 6px;" id="detailTitle">No cold-storage access for tomato farmers</h1>
+            <div class="pcard-tags" id="detailTags"><span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Post-Harvest Loss &amp; Storage</span><span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Farmer Income &amp; Market Access</span><span class="tag">#coldchain</span></div>
+          </div>
+          <div id="detailStamp"><span class="stamp stamp-validated">Validated</span></div>
+        </div>
+        <p id="detailDesc" style="font-size:13.5px; color:var(--text-soft);">Farmers lose an estimated 30% of tomato yield post-harvest due to the nearest cold storage being over 40km away, leading to distress sales.</p>
+        <div class="grid grid-4" style="gap:10px; margin:16px 0;">
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+          </div>
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
+          </div>
+          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-family:var(--font-mono); font-size:11px;">+3</div>
+          <div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>
+        </div>
+        <div class="row-flex" style="gap:8px; flex-wrap:wrap;" id="actRow">
+          <button class="btn btn-accent btn-sm" id="actSupport" onclick="supportThisProblem()">Support this problem (211)</button>
+          <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
+          <button class="btn btn-outline btn-sm" id="actCommunity" onclick="document.getElementById('communityPanel').scrollIntoView({behavior:'smooth'})">💬 Community</button>
+          <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Request funds</button>
+          <button class="btn btn-primary btn-sm" id="actInterest" onclick="openModal('interestModal')">Express Interest</button>
+        </div>
+      </div>
+
+      <div class="card card-pad">
+        <div class="section-head"><h2>Status timeline</h2></div>
+        <div class="status-rail" id="detailRail"><div class="rail-item done"><div class="rail-dot"></div><div class="rail-body"><b>Submitted</b><span>Citizen filed the problem</span></div></div><div class="rail-item done"><div class="rail-dot"></div><div class="rail-body"><b>Under Review</b><span>Admin checking completeness</span></div></div><div class="rail-item current"><div class="rail-dot"></div><div class="rail-body"><b>Validated</b><span>Confirmed genuine &amp; categorized</span></div></div><div class="rail-item "><div class="rail-dot"></div><div class="rail-body"><b>Open for Solutions</b><span>Visible to matching organizations</span></div></div><div class="rail-item "><div class="rail-dot"></div><div class="rail-body"><b>Project Active</b><span>An organization is working on it</span></div></div><div class="rail-item "><div class="rail-dot"></div><div class="rail-body"><b>Solution Testing</b><span>Prototype under field validation</span></div></div><div class="rail-item "><div class="rail-dot"></div><div class="rail-body"><b>Impact Verified</b><span>Deployed &amp; outcome recorded</span></div></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card card-pad" style="margin-bottom:16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:12px;">Case File</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Location</span><b id="detailLoc">Ranchi, Bero</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Affected</span><b id="detailAffected">2,400</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Severity</span><b id="detailSev"><span class="sev-dot sev-medium"></span> Medium</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Urgency</span><b id="detailUrg">Within months</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Supporters</span><b id="detailSupp">211 supporters · 19 contributors</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Filed on</span><b id="detailDate">22 Jul 2026</b></div>
+        </div>
+      </div>
+      <div class="card card-pad" id="detailProjectCard" style="display: block; margin-bottom: 16px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:8px;">Linked project</h4>
+        <div id="detailProjectLink">
+      <div style="cursor:pointer;" onclick="go('project.html', {code:'PRJ-0298'})">
+        <span class="pcard-id mono">PRJ-0298</span>
+        <h4 style="font-size:14px; margin:4px 0 8px;">Cold-Chain Micro-Storage Pilot</h4>
+        <div class="milestone" style="margin:0;"><div class="mtop"><b>Progress</b><span>56%</span></div><div class="track"><div class="fill" style="width:56%;"></div></div></div>
+      </div></div>
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:8px;">Interested organizations</h4>
+        <div id="detailOrgs"><div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:#A32F2F; color:#fff;">AS</div><div><b>AgroLink Startup</b><span>Startup · expressed interest</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-pad" style="margin-top:16px;">
+    <div class="section-head">
+      <h2>Funding needs <span class="count-pill" id="fundCount"></span></h2>
+      <button class="btn btn-outline btn-sm" onclick="openRequestFund('problem', CUR_REF)">+ Request funds for this case</button>
+    </div>
+    <div id="fundList"><div class="empty" style="padding:26px 16px;">
+          <h4>No funding needs posted for this case</h4>
+          <p>Driving this problem? Use “Request funds” to post what money is needed — organizations and individuals can then pledge any amount.</p>
+        </div></div>
+  </div>
+
+  <!-- ============ COMMUNITY DISCUSSION ============ -->
+  <div class="card card-pad" style="margin-top:16px;" id="communityPanel">
+    <div class="section-head">
+      <h2>Community <span class="count-pill" id="cmCount">(3)</span></h2>
+      <span class="sub">Locals, solvers &amp; officials discussing this case</span>
+    </div>
+
+    <div class="cm-compose">
+      <textarea class="input" id="cmText" rows="3" placeholder="Add to the discussion — keep it respectful &amp; useful."></textarea>
+      <div class="row-flex" style="justify-content:flex-end; margin-top:8px;">
+        <button class="btn btn-primary btn-sm" type="button" id="cmPostBtn" onclick="postComment()">Post comment</button>
+      </div>
+    </div>
+
+    <div id="commentList">
+      <div class="cm-item">
+        <div class="cm-votes">
+          <button title="Upvote" onclick="cmVote(0, 1)">▲</button>
+          <span class="score">41</span>
+          <button title="Downvote" onclick="cmVote(0, -1)">▼</button>
+        </div>
+        <div class="cm-body">
+          <div class="cm-meta"><b>Ramesh Sahu</b><span class="cm-role">Farmer</span><span class="cm-when">4d ago</span></div>
+          <p class="cm-text">Middlemen pay ₹8-10/kg at the farm gate. Same tomatoes sell at ₹30 in Ranchi. Cold storage changes everything.</p>
+        </div>
+      </div>
+      <div class="cm-item">
+        <div class="cm-votes">
+          <button title="Upvote" onclick="cmVote(1, 1)">▲</button>
+          <span class="score">32</span>
+          <button title="Downvote" onclick="cmVote(1, -1)">▼</button>
+        </div>
+        <div class="cm-body">
+          <div class="cm-meta"><b>Kiran Devi</b><span class="cm-role">Farmer</span><span class="cm-when">2d ago</span></div>
+          <p class="cm-text">Last season half my crop rotted on the way to market. Even one storage unit in the block would help hundreds of us.</p>
+        </div>
+      </div>
+      <div class="cm-item">
+        <div class="cm-votes">
+          <button title="Upvote" onclick="cmVote(2, 1)">▲</button>
+          <span class="score">25</span>
+          <button title="Downvote" onclick="cmVote(2, -1)">▼</button>
+        </div>
+        <div class="cm-body">
+          <div class="cm-meta"><b>AgroLink Startup</b><span class="cm-role">Organization</span><span class="cm-when">3d ago</span></div>
+          <p class="cm-text">Prototype enclosure design is done — the funding request covers insulated panels and the first field trial.</p>
+        </div>
+      </div></div>
+  </div>
+</main>
+
+<div id="modal-mount">
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Log in to SolveSamaj</h3><button class="close-x" onclick="closeModal('loginModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="tabbar" style="margin-bottom:16px;">
+          <button class="tabbtn active" data-ltab="citizen" onclick="switchLoginTab('citizen')">Citizen</button>
+          <button class="tabbtn" data-ltab="org" onclick="switchLoginTab('org')">Organization</button>
+          <button class="tabbtn" data-ltab="admin" onclick="switchLoginTab('admin')">Admin</button>
+        </div>
+        <div class="field"><label>Email or mobile number</label><input class="input" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input class="input" type="password" placeholder="••••••••"></div>
+        <p class="hint">Placeholder screen — no authentication is wired up yet. "Continue" will just switch your viewing role and take you to that dashboard.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('loginModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="mockLogin()">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="interestModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Express Interest</h3><button class="close-x" onclick="closeModal('interestModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Proposed approach</label><textarea class="input" placeholder="How would your organization approach this problem?"></textarea></div>
+        <div class="field"><label>Resources you'd bring</label><input class="input" placeholder="e.g. IoT lab, 6 student researchers, 2 faculty mentors"></div>
+        <div class="field"><label>Estimated timeline</label>
+          <select class="input"><option>1–3 months</option><option>3–6 months</option><option>6–12 months</option><option>12+ months</option></select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('interestModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="closeModal('interestModal'); toast('Interest sent to the problem owner (placeholder)')">Send interest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="inviteModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Invite a Collaborator</h3><button class="close-x" onclick="closeModal('inviteModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Organization</label><input class="input" placeholder="Search verified organizations..."></div>
+        <div class="field"><label>Role in project</label>
+          <select class="input"><option>Technical partner</option><option>Implementation partner</option><option>Funding partner</option><option>Research partner</option></select>
+        </div>
+        <div class="field"><label>Note</label><textarea class="input" placeholder="Briefly explain what you need from them"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('inviteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="closeModal('inviteModal'); toast('Invitation sent (placeholder)')">Send invitation</button>
+      </div>
+    </div>
+
+  <div class="modal-overlay" id="donateModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Support this request</h3><button class="close-x" onclick="closeModal('donateModal')">✕</button></div>
+      <div class="modal-body">
+        <p id="donateReqTitle" style="font-weight:600; margin:0 0 2px;"></p>
+        <p id="donateReqMeta" class="hint" style="margin-top:0;"></p>
+        <div class="field"><label>I'm contributing as</label>
+          <select class="input" id="donorType" onchange="donorTypeChanged()">
+            <option value="individual">Individual</option>
+            <option value="org">Organization</option>
+          </select>
+        </div>
+        <div class="field" id="donorIndField"><label>Your name</label><input class="input" id="donorName" placeholder="e.g. Ravi Kumar"></div>
+        <div class="field" id="donorOrgField" style="display:none;"><label>Organization</label>
+          <select class="input" id="donorOrg"><option>MMMUT</option><option>NIT Jamshedpur</option><option>Civica NGO</option><option>AgroLink Startup</option><option>Vidya Foundation</option><option>Sahyog NGO</option><option>PowerGrid Interns Collective</option><option>Sensfirm Robotics</option></select>
+        </div>
+        <div class="field"><label>Amount (₹)</label><input class="input" id="donorAmount" type="number" min="100" step="100" placeholder="Partial amounts are welcome">
+          <p class="hint">Payment is simulated in this prototype — the case/project owner verifies each receipt.</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('donateModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitDonation()">Record contribution</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="requestFundModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Request funds</h3><button class="close-x" onclick="closeModal('requestFundModal')">✕</button></div>
+      <div class="modal-body">
+        <p class="hint" style="margin-top:0;">Posted publicly so organizations and individuals can pledge support. You verify each receipt as payments come in.</p>
+        <div class="field"><label>Purpose — what the funds are for</label><input class="input" id="rfTitle" placeholder="e.g. Water testing kits &amp; lab analysis"></div>
+        <div class="field"><label>Details</label><textarea class="input" id="rfDesc" placeholder="Breakdown, vendors, timeline…"></textarea></div>
+        <div class="field"><label>Target amount (₹)</label><input class="input" id="rfTarget" type="number" min="500" step="500"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('requestFundModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFundRequest()">Post request</button>
+      </div>
+    </div>
+  </div></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script><script src="js/chat-brain.js"></script><script src="js/chat-widget.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('crumbHref').href = 'explore.html' + paramStr();
+
+  const params = new URLSearchParams(location.search);
+  const id = parseInt(params.get('id'), 10);
+  const p = PROBLEMS.find(x => x.id === id) || PROBLEMS[0];
+
+  document.getElementById('detailCaseNo').textContent = `Case #${p.id}`;
+  document.getElementById('detailId').textContent = `CASE NO. ${caseNo(p.id)}`;
+  document.getElementById('detailTitle').textContent = p.title;
+  document.getElementById('detailDesc').textContent = p.desc;
+  document.getElementById('detailTags').innerHTML = problemCats(p).map(categoryTagHTML).join("") + p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  document.getElementById('detailStamp').innerHTML = stampHTML(p.status);
+  document.getElementById('detailLoc').textContent = `${p.district}, ${p.block}`;
+  document.getElementById('detailAffected').textContent = p.affected.toLocaleString();
+  document.getElementById('detailSev').innerHTML = `${sevDotHTML(p.severity)} ${p.severity[0].toUpperCase()+p.severity.slice(1)}`;
+  document.getElementById('detailUrg').textContent = p.urgency;
+  document.getElementById('detailSupp').textContent = `${p.supporters} supporters · ${p.contributors} contributors`;
+  document.getElementById('detailDate').textContent = formatDate(p.date);
+  document.title = p.title + ' — SolveSamaj';
+
+  const stageOrder = STATUS_STAGES.map(s=>s[0]);
+  const curIdx = stageOrder.indexOf(p.status) === -1 ? 0 : stageOrder.indexOf(p.status);
+  document.getElementById('detailRail').innerHTML = STATUS_STAGES.map(([key,label,desc],i) => {
+    const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
+    return `<div class="rail-item ${cls}"><div class="rail-dot"></div><div class="rail-body"><b>${label}</b><span>${desc}</span></div></div>`;
+  }).join("");
+
+  document.getElementById('detailOrgs').innerHTML = p.orgs.length
+    ? p.orgs.map(name => {
+        const o = ORGS.find(x=>x.name===name);
+        return `<div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:${avatarColor(name)}; color:#fff;">${initials(name)}</div><div><b>${name}</b><span>${o?o.type:'Organization'} · expressed interest</span></div></div>`;
+      }).join("")
+    : `<p style="font-size:12px; color:var(--text-faint); margin:0;">No organizations yet — be the first to express interest.</p>`;
+
+  const linkedProject = PROJECTS.find(pr => pr.problem === p.id);
+  if(linkedProject){
+    document.getElementById('detailProjectCard').style.display = 'block';
+    document.getElementById('detailProjectLink').innerHTML = `
+      <div style="cursor:pointer;" onclick="go('project.html', {code:'${linkedProject.code}'})">
+        <span class="pcard-id mono">${linkedProject.code}</span>
+        <h4 style="font-size:14px; margin:4px 0 8px;">${linkedProject.title}</h4>
+        <div class="milestone" style="margin:0;"><div class="mtop"><b>Progress</b><span>${linkedProject.progress}%</span></div><div class="track"><div class="fill" style="width:${linkedProject.progress}%;"></div></div></div>
+      </div>`;
+  }
+
+  window.CUR_REF = id;
+
+  /* Guests get a view-only case page */
+  const GUEST = currentRole() === 'guest';
+  if(GUEST){
+    ['actSupport','actEvidence','actFund'].forEach(x => {
+      const b = document.getElementById(x);
+      if(b) b.style.display = 'none';
+    });
+    const ei = document.getElementById('actInterest');
+    if(ei){
+      ei.textContent = 'Sign in to express interest';
+      ei.onclick = () => openModal('loginModal');
+    }
+    const hint = document.createElement('span');
+    hint.className = 'tag';
+    hint.style.marginLeft = 'auto';
+    hint.textContent = '👀 Viewing as guest — sign in to interact';
+    document.getElementById('actRow').appendChild(hint);
+
+    const ct = document.getElementById('cmText');
+    if(ct){ ct.readOnly = true; ct.placeholder = 'Sign in to join the discussion'; }
+    const pb = document.getElementById('cmPostBtn');
+    if(pb) pb.style.display = 'none';
+  }
+
+  /* ---------- live supporter counter (DB-backed: problems.support) ----------
+     The button shows the row's support value, writes +1 through Supabase on
+     click, then locks to "Supported ✓" for the rest of this session. The
+     count itself lives in the DB (survives refresh, same for everyone);
+     only the "already supported" lock is per-session. */
+  const actSupportBtn = document.getElementById('actSupport');
+  let supportCount = p.supporters;
+  let supportInFlight = false;
+  const supportLabel   = n => 'Support this problem (' + n + ')';
+  const supportedLabel = n => 'Supported ✓ (' + n + ')';
+  function paintSupportButton(){
+    if(!actSupportBtn) return;
+    const locked = hasSupported(p.id);
+    actSupportBtn.disabled = locked;
+    actSupportBtn.textContent = locked ? supportedLabel(supportCount) : supportLabel(supportCount);
+  }
+  function paintSupportersField(){
+    document.getElementById('detailSupp').textContent = `${supportCount} supporters · ${p.contributors} contributors`;
+  }
+  window.supportThisProblem = async function(){
+    if(!actSupportBtn || supportInFlight || hasSupported(p.id)) return;
+    supportInFlight = true;
+    actSupportBtn.disabled = true;
+    actSupportBtn.textContent = 'Supporting…';
+    try{
+      const next = await incrementSupport(p.id);
+      supportCount = next;
+      p.supporters = next;                       /* keep the in-memory object in sync */
+      markSupported(p.id);
+      paintSupportButton();
+      paintSupportersField();
+      toast('Thanks — your support was recorded');
+    }catch(e){
+      console.warn('[support] increment failed:', (e && e.message) || e);
+      toast('Could not record support — please try again');
+      paintSupportButton();                      /* restore the clickable state */
+    }finally{
+      supportInFlight = false;
+    }
+  };
+  paintSupportButton();
+  paintSupportersField();
+
+  /* Pull the authoritative count once the page is up (also picks up supports
+     made by other visitors); the demo value stays as the offline fallback. */
+  (async () => {
+    if(!supportApiReady()) return;
+    try{
+      const { data: row, error } = await sbClient.from('problems')
+        .select('id, support').eq('id', p.id).maybeSingle();
+      if(error || !row) return;
+      const v = (typeof row.support === 'number') ? row.support : parseInt(row.support, 10);
+      if(!isNaN(v) && v !== supportCount){
+        supportCount = v;
+        p.supporters = v;
+        paintSupportButton();
+        paintSupportersField();
+      }
+    }catch(e){ console.warn('[support] initial count fetch failed:', (e && e.message) || e); }
+  })();
+
+  window.renderFunding = function(){
+    const list = FUND_REQUESTS.filter(f => f.kind === 'problem' && f.ref === id);
+    document.getElementById('fundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
+    document.getElementById('fundList').innerHTML = list.length ? list.map(fr => `
+      <div style="padding:14px 0; border-bottom:1px dashed var(--border);">
+        <div class="row-flex" style="justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div>
+            <b style="font-size:14px;">${fr.title}</b>
+            <div class="pcard-id mono">${fr.id} · posted by ${fr.postedBy}</div>
+          </div>
+          ${fundIsFunded(fr) ? '<span class="stamp stamp-validated">Fully funded</span>' : '<span class="stamp stamp-open">Open</span>'}
+        </div>
+        <p style="font-size:12.5px; margin:6px 0 12px;">${fr.desc}</p>
+        ${fundProgressHTML(fr)}
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          ${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}
+        </div>
+        ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:4px 0 8px;">No contributions yet — be the first backer.</p>'}
+        ${fundIsFunded(fr) ? '<p style="font-size:12px; color:var(--ledger); margin:8px 0 0;"><b>Fully funded.</b> Thank you to every backer.</p>'
+          : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
+      </div>`).join("")
+      : `<div class="empty" style="padding:26px 16px;">
+          <h4>No funding needs posted for this case</h4>
+          <p>Driving this problem? Use “Request funds” to post what money is needed — organizations and individuals can then pledge any amount.</p>
+        </div>`;
+  };
+  window.renderFunding();
+
+  /* ---------- community discussion ---------- */
+  const cmList = ((typeof COMMENTS !== 'undefined' && COMMENTS[id]) || [])
+                   .map(c => Object.assign({}, c, { my:0 }));   // visitor vote: 1/-1/0
+  const cmListEl = document.getElementById('commentList');
+  const cmScore = c => c.up - c.down;
+  const cmEsc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  function cmRender(){
+    cmList.sort((a,b) => cmScore(b) - cmScore(a));
+    document.getElementById('cmCount').textContent = '(' + cmList.length + ')';
+    document.getElementById('commentList').innerHTML = cmList.map((c, idx) => `
+      <div class="cm-item">
+        <div class="cm-votes">
+          <button title="Upvote" onclick="cmVote(${idx}, 1)">▲</button>
+          <span class="score">${cmScore(c)}</span>
+          <button title="Downvote" onclick="cmVote(${idx}, -1)">▼</button>
+        </div>
+        <div class="cm-body">
+          <div class="cm-meta"><b>${cmEsc(c.by)}</b><span class="cm-role">${cmEsc(c.role)}</span><span class="cm-when">${cmEsc(c.when)}</span></div>
+          <p class="cm-text">${cmEsc(c.text)}</p>
+        </div>
+      </div>`).join("")
+      || '<div class="empty" style="padding:22px;"><h4>No comments yet</h4><p>Start the conversation — locals and solvers can discuss this case right here.</p></div>';
+  }
+
+  window.cmVote = function(idx, dir){
+    const c = cmList[idx];
+    if(!c) return;
+    if(c.my === dir){                       // undo
+      if(dir === 1) c.up--; else c.down--;
+      c.my = 0;
+    } else {                                // switch or fresh vote
+      if(c.my === 1) c.up--;
+      if(c.my === -1) c.down--;
+      if(dir === 1) c.up++; else c.down++;
+      c.my = dir;
+    }
+    cmRender();
+  };
+
+  window.postComment = function(){
+    const t = document.getElementById('cmText').value.trim();
+    if(!t){ toast('Write something first'); return; }
+    const c = { by:'You', role:'Citizen', text:t, up:0, down:0, my:0, when:'just now' };
+    cmList.push(c);
+    document.getElementById('cmText').value = '';
+    cmRender();
+    toast('Comment posted to the community thread');
+  };
+
+  cmRender();
+});
+</script>
+
+
+<div id="cwRoot" class="cw-root">
+  <div class="cw-panel" id="cwPanel">
+    <div class="cw-head">
+      <span class="cw-av">S</span>
+      <div style="flex:1;min-width:0;">
+        <b>Sahayak</b>
+        <span>AI assistant · online</span>
+      </div>
+      <button class="cw-ico" id="cwClear" title="Clear conversation"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+      <button class="cw-ico" id="cwClose" title="Minimise"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg></button>
+    </div>
+    <div class="cw-log" id="cwLog"></div>
+    <form class="cw-input" id="cwForm">
+      <input id="cwText" placeholder="Ask Sahayak…" autocomplete="off">
+      <button class="cw-send" type="submit" aria-label="Send"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+    </form>
+  </div>
+  <button class="cw-btn" id="cwBtn" aria-label="Open Sahayak AI assistant"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"></rect><path d="M12 7V4M8 4h8"></path><circle cx="9" cy="13" r="1"></circle><circle cx="15" cy="13" r="1"></circle></svg></button></div></body></html>
