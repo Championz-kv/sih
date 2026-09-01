@@ -53,7 +53,9 @@
     </div>
 
     <div class="field"><label>Documents <span style="font-weight:400; color:var(--text-faint);">(proposals, specs, survey data…)</span></label>
-      <div class="upload-zone">Drag files here, or click to browse — placeholder only</div>
+      <div class="upload-zone" id="docZone" style="cursor:pointer;" onclick="document.getElementById('fDocs').click()">Drag files here, or click to browse</div>
+      <input type="file" id="fDocs" multiple hidden>
+      <div id="docList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 
     <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
@@ -110,6 +112,35 @@ function suggestTeamSize(){
   document.getElementById('fTeamSize').value = memberCount() + 1;
 }
 
+/* ---------- documents — click opens the PC file picker (drag & drop too) ---------- */
+let docFiles = [];
+function renderDocList(){
+  const wrap = document.getElementById('docList');
+  wrap.innerHTML = docFiles.map((f, i) => `
+    <div class="link-row" style="margin-bottom:0;">
+      <div class="person-row" style="flex:1; min-width:0; padding:0;">
+        <div class="av" style="border-radius:6px;">📄</div>
+        <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(f.name)}</b><span>${f.size ? (f.size/1024).toFixed(0) + ' KB' : ''}</span></div>
+      </div>
+      <button class="link-del" type="button" title="Remove this document" onclick="removeDoc(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>`).join('');
+}
+function removeDoc(i){
+  docFiles.splice(i, 1);
+  renderDocList();
+}
+function handleDocFiles(fileList){
+  const arr = Array.from(fileList || []);
+  if(!arr.length) return;
+  docFiles = docFiles.concat(arr);
+  renderDocList();
+  toast(arr.length + ' document' + (arr.length === 1 ? '' : 's') + ' attached');
+}
+
 /* ---------- problem title auto-fill from known cases ---------- */
 function autofillProblemTitle(){
   const id = parseInt(val('fProblemId'), 10);
@@ -121,6 +152,8 @@ function autofillProblemTitle(){
 function clearForm(){
   ['fProblemId','fProblemTitle','fSummary','fTeamSize'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('memberRows').innerHTML = '';
+  docFiles = [];
+  renderDocList();
   teamSizeTouched = false;
   initDefaults();
   toast('Form cleared');
@@ -145,7 +178,9 @@ function saveProject(){
     stage: 'Proposed', lead: val('fLead') || MY_ORG,
     orgs: [val('fLead') || MY_ORG],
     team: parseInt(val('fTeamSize'), 10),
-    start: val('fStart'), progress: 0
+    start: val('fStart'), progress: 0,
+    /* attached document names ride along for the future backend wiring */
+    docs: docFiles.map(f => [f.name, f.size ? (f.size/1024).toFixed(0) + ' KB' : ''])
   });
   try{ sessionStorage.setItem('ss_demo_projects', JSON.stringify(saved)); }catch(e){}
 
@@ -175,6 +210,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initDefaults();
   addMemberRow();   /* start with one empty member row */
   document.getElementById('fTeamSize').addEventListener('input', () => { teamSizeTouched = true; });
+
+  /* Documents — click opens the PC file picker; drag & drop also works. */
+  const docsInput = document.getElementById('fDocs');
+  docsInput.addEventListener('change', () => {
+    handleDocFiles(docsInput.files);
+    docsInput.value = '';   /* allow re-attaching the same file later */
+  });
+  const zone = document.getElementById('docZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--setu-2)'; });
+  zone.addEventListener('dragleave', e => { e.preventDefault(); zone.style.borderColor = ''; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.style.borderColor = '';
+    handleDocFiles(e.dataTransfer.files);
+  });
 });
 </script>
 </body>
