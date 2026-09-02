@@ -18,13 +18,13 @@
   <div class="page-head"><div><h1>Create Project</h1><p class="sub">Open a collaboration workspace for a problem — link the case, staff the team and save.</p></div></div>
 
   <div class="card card-pad" style="max-width:860px;">
-    <div class="field"><label>Problem ID *</label>
+    <div class="field"><label>Case ID *</label>
       <input class="input mono" id="fProblemId" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
       <p class="hint">The case this project addresses — the title fills in automatically for known cases.</p>
     </div>
 
     <div class="field"><label>Problem title *</label>
-      <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Problem ID, or type it here">
+      <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Case ID, or type it here">
     </div>
 
     <div class="field"><label>Project short summary *</label>
@@ -36,20 +36,9 @@
       <p class="hint">Taken from your logged-in organization account — it will lead this project.</p>
     </div>
 
-    <div class="field"><label>Members / mentors</label>
-      <div id="memberRows"></div>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="addMemberRow()">+ Add another member / mentor</button>
-    </div>
-
-    <div class="field-row">
-      <div class="field"><label>Team size *</label>
-        <input class="input" type="number" id="fTeamSize" min="1" placeholder="e.g. 6">
-        <p class="hint">Auto-suggested from the members above — adjust if needed.</p>
-      </div>
-      <div class="field"><label>Date of starting the project *</label>
-        <input class="input" type="date" id="fStart">
-        <p class="hint">Pre-filled with today — edit it to any other start date.</p>
-      </div>
+    <div class="field"><label>Date of starting the project *</label>
+      <input class="input" type="date" id="fStart">
+      <p class="hint">Pre-filled with today — edit it to any other start date.</p>
     </div>
 
     <div class="field"><label>Documents <span style="font-weight:400; color:var(--text-faint);">(proposals, specs, survey data…)</span></label>
@@ -60,7 +49,7 @@
 
     <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
       <button class="btn btn-ghost" type="button" onclick="clearForm()">✕ Clear form</button>
-      <button class="btn btn-primary" type="button" onclick="saveProject()">Save Project</button>
+      <button class="btn btn-primary" type="button" onclick="saveProject()">Add project</button>
     </div>
   </div>
 </main>
@@ -81,36 +70,6 @@
    backend persists projects.
    ================================================================== */
 const val = id => (document.getElementById(id)?.value || '').trim();
-
-/* ---------- members / mentors rows ---------- */
-function memberRowHTML(){
-  return '<div class="link-row">' +
-    '<input class="input" placeholder="Name — e.g. R. Kumar">' +
-    '<input class="input" placeholder="Role — e.g. Faculty mentor">' +
-    '<button class="link-del" type="button" title="Remove this member" onclick="removeMemberRow(this)">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-    '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
-    '</svg></button></div>';
-}
-function addMemberRow(){
-  document.getElementById('memberRows').insertAdjacentHTML('beforeend', memberRowHTML());
-  suggestTeamSize();
-}
-function removeMemberRow(btn){
-  btn.closest('.link-row').remove();
-  suggestTeamSize();
-}
-function memberCount(){
-  return document.querySelectorAll('#memberRows .link-row').length;
-}
-
-/* ---------- team size auto-suggestion (editable) ---------- */
-let teamSizeTouched = false;
-function suggestTeamSize(){
-  if(teamSizeTouched) return;
-  /* lead + listed members/mentors */
-  document.getElementById('fTeamSize').value = memberCount() + 1;
-}
 
 /* ---------- documents — click opens the PC file picker (drag & drop too) ---------- */
 let docFiles = [];
@@ -150,20 +109,17 @@ function autofillProblemTitle(){
 
 /* ---------- form actions ---------- */
 function clearForm(){
-  ['fProblemId','fProblemTitle','fSummary','fTeamSize'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  document.getElementById('memberRows').innerHTML = '';
+  ['fProblemId','fProblemTitle','fSummary'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   docFiles = [];
   renderDocList();
-  teamSizeTouched = false;
   initDefaults();
   toast('Form cleared');
 }
 function saveProject(){
   const need = [];
-  if(!val('fProblemId'))    need.push('Problem ID');
+  if(!val('fProblemId'))    need.push('Case ID');
   if(!val('fProblemTitle')) need.push('Problem title');
   if(!val('fSummary'))      need.push('Project short summary');
-  if(!parseInt(val('fTeamSize'),10)) need.push('Team size');
   if(!val('fStart'))        need.push('Start date');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
 
@@ -177,7 +133,6 @@ function saveProject(){
     problem: parseInt(val('fProblemId'), 10) || null,
     stage: 'Proposed', lead: val('fLead') || MY_ORG,
     orgs: [val('fLead') || MY_ORG],
-    team: parseInt(val('fTeamSize'), 10),
     start: val('fStart'), progress: 0,
     /* attached document names ride along for the future backend wiring */
     docs: docFiles.map(f => [f.name, f.size ? (f.size/1024).toFixed(0) + ' KB' : ''])
@@ -194,7 +149,6 @@ function initDefaults(){
   document.getElementById('fLead').value = MY_ORG;
   /* Start date — today, editable to any other date. */
   document.getElementById('fStart').value = new Date().toISOString().slice(0, 10);
-  suggestTeamSize();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -208,8 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initDefaults();
-  addMemberRow();   /* start with one empty member row */
-  document.getElementById('fTeamSize').addEventListener('input', () => { teamSizeTouched = true; });
 
   /* Documents — click opens the PC file picker; drag & drop also works. */
   const docsInput = document.getElementById('fDocs');
