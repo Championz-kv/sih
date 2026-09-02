@@ -77,7 +77,9 @@
       </div>
 
       <div class="field"><label>Evidence (photos, videos, documents)</label>
-        <div class="upload-zone">Drag files here, or click to browse — placeholder only</div>
+        <div class="upload-zone" id="evidenceZone" style="cursor:pointer;" onclick="document.getElementById('fEvidence').click()">Drag files here, or click to browse</div>
+        <input type="file" id="fEvidence" multiple hidden>
+        <div id="evidenceList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
       </div>
 
       <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
@@ -455,6 +457,35 @@ function collectFormData(){
   };
 }
 
+/* ---------- evidence attachments — click opens the PC file picker (drag & drop too) ---------- */
+let evidenceFiles = [];
+function renderEvidence(){
+  const wrap = document.getElementById('evidenceList');
+  wrap.innerHTML = evidenceFiles.map((f, i) => `
+    <div class="link-row" style="margin-bottom:0;">
+      <div class="person-row" style="flex:1; min-width:0; padding:0;">
+        <div class="av" style="border-radius:6px;">📄</div>
+        <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(f.name)}</b><span>${f.size ? (f.size/1024).toFixed(0) + ' KB' : ''}</span></div>
+      </div>
+      <button class="link-del" type="button" title="Remove this document" onclick="removeEvidence(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>`).join('');
+}
+function removeEvidence(i){
+  evidenceFiles.splice(i, 1);
+  renderEvidence();
+}
+function handleEvidenceFiles(fileList){
+  const arr = Array.from(fileList || []);
+  if(!arr.length) return;
+  evidenceFiles = evidenceFiles.concat(arr);
+  renderEvidence();
+  toast(arr.length + ' document' + (arr.length === 1 ? '' : 's') + ' attached');
+}
+
 /* ---------- step 1 helpers ---------- */
 function linkRowHTML(){
   return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
@@ -478,6 +509,8 @@ function removeLinkRow(btn){
 function clearStep1(){
   ['fTitle','fDesc','fBlock','fAffected','fTags','fLocation'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.querySelectorAll('#linkRows .link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
+  evidenceFiles = [];
+  renderEvidence();
   toast('Form cleared');
 }
 /* "Continue with draft" — pull the user's most recent draft row and reload
@@ -644,6 +677,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   goStep(1);
   document.getElementById('chkTerms').addEventListener('change', updatePostBtn);
   document.getElementById('chkConsent').addEventListener('change', updatePostBtn);
+
+  /* Evidence — click opens the PC file picker; drag & drop also works. */
+  const evidenceInput = document.getElementById('fEvidence');
+  evidenceInput.addEventListener('change', () => {
+    handleEvidenceFiles(evidenceInput.files);
+    evidenceInput.value = '';   /* allow re-attaching the same file later */
+  });
+  const evZone = document.getElementById('evidenceZone');
+  evZone.addEventListener('dragover', e => { e.preventDefault(); evZone.style.borderColor = 'var(--setu-2)'; });
+  evZone.addEventListener('dragleave', e => { e.preventDefault(); evZone.style.borderColor = ''; });
+  evZone.addEventListener('drop', e => {
+    e.preventDefault();
+    evZone.style.borderColor = '';
+    handleEvidenceFiles(e.dataTransfer.files);
+  });
 
   /* ---- State / District dropdowns ----
      Primary source: js/india-districts-fallback.js (works offline & on file://).

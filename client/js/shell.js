@@ -32,6 +32,11 @@ const NAV = [
     { page:'requests', href:'requests.html', label:'Collaboration Requests', roles:['org'], icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', count:3 },
     { page:'funding', href:'funding.html', label:'Funding', roles:['citizen','org','admin'], icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', count:FUND_REQUESTS.filter(f => !fundIsFunded(f)).length },
   ]},
+  /* My Projects — the signed-in organisation's own created projects.
+     Org-only; demo count until per-org projects are persisted. */
+  { group:null, items:[
+    { page:'myprojects', href:'my-projects.html', label:'My Projects', roles:['org'], icon:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M9 14l2 2 4-4"/>', count:2 },
+  ]},
   { group:null, label:'Insights', items:[
     { page:'analytics', href:'analytics.html', label:'Public Analytics', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
   ]},
@@ -116,6 +121,9 @@ function renderSidebar(activePage){
       const count = (it.count !== undefined && it.count !== null) ? `<span class="count">${it.count}</span>` : '';
       return `<a class="nav-item${active}" data-page="${it.page}" href="${it.href}${paramStr()}">${svgIcon(it.icon)}${it.label}${count}</a>`;
     }).join('');
+    /* Groups whose items are all role-filtered out (e.g. My Projects for
+       non-org roles) are skipped entirely — no empty-gap artifacts. */
+    if(!items) return '';
     return `<div class="nav-group"${attr}>${label}${items}</div>`;
   }).join('');
 

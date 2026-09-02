@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Project — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="createproject" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head"><div><h1>Create Project</h1><p class="sub">Open a collaboration workspace for a problem — link the case, staff the team and save.</p></div></div>
+
+  <div class="card card-pad" style="max-width:860px;">
+    <div class="field"><label>Problem ID *</label>
+      <input class="input mono" id="fProblemId" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
+      <p class="hint">The case this project addresses — the title fills in automatically for known cases.</p>
+    </div>
+
+    <div class="field"><label>Problem title *</label>
+      <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Problem ID, or type it here">
+    </div>
+
+    <div class="field"><label>Project short summary *</label>
+      <textarea class="input" id="fSummary" style="min-height:120px;" placeholder="One short paragraph: what the project will build, deploy or study — and the outcome it targets."></textarea>
+    </div>
+
+    <div class="field"><label>Lead organisation <span style="font-weight:400; color:var(--text-faint);">(auto-detected from your login)</span></label>
+      <input class="input" id="fLead" readonly>
+      <p class="hint">Taken from your logged-in organization account — it will lead this project.</p>
+    </div>
+
+    <div class="field"><label>Members / mentors</label>
+      <div id="memberRows"></div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addMemberRow()">+ Add another member / mentor</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field"><label>Team size *</label>
+        <input class="input" type="number" id="fTeamSize" min="1" placeholder="e.g. 6">
+        <p class="hint">Auto-suggested from the members above — adjust if needed.</p>
+      </div>
+      <div class="field"><label>Date of starting the project *</label>
+        <input class="input" type="date" id="fStart">
+        <p class="hint">Pre-filled with today — edit it to any other start date.</p>
+      </div>
+    </div>
+
+    <div class="field"><label>Documents <span style="font-weight:400; color:var(--text-faint);">(proposals, specs, survey data…)</span></label>
+      <div class="upload-zone" id="docZone" style="cursor:pointer;" onclick="document.getElementById('fDocs').click()">Drag files here, or click to browse</div>
+      <input type="file" id="fDocs" multiple hidden>
+      <div id="docList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
+      <button class="btn btn-ghost" type="button" onclick="clearForm()">✕ Clear form</button>
+      <button class="btn btn-primary" type="button" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+/* ==================================================================
+   Create Project — organisation form (mirrors the Report-a-Problem
+   interface). Saving is a demo stand-in: the project lands in the
+   My Projects list for this session (sessionStorage) until the
+   backend persists projects.
+   ================================================================== */
+const val = id => (document.getElementById(id)?.value || '').trim();
+
+/* ---------- members / mentors rows ---------- */
+function memberRowHTML(){
+  return '<div class="link-row">' +
+    '<input class="input" placeholder="Name — e.g. R. Kumar">' +
+    '<input class="input" placeholder="Role — e.g. Faculty mentor">' +
+    '<button class="link-del" type="button" title="Remove this member" onclick="removeMemberRow(this)">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+    '</svg></button></div>';
+}
+function addMemberRow(){
+  document.getElementById('memberRows').insertAdjacentHTML('beforeend', memberRowHTML());
+  suggestTeamSize();
+}
+function removeMemberRow(btn){
+  btn.closest('.link-row').remove();
+  suggestTeamSize();
+}
+function memberCount(){
+  return document.querySelectorAll('#memberRows .link-row').length;
+}
+
+/* ---------- team size auto-suggestion (editable) ---------- */
+let teamSizeTouched = false;
+function suggestTeamSize(){
+  if(teamSizeTouched) return;
+  /* lead + listed members/mentors */
+  document.getElementById('fTeamSize').value = memberCount() + 1;
+}
+
+/* ---------- documents — click opens the PC file picker (drag & drop too) ---------- */
+let docFiles = [];
+function renderDocList(){
+  const wrap = document.getElementById('docList');
+  wrap.innerHTML = docFiles.map((f, i) => `
+    <div class="link-row" style="margin-bottom:0;">
+      <div class="person-row" style="flex:1; min-width:0; padding:0;">
+        <div class="av" style="border-radius:6px;">📄</div>
+        <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(f.name)}</b><span>${f.size ? (f.size/1024).toFixed(0) + ' KB' : ''}</span></div>
+      </div>
+      <button class="link-del" type="button" title="Remove this document" onclick="removeDoc(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>`).join('');
+}
+function removeDoc(i){
+  docFiles.splice(i, 1);
+  renderDocList();
+}
+function handleDocFiles(fileList){
+  const arr = Array.from(fileList || []);
+  if(!arr.length) return;
+  docFiles = docFiles.concat(arr);
+  renderDocList();
+  toast(arr.length + ' document' + (arr.length === 1 ? '' : 's') + ' attached');
+}
+
+/* ---------- problem title auto-fill from known cases ---------- */
+function autofillProblemTitle(){
+  const id = parseInt(val('fProblemId'), 10);
+  const known = PROBLEMS.find(p => p.id === id);
+  if(known) document.getElementById('fProblemTitle').value = known.title;
+}
+
+/* ---------- form actions ---------- */
+function clearForm(){
+  ['fProblemId','fProblemTitle','fSummary','fTeamSize'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('memberRows').innerHTML = '';
+  docFiles = [];
+  renderDocList();
+  teamSizeTouched = false;
+  initDefaults();
+  toast('Form cleared');
+}
+function saveProject(){
+  const need = [];
+  if(!val('fProblemId'))    need.push('Problem ID');
+  if(!val('fProblemTitle')) need.push('Problem title');
+  if(!val('fSummary'))      need.push('Project short summary');
+  if(!parseInt(val('fTeamSize'),10)) need.push('Team size');
+  if(!val('fStart'))        need.push('Start date');
+  if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
+
+  /* Demo persistence — sessionStorage until the backend exists. The saved
+     project appears in My Projects for this session. */
+  let saved = [];
+  try{ saved = JSON.parse(sessionStorage.getItem('ss_demo_projects') || '[]'); }catch(e){ saved = []; }
+  saved.unshift({
+    code: 'PRJ-0' + (361 + saved.length),
+    title: val('fProblemTitle'),
+    problem: parseInt(val('fProblemId'), 10) || null,
+    stage: 'Proposed', lead: val('fLead') || MY_ORG,
+    orgs: [val('fLead') || MY_ORG],
+    team: parseInt(val('fTeamSize'), 10),
+    start: val('fStart'), progress: 0,
+    /* attached document names ride along for the future backend wiring */
+    docs: docFiles.map(f => [f.name, f.size ? (f.size/1024).toFixed(0) + ' KB' : ''])
+  });
+  try{ sessionStorage.setItem('ss_demo_projects', JSON.stringify(saved)); }catch(e){}
+
+  toast('Project saved — it now appears under My Projects. (Demo — backend wiring comes next)');
+  setTimeout(() => go('my-projects.html'), 900);
+}
+
+/* ---------- defaults ---------- */
+function initDefaults(){
+  /* Lead organisation — auto-detected from the logged-in account (demo org). */
+  document.getElementById('fLead').value = MY_ORG;
+  /* Start date — today, editable to any other date. */
+  document.getElementById('fStart').value = new Date().toISOString().slice(0, 10);
+  suggestTeamSize();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  /* The Create Project flow belongs to organization accounts. */
+  if(currentRole() !== 'org'){
+    toast('Creating projects needs an Organization account — you\u2019re currently browsing as ' + currentRole() + '.');
+    setTimeout(() => go('my-projects.html'), 1300);
+    return;
+  }
+
+  initDefaults();
+  addMemberRow();   /* start with one empty member row */
+  document.getElementById('fTeamSize').addEventListener('input', () => { teamSizeTouched = true; });
+
+  /* Documents — click opens the PC file picker; drag & drop also works. */
+  const docsInput = document.getElementById('fDocs');
+  docsInput.addEventListener('change', () => {
+    handleDocFiles(docsInput.files);
+    docsInput.value = '';   /* allow re-attaching the same file later */
+  });
+  const zone = document.getElementById('docZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--setu-2)'; });
+  zone.addEventListener('dragleave', e => { e.preventDefault(); zone.style.borderColor = ''; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.style.borderColor = '';
+    handleDocFiles(e.dataTransfer.files);
+  });
+});
+</script>
+</body>
+</html>
