@@ -42,9 +42,10 @@ create table public.projects (
   start_date        date not null,
 
   /* ---- form: Documents (multiple files) ----
-     Each attachment is stored as {"name": "...", "size_kb": 123}.
-     The files themselves should be uploaded to a Supabase Storage bucket
-     (e.g. 'project-documents') with the public URL added to each object.
+     Each attachment is stored as {"name", "size_kb", "path", "url"} —
+     "path" is the object's location in the project_docs bucket
+     (<project_id>/<file name>); "url" is its public URL (only usable if
+     the bucket is public). The files themselves live in the bucket.
      Normalized alternative: a project_documents child table — use that
      instead if you later need per-document metadata/permissions. */
   documents         jsonb not null default '[]'::jsonb,
@@ -88,8 +89,12 @@ create policy "projects_insert_authenticated"
   with check (true);
 
 -- The lead organisation can keep its project up to date (stage/progress).
-create policy "projects_update_lead"
+-- Permissive for now (any signed-in user) so the form's document-list
+-- update always works while lead_organisation is still the demo value
+-- ('MMMUT') rather than a real FK. Tighten once organizations exist, e.g.:
+--   using (lead_organisation = (select full_name from public.profiles where id = auth.uid()))
+create policy "projects_update_authenticated"
   on public.projects for update
   to authenticated
-  using (lead_organisation = (select full_name from public.profiles where id = auth.uid()))
-  with check (lead_organisation = (select full_name from public.profiles where id = auth.uid()));
+  using (true)
+  with check (true);
