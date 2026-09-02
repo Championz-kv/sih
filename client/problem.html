@@ -42,7 +42,7 @@
           <button class="btn btn-accent btn-sm" id="actSupport" onclick="toast('Marked as supporting this problem')">Support this problem</button>
           <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
           <button class="btn btn-outline btn-sm" id="actCommunity" onclick="document.getElementById('communityPanel').scrollIntoView({behavior:'smooth'})">💬 Community</button>
-          <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Request funds</button>
+          <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Donate funds</button>
           <button class="btn btn-primary btn-sm" id="actInterest" onclick="openModal('interestModal')">Express Interest</button>
         </div>
       </div>
@@ -212,57 +212,122 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   window.renderFunding();
 
-  /* ---------- community discussion ---------- */
-  const cmList = ((typeof COMMENTS !== 'undefined' && COMMENTS[id]) || [])
-                   .map(c => Object.assign({}, c, { my:0 }));   // visitor vote: 1/-1/0
+  /* ---------- community discussion (Supabase-backed) ----------
+     Table public.community: comment_id (pk), problem_id -> problems.id,
+     user_id -> profiles.id, comment, supports, created_at.
+     Anyone can read; signed-in accounts post as themselves and can
+     toggle support on any comment. Run sql/community-table.sql once. */
+  const CM_PROBLEM_ID = (params.get('id') || '').trim();
   const cmListEl = document.getElementById('commentList');
-  const cmScore = c => c.up - c.down;
-  const cmEsc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const cmEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  let cmList = [];
+
+  function cmName(p){ return (p && (p.full_name || p.username)) || 'Member'; }
+  function cmWhen(iso){ const d = (iso || '').slice(0,10); return d ? formatDate(d) : 'just now'; }
+  function cmRole(p){ return (p && p.role === 'org_member') ? 'Organization' : 'Citizen'; }
 
   function cmRender(){
-    cmList.sort((a,b) => cmScore(b) - cmScore(a));
+    cmList.sort((a,b) => b.supports - a.supports);
     document.getElementById('cmCount').textContent = '(' + cmList.length + ')';
-    document.getElementById('commentList').innerHTML = cmList.map((c, idx) => `
+    cmListEl.innerHTML = cmList.map((c, idx) => `
       <div class="cm-item">
         <div class="cm-votes">
-          <button title="Upvote" onclick="cmVote(${idx}, 1)">▲</button>
-          <span class="score">${cmScore(c)}</span>
-          <button title="Downvote" onclick="cmVote(${idx}, -1)">▼</button>
+          <button title="Support this comment" onclick="cmVote(${idx}, 1)" ${c.my ? 'style="color:var(--accent);"' : ''}>▲</button>
+          <span class="score">${c.supports}</span>
+          <button title="Remove support" onclick="cmVote(${idx}, -1)" ${c.my ? '' : 'style="visibility:hidden;"'}>▼</button>
         </div>
         <div class="cm-body">
-          <div class="cm-meta"><b>${cmEsc(c.by)}</b><span class="cm-role">${cmEsc(c.role)}</span><span class="cm-when">${cmEsc(c.when)}</span></div>
-          <p class="cm-text">${cmEsc(c.text)}</p>
+          <div class="cm-meta"><b>${cmEsc(cmName(c.profile))}</b><span class="cm-role">${cmEsc(cmRole(c.profile))}</span><span class="cm-when">${cmEsc(cmWhen(c.created_at))}</span></div>
+          <p class="cm-text">${cmEsc(c.comment)}</p>
         </div>
       </div>`).join("")
       || '<div class="empty" style="padding:22px;"><h4>No comments yet</h4><p>Start the conversation — locals and solvers can discuss this case right here.</p></div>';
   }
 
-  window.cmVote = function(idx, dir){
+  async function cmLoad(){
+    try{
+      let q = sbClient.from('community')
+        .select('comment_id, comment, supports, created_at, profile:profiles!community_user_id_fkey(username, full_name, avatar_url, role)')
+        .order('created_at', { ascending: false });
+      if(CM_PROBLEM_ID) q = q.eq('problem_id', CM_PROBLEM_ID);
+      const { data, error } = await q;
+      if(error){
+        console.error('[community] load failed:', error.message);
+        document.getElementById('cmCount').textContent = '(0)';
+        cmListEl.innerHTML = '<div class="empty" style="padding:22px;"><h4>Could not load comments</h4><p>' + cmEsc(error.message) + '</p></div>';
+        return;
+      }
+      cmList = (data || []).map(c => Object.assign({}, c, { my:false }));
+      cmRender();
+    }catch(e){
+      console.error('[community] load failed:', e);
+      document.getElementById('cmCount').textContent = '(0)';
+    }
+  }
+
+  window.cmVote = async function(idx, dir){
     const c = cmList[idx];
     if(!c) return;
-    if(c.my === dir){                       // undo
-      if(dir === 1) c.up--; else c.down--;
-      c.my = 0;
-    } else {                                // switch or fresh vote
-      if(c.my === 1) c.up--;
-      if(c.my === -1) c.down--;
-      if(dir === 1) c.up++; else c.down++;
-      c.my = dir;
-    }
+    let uid = null;
+    try{
+      const { data } = await sbClient.auth.getSession();
+      uid = (data && data.session && data.session.user) ? data.session.user.id : null;
+    }catch(e){}
+    if(!uid){ openModal('loginModal'); return; }
+    if(dir === 1 && !c.my){ c.supports++; c.my = true; }
+    else if(dir === -1 && c.my){ c.supports--; c.my = false; }
+    else return;
     cmRender();
+    const { error } = await sbClient.from('community')
+      .update({ supports: c.supports })
+      .eq('comment_id', c.comment_id);
+    if(error){
+      console.error('[community] support failed:', error.message);
+      if(c.my){ c.supports--; c.my = false; } else { c.supports++; c.my = true; }
+      cmRender();
+      toast('Could not save your support — ' + error.message);
+    }
   };
 
-  window.postComment = function(){
+  window.postComment = async function(){
     const t = document.getElementById('cmText').value.trim();
     if(!t){ toast('Write something first'); return; }
-    const c = { by:'You', role:'Citizen', text:t, up:0, down:0, my:0, when:'just now' };
-    cmList.push(c);
-    document.getElementById('cmText').value = '';
-    cmRender();
-    toast('Comment posted to the community thread');
+    let uid = null;
+    try{
+      const { data } = await sbClient.auth.getSession();
+      uid = (data && data.session && data.session.user) ? data.session.user.id : null;
+    }catch(e){}
+    if(!uid){
+      const cp = getSessionProfile();
+      uid = (cp && cp.id) || null;
+    }
+    if(!uid){ openModal('loginModal'); toast('Sign in to join the discussion'); return; }
+    if(!CM_PROBLEM_ID){ toast('Open a case file first'); return; }
+    try{
+      const { data, error } = await sbClient.from('community')
+        .insert({ problem_id: CM_PROBLEM_ID, user_id: uid, comment: t })
+        .select('comment_id, comment, supports, created_at')
+        .maybeSingle();
+      if(error){
+        console.error('[community] insert failed:', error.message);
+        toast('Could not post — ' + error.message);
+        return;
+      }
+      const prof = getSessionProfile();
+      cmList.unshift(Object.assign({}, data, {
+        my:false,
+        profile: prof ? { username: prof.username, full_name: prof.full_name, avatar_url: prof.avatar_url, role: prof.role } : null
+      }));
+      document.getElementById('cmText').value = '';
+      cmRender();
+      toast('Comment posted to the community thread');
+    }catch(e){
+      console.error('[community] insert failed:', e);
+      toast('Could not post — check your connection');
+    }
   };
 
-  cmRender();
+  cmLoad();
 });
 </script>
 </body>

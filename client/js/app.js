@@ -171,6 +171,23 @@ function orgCardHTML(o){
   </div>`;
 }
 
+/* ---------------- my-projects (organisation) helpers ----------------
+   Demo stand-in for per-org project ownership until the backend persists
+   projects: the demo org (MMMUT) claims projects where it leads or
+   collaborates, padded so the My Projects section always demos with two
+   already-created projects. Shared by my-projects.html and project.html
+   (which gates its Edit Project button on the same rule). */
+const MY_ORG = 'MMMUT';
+function myOrgProjects(){
+  const mine = PROJECTS.filter(pr => pr.lead === MY_ORG || pr.orgs.includes(MY_ORG));
+  return mine.length >= 2
+    ? mine
+    : mine.concat(PROJECTS.filter(pr => !mine.includes(pr)).slice(0, 2 - mine.length));
+}
+function isMyOrgProject(code){
+  return myOrgProjects().some(pr => pr.code === code);
+}
+
 /* ---------------- toast ---------------- */
 function toast(msg){
   const wrap = document.getElementById('toastWrap');

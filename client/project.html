@@ -23,6 +23,7 @@
       <p class="sub" id="wsLinked">Linked to case —</p>
     </div>
     <div class="page-head-actions">
+      <button class="btn btn-outline btn-sm" id="editProjectBtn" style="display:none;" onclick="toast('Edit Project is a placeholder for now')">✎ Edit Project</button>
       <button class="btn btn-outline btn-sm" onclick="openModal('inviteModal')">Invite collaborator</button>
       <button class="btn btn-primary btn-sm" onclick="toast('Update posted (placeholder)')">Post update</button>
     </div>
@@ -152,6 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   const code = params.get('code');
   const pr = PROJECTS.find(x => x.code === code) || PROJECTS[0];
+
+  /* Edit Project — shown only on projects that appear in the signed-in
+     organisation's My Projects (same shared ownership rule as that page,
+     see isMyOrgProject in app.js). The button itself is a placeholder. */
+  const isMyProject = currentRole() === 'org' && isMyOrgProject(pr.code);
+  document.getElementById('editProjectBtn').style.display = isMyProject ? '' : 'none';
 
   document.getElementById('wsCode').textContent = pr.code;
   document.getElementById('wsStage').textContent = pr.stage.toUpperCase();

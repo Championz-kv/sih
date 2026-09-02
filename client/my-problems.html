@@ -20,7 +20,7 @@
   </div>
   <div class="card">
     <table class="datatable">
-      <thead><tr><th>Case</th><th>Title</th><th>Category</th><th>Status</th><th>Supporters</th><th>Filed</th><th></th></tr></thead>
+      <thead><tr><th>Case</th><th>Title</th><th>Location</th><th>Status</th><th>Severity</th><th>Filed</th><th></th></tr></thead>
       <tbody id="myProblemsBody"></tbody>
     </table>
   </div>
@@ -35,20 +35,83 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
+/* ---- My Problems — reads the user's rows from the problems table ---- */
+
+/* problem_state → stamp class/label (app.js stampHTML uses demo statuses,
+   so the wizard's states get their own mapping with the same CSS classes). */
+const STATE_STAMPS = {
+  draft:          ['stamp-pending',   'Draft'],
+  unreviewed:     ['stamp-review',    'Under Review'],
+  reviewed:       ['stamp-validated', 'Validated'],
+  project_active: ['stamp-open',      'Project Active'],
+  resolved:       ['stamp-resolved',  'Resolved'],
+  removed:        ['stamp-duplicate', 'Removed'],
+};
+function stateStamp(state){
+  const [cls, label] = STATE_STAMPS[state] || ['stamp-pending', state || 'Pending'];
+  return `<span class="stamp ${cls}">${label}</span>`;
+}
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* Resume a draft in the report wizard (sets the marker submit.html reads). */
+function resumeDraft(id){
+  sessionStorage.setItem('ss_draft_id', id);
+  go('submit.html');
+}
+
+async function loadMyProblems(){
+  const { data: sess } = await sbClient.auth.getSession();
+  const user = sess?.session?.user;
+  if(!user){ go('login.html'); return; }
+
+  const body = document.getElementById('myProblemsBody');
+  const { data: rows, error } = await sbClient.from('problems')
+    .select('id, case_no, title, categories, severity, problem_state, ai_reviewed, created_at')
+    .eq('submitted_by', user.id)
+    .order('created_at', { ascending: false });
+
+  if(error){
+    console.error('[my-problems] load failed:', error);
+    body.innerHTML = `<tr><td colspan="7"><div class="empty"><h4>Could not load your problems</h4><p>${esc(error.message)}</p></div></td></tr>`;
+    toast('Could not load problems — ' + error.message);
+    return;
+  }
+
+  const list = rows || [];
+  document.getElementById('pageCount').textContent = list.length;
+
+  if(!list.length){
+    body.innerHTML = `<tr><td colspan="7"><div class="empty">
+      <h4>No problems posted yet</h4>
+      <p>Report your first problem to get started.</p>
+    </div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = list.map(p => {
+    const cat = (Array.isArray(p.categories) && p.categories[0]) || '';
+    const catHtml = cat ? categoryTagHTML(cat) : '<span style="color:var(--text-faint);">—</span>';
+    const date = p.created_at ? formatDate(String(p.created_at).slice(0,10)) : '—';
+    const action = p.problem_state === 'draft'
+      ? `<a href="#" onclick="event.stopPropagation(); resumeDraft('${esc(p.id)}'); return false;">Continue →</a>`
+      : `<a href="problem.html${paramStr({id:p.id})}" onclick="event.stopPropagation();">View →</a>`;
+    return `
+      <tr style="cursor:pointer;" onclick="go('problem.html', {id:'${esc(p.id)}'})">
+        <td class="mono">${esc(p.case_no) || ('#' + esc(p.id))}</td>
+        <td>${esc(p.title)}</td>
+        <td>${catHtml}</td>
+        <td>${stateStamp(p.problem_state)}</td>
+        <td class="mono">—</td>
+        <td class="mono">${date}</td>
+        <td>${action}</td>
+      </tr>`;
+  }).join('');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  const mine = PROBLEMS.slice(0,5);
-  document.getElementById('pageCount').textContent = mine.length;
-  document.getElementById('myProblemsBody').innerHTML = mine.map(p => `
-    <tr style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
-      <td class="mono">#${p.id}</td>
-      <td>${p.title}</td>
-      <td>${categoryTagHTML(p.category)}</td>
-      <td>${stampHTML(p.status)}</td>
-      <td class="mono">${p.supporters}</td>
-      <td class="mono">${formatDate(p.date)}</td>
-      <td><a href="problem.html${paramStr({id:p.id})}" onclick="event.stopPropagation();">View →</a></td>
-    </tr>`).join("");
+  loadMyProblems();
 });
 </script>
 </body>

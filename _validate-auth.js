@@ -205,6 +205,43 @@ for(const [name, pass] of teamChecks){
   if(!pass) ok = false;
 }
 
+/* 4g. temp demo-ids tile + github links */
+const ghLink = 'github.com/Championz-kv/sih';
+const tempChecks = [
+  ['login: sample-ids tile present (temp)', login.includes('class="demo-ids"') && login.includes('citizen@gmail.com') && login.includes('admin@gmail.com')],
+  ['login: tile clearly marked removable', login.includes('TEMP: sample-ids tile')],
+  ['index: github link in footer', idx.includes(ghLink)],
+  ['team: github link at bottom', teamHtml.includes(ghLink)],
+];
+for(const [name, pass] of tempChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'temp-ui: ' + name);
+  if(!pass) ok = false;
+}
+
+/* 4h. citizen profile ↔ Supabase */
+const cp = fs.readFileSync(path.join(root, 'citizen-profile.html'), 'utf8');
+const cpChecks = [
+  ['about field has id cAbout', /textarea class="input" id="cAbout"/.test(cp)],
+  ['link inputs use .link-input (static + dynamic rows)', (cp.match(/class="input link-input"/g) || []).length === 2],
+  ['username/email readonly with notes', cp.includes('id="cUser" value="guest" readonly') && cp.includes('(username cannot be changed)')],
+  ['email editable and saved', !/id="cEmail"[^>]*readonly/.test(cp) && cp.includes("email: document.getElementById('cEmail').value.trim()")],
+  ['loads profile with full column list', cp.includes("select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')")],
+  ['falls back to select(*) when a column is missing', cp.includes("select('*')")],
+  ['missing row → auto-created via upsert', cp.includes("upsert") && cp.includes("ignoreDuplicates: true")],
+  ['load errors surfaced via toast', cp.includes("toast('Could not load profile — ' +")],
+  ['no session redirects to login', cp.includes("go('login.html')")],
+  ['save uses sbClient update on profiles', /from\('profiles'\)[\s\S]{0,40}\.update\(payload\)/.test(cp)],
+  ['uses link_other column (not link_others)', cp.includes('link_other') && !cp.includes('link_others')],
+  ['links joined as newline string on save', cp.includes(".join('\\n')")],
+  ['ss_profile synced after save', cp.includes("sessionStorage.getItem('ss_profile')")],
+  ['civic counts via head:true', (cp.match(/count:'exact', head:true/g) || []).length === 2],
+  ['page requires auth via body flag', cp.includes('data-auth="required"')],
+];
+for(const [name, pass] of cpChecks){
+  console.log((pass ? 'OK   ' : 'FAIL ') + 'citizen-profile: ' + name);
+  if(!pass) ok = false;
+}
+
 /* 5. live probes */
 const SUPA = 'https://chwvtrcxnfqfkwlaxxbo.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNod3Z0cmN4bmZxZmt3bGF4eGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDczNjUsImV4cCI6MjEwMzI4MzM2NX0.RS5UcZDMG4hYV4ksztZvxDIO51LJVP9GkRjpJQD1ZoY';
