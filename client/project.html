@@ -34,11 +34,9 @@
   <div class="tabbar">
     <button class="tabbtn active" data-tab="ov" onclick="switchTab('ov')">Overview</button>
     <button class="tabbtn" data-tab="team" onclick="switchTab('team')">Organisation</button>
-    <button class="tabbtn" data-tab="milestones" onclick="switchTab('milestones')">Milestones</button>
     <button class="tabbtn" data-tab="tasks" onclick="switchTab('tasks')">Tasks</button>
     <button class="tabbtn" data-tab="docs" onclick="switchTab('docs')">Documents</button>
     <button class="tabbtn" data-tab="discussion" onclick="switchTab('discussion')">Discussion</button>
-    <button class="tabbtn" data-tab="outcomes" onclick="switchTab('outcomes')">Outcomes &amp; Impact</button>
     <button class="tabbtn" data-tab="funding" onclick="switchTab('funding')">Funding</button>
   </div>
 
@@ -69,8 +67,6 @@
       <div id="wsOrgs"></div>
     </div>
   </div>
-
-  <div class="tabpanel" id="tab-milestones"><div class="card card-pad" id="wsMilestones"></div></div>
 
   <div class="tabpanel" id="tab-tasks">
     <div class="card">
@@ -108,13 +104,6 @@
         <button class="btn btn-outline btn-sm" onclick="openRequestFund('project', CUR_REF)">+ Request funds for this project</button>
       </div>
       <div id="projFundList"></div>
-    </div>
-  </div>
-
-  <div class="tabpanel" id="tab-outcomes">
-    <div class="card card-pad">
-      <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:12px;">Measured impact</h4>
-      <div class="grid grid-4" id="wsOutcomes"></div>
     </div>
   </div>
 </main>
@@ -180,12 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('wsOrgs').innerHTML = pr.orgs.map(name => `
     <div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:${avatarColor(name)}; color:#fff;">${initials(name)}</div><div><b>${name}</b><span>${name===pr.lead?'Lead organization':'Partner organization'}</span></div></div>`).join("");
 
-  document.getElementById('wsMilestones').innerHTML = pr.milestones.map(([name,pct]) => `
-    <div class="milestone ${pct===0?'pending':''}">
-      <div class="mtop"><b>${name}</b><span>${pct}%</span></div>
-      <div class="track"><div class="fill" style="width:${pct}%;"></div></div>
-    </div>`).join("");
-
   document.getElementById('wsTasksBody').innerHTML = pr.tasks.map(([t,owner,status,due]) => `
     <tr><td>${t}</td><td>${owner}</td><td>${status==='Done'?'<span class="stamp stamp-resolved">Done</span>':status==='In progress'?'<span class="stamp stamp-open">In progress</span>':'<span class="stamp stamp-pending">Not started</span>'}</td><td class="mono">${due}</td></tr>`).join("");
 
@@ -196,9 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="notif-item"><div class="av" style="width:30px;height:30px;border-radius:50%;background:${avatarColor(who)};color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--font-mono);font-weight:600;">${initials(who)}</div>
       <div><p><b>${who}</b></p><p style="margin-top:-4px;">${msg}</p><span>${when}</span></div>
     </div>`).join("");
-
-  document.getElementById('wsOutcomes').innerHTML = pr.outcomes.map(([v,l]) => `
-    <div><span class="mono" style="font-size:19px; display:block; color:var(--ink); font-weight:600;">${v}</span><span style="font-size:11px; color:var(--text-faint);">${l}</span></div>`).join("");
 
   window.CUR_REF = pr.code;
 
