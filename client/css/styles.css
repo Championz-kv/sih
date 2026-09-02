@@ -12,7 +12,7 @@
    require touching CSS.
    ============================================================ */
 :root{
-  /* Warm peachy-pink light palette with orange accents */
+  /* Bright yellow-orange on white — light palette */
   --ink:         #3A2B06;
   --ink-2:       #7A520E;
   --setu:        #FFA200;
@@ -23,15 +23,15 @@
   --rust:        #C13A20;
   --violet:      #F97316;
   --sky:         #FFB84D;
-  --paper:       #FFF1EA;
-  --paper-2:     #FFE3D6;
-  --paper-3:     #FFD2BC;
+  --paper:       #FFF9E8;
+  --paper-2:     #FFF1C6;
+  --paper-3:     #FBDF9A;
   --ink-soft:    #8A7442;
-  --surface:     #FFFAF6;
+  --surface:     #FFFDF6;
   --surface-hi:  #FFFFFF;
-  --surface-2:   #FFEAE0;
-  --border:      #F6D4C4;
-  --border-2:    #EDB49E;
+  --surface-2:   #FFF6D9;
+  --border:      #F2E3B3;
+  --border-2:    #E4CD84;
   --text:        #33270A;
   --text-soft:   #756135;
   --text-faint:  #AA9560;
