@@ -28,16 +28,7 @@
           <div id="detailStamp"></div>
         </div>
         <p id="detailDesc" style="font-size:13.5px; color:var(--text-soft);">Description</p>
-        <div class="grid grid-4" style="gap:10px; margin:16px 0;">
-          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </div>
-          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-          </div>
-          <div style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-family:var(--font-mono); font-size:11px;">+3</div>
-          <div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>
-        </div>
+        <div class="grid grid-4" style="gap:10px; margin:16px 0;" id="mediaGrid"></div>
         <div class="row-flex" style="gap:8px; flex-wrap:wrap;" id="actRow">
           <button class="btn btn-accent btn-sm" id="actSupport" onclick="supportThisProblem()">Support</button>
           <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
@@ -111,27 +102,107 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   renderShell();
   document.getElementById('crumbHref').href = 'explore.html' + paramStr();
 
   const params = new URLSearchParams(location.search);
-  const id = parseInt(params.get('id'), 10);
-  const p = PROBLEMS.find(x => x.id === id) || PROBLEMS[0];
+  const urlId = parseInt(params.get('id'), 10);
+  const HAS_ID = !isNaN(urlId);
 
-  document.getElementById('detailCaseNo').textContent = `Case #${p.id}`;
-  document.getElementById('detailId').textContent = `CASE NO. ${caseNo(p.id)}`;
+  /* ---------- load the real problem from the problems table ----------
+     ?id=<problems.id> → fetch that row (RLS decides visibility: everyone
+     sees non-draft/non-removed rows; owners also see their own drafts).
+     Falls back to the bundled demo case only when no id was given. */
+  const STATE_TO_STATUS = { unreviewed:'review', reviewed:'validated', project_active:'progress', resolved:'resolved', removed:'duplicate', draft:'pending' };
+  const pEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  function suppLine(s, c){ return (s || 0) + ' supporters' + (c != null ? ' · ' + c + ' contributors' : ''); }
+  function parseHashtags(s){ return (s || '').split(/\s+/).filter(Boolean).map(t => t.startsWith('#') ? t : '#' + t); }
+  function problemFromRow(row){
+    return {
+      id: row.id,
+      case_no: row.case_no || null,
+      title: row.title || 'Untitled problem',
+      desc: row.description || '',
+      category: (row.categories && row.categories[0]) || 'Uncategorized',
+      cats: Array.isArray(row.categories) ? row.categories : [],
+      tags: parseHashtags(row.hashtags),
+      status: STATE_TO_STATUS[row.problem_state] || 'review',
+      district: row.district || '',
+      block: row.block || '',
+      state_name: row.state || '',
+      location_text: row.location_text || '',
+      affected: row.affected_count || 0,
+      severity: row.severity || 'medium',
+      urgency: (row.urgency != null) ? row.urgency : 5,
+      supporters: row.support || 0,
+      contributors: null,
+      date: (row.created_at || '').slice(0, 10),
+      orgs: [],
+      media: Array.isArray(row.media_urls) ? row.media_urls : [],
+      demo: false
+    };
+  }
+
+  let p = null;
+  if(HAS_ID && typeof sbClient !== 'undefined' && sbClient){
+    try{
+      const { data: row, error } = await sbClient.from('problems').select('*').eq('id', urlId).maybeSingle();
+      if(!error && row) p = problemFromRow(row);
+    }catch(e){ console.warn('[problem] load failed:', (e && e.message) || e); }
+  }
+
+  if(!p && HAS_ID && !PROBLEMS.some(x => x.id === urlId)){
+    /* Unknown / hidden id — show a not-found state instead of a wrong case */
+    document.getElementById('detailTitle').textContent = 'Problem not found';
+    document.getElementById('detailDesc').textContent = 'This case does not exist or is not visible to you. It may have been removed, or you may need to sign in to view your own drafts.';
+    document.getElementById('detailTags').innerHTML = '';
+    document.getElementById('detailStamp').innerHTML = '';
+    const mg = document.getElementById('mediaGrid'); if(mg) mg.innerHTML = '';
+    document.title = 'Problem not found — SolveSamaj';
+    ['actSupport','actEvidence','actCommunity','actFund','actInterest'].forEach(x => { const b = document.getElementById(x); if(b) b.style.display = 'none'; });
+    const ct = document.getElementById('cmText'); if(ct){ ct.readOnly = true; ct.placeholder = 'Sign in to join the discussion'; }
+    const pb = document.getElementById('cmPostBtn'); if(pb) pb.style.display = 'none';
+    return;
+  }
+  if(!p){ p = PROBLEMS.find(x => x.id === urlId) || PROBLEMS[0]; p.demo = true; }
+  const id = p.id;          /* used by the supporter counter, funding & modals below */
+  const IS_DEMO = !!p.demo; /* bundled sample cases keep their demo orgs/funding */
+
+  document.getElementById('detailCaseNo').textContent = p.case_no ? ('Case ' + p.case_no) : (p.demo ? ('Case #' + p.id) : 'Case —');
+  document.getElementById('detailId').textContent = p.case_no ? ('CASE NO. ' + p.case_no) : (p.demo ? ('CASE NO. ' + caseNo(p.id)) : 'CASE NO. —');
   document.getElementById('detailTitle').textContent = p.title;
   document.getElementById('detailDesc').textContent = p.desc;
-  document.getElementById('detailTags').innerHTML = problemCats(p).map(categoryTagHTML).join("") + p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  document.getElementById('detailTags').innerHTML = problemCats(p).filter(Boolean).map(categoryTagHTML).join("") + p.tags.map(t=>`<span class="tag">${pEsc(t)}</span>`).join("");
   document.getElementById('detailStamp').innerHTML = stampHTML(p.status);
-  document.getElementById('detailLoc').textContent = `${p.district}, ${p.block}`;
-  document.getElementById('detailAffected').textContent = p.affected.toLocaleString();
-  document.getElementById('detailSev').innerHTML = `${sevDotHTML(p.severity)} ${p.severity[0].toUpperCase()+p.severity.slice(1)}`;
-  document.getElementById('detailUrg').textContent = p.urgency;
-  document.getElementById('detailSupp').textContent = `${p.supporters} supporters · ${p.contributors} contributors`;
-  document.getElementById('detailDate').textContent = formatDate(p.date);
+  const locBits = [p.block, p.district, p.state_name].filter(Boolean);
+  document.getElementById('detailLoc').textContent = locBits.join(', ') || p.location_text || '—';
+  document.getElementById('detailAffected').textContent = (p.affected || 0).toLocaleString();
+  document.getElementById('detailSev').innerHTML = p.severity ? `${sevDotHTML(p.severity)} ${p.severity[0].toUpperCase()+p.severity.slice(1)}` : '—';
+  document.getElementById('detailUrg').textContent = (p.urgency != null) ? p.urgency : '—';
+  document.getElementById('detailSupp').textContent = suppLine(p.supporters, p.contributors);
+  document.getElementById('detailDate').textContent = p.date ? formatDate(p.date) : '—';
   document.title = p.title + ' — SolveSamaj';
+
+  /* ---------- evidence gallery (real files from problems.media_urls) ---------- */
+  function renderMedia(pr){
+    const g = document.getElementById('mediaGrid');
+    if(!g) return;
+    const tiles = [];
+    (pr.media || []).slice(0, 8).forEach(u => {
+      const url = pEsc(u);
+      const isImg = /\.(png|jpe?g|gif|webp|avif|bmp)(\?|#|$)/i.test(u);
+      tiles.push(isImg
+        ? `<a href="${url}" target="_blank" rel="noopener" style="aspect-ratio:1; border:1px solid var(--border); border-radius:var(--radius-m); overflow:hidden; display:block;"><img src="${url}" alt="Evidence" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></a>`
+        : `<a href="${url}" target="_blank" rel="noopener" style="aspect-ratio:1; background:var(--paper-2); border:1px solid var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:11px; text-align:center; padding:6px; word-break:break-all;">📄 ${pEsc((u.split('/').pop() || 'attachment').slice(0, 24))}</a>`);
+    });
+    if(!(pr.media || []).length){
+      tiles.push('<div style="aspect-ratio:1; background:var(--paper-2); border:1px dashed var(--border); border-radius:var(--radius-m); display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:11px; text-align:center; padding:6px;">No evidence files attached</div>');
+    }
+    tiles.push('<div class="upload-zone" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; font-size:11px;">Add evidence</div>');
+    g.innerHTML = tiles.join('');
+  }
+  renderMedia(p);
 
   const stageOrder = STATUS_STAGES.map(s=>s[0]);
   const curIdx = stageOrder.indexOf(p.status) === -1 ? 0 : stageOrder.indexOf(p.status);
@@ -147,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join("")
     : `<p style="font-size:12px; color:var(--text-faint); margin:0;">No organizations yet — be the first to express interest.</p>`;
 
-  const linkedProject = PROJECTS.find(pr => pr.problem === p.id);
+  const linkedProject = IS_DEMO ? PROJECTS.find(pr => pr.problem === p.id) : null;
   if(linkedProject){
     document.getElementById('detailProjectCard').style.display = 'block';
     document.getElementById('detailProjectLink').innerHTML = `
@@ -202,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     actSupportBtn.innerHTML = 'Support<span class="supp-pill">' + supportCount + '</span>';
   }
   function paintSupportersField(){
-    document.getElementById('detailSupp').textContent = `${supportCount} supporters · ${p.contributors} contributors`;
+    document.getElementById('detailSupp').textContent = suppLine(supportCount, p.contributors);
   }
   window.supportThisProblem = async function(){
     if(!actSupportBtn || supportInFlight || hasSupported(p.id)) return;
@@ -247,7 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   window.renderFunding = function(){
-    const list = FUND_REQUESTS.filter(f => f.kind === 'problem' && f.ref === id);
+    /* Demo funding requests only exist for the bundled sample cases;
+       real DB-backed cases have no funding rows in the prototype yet. */
+    const list = IS_DEMO ? FUND_REQUESTS.filter(f => f.kind === 'problem' && f.ref === id) : [];
     document.getElementById('fundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
     document.getElementById('fundList').innerHTML = list.length ? list.map(fr => `
       <div style="padding:14px 0; border-bottom:1px dashed var(--border);">
