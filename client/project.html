@@ -33,7 +33,7 @@
 
   <div class="tabbar">
     <button class="tabbtn active" data-tab="ov" onclick="switchTab('ov')">Overview</button>
-    <button class="tabbtn" data-tab="team" onclick="switchTab('team')">Members &amp; Orgs</button>
+    <button class="tabbtn" data-tab="team" onclick="switchTab('team')">Organisation</button>
     <button class="tabbtn" data-tab="milestones" onclick="switchTab('milestones')">Milestones</button>
     <button class="tabbtn" data-tab="tasks" onclick="switchTab('tasks')">Tasks</button>
     <button class="tabbtn" data-tab="docs" onclick="switchTab('docs')">Documents</button>
@@ -64,15 +64,9 @@
   </div>
 
   <div class="tabpanel" id="tab-team">
-    <div class="grid grid-2">
-      <div class="card card-pad">
-        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Participating organizations</h4>
-        <div id="wsOrgs"></div>
-      </div>
-      <div class="card card-pad">
-        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Members &amp; mentors</h4>
-        <div id="wsMembers"></div>
-      </div>
+    <div class="card card-pad">
+      <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Participating organizations</h4>
+      <div id="wsOrgs"></div>
     </div>
   </div>
 
@@ -185,9 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('wsOrgs').innerHTML = pr.orgs.map(name => `
     <div class="person-row" style="cursor:pointer;" onclick="go('organizations.html')"><div class="av" style="background:${avatarColor(name)}; color:#fff;">${initials(name)}</div><div><b>${name}</b><span>${name===pr.lead?'Lead organization':'Partner organization'}</span></div></div>`).join("");
-  document.getElementById('wsMembers').innerHTML = `
-    <div class="person-row"><div class="av">FM</div><div><b>Faculty Mentor</b><span>Principal Investigator</span></div></div>
-    <div class="person-row"><div class="av">ST</div><div><b>Student Team (${pr.team-1})</b><span>Multidisciplinary contributors</span></div></div>`;
 
   document.getElementById('wsMilestones').innerHTML = pr.milestones.map(([name,pct]) => `
     <div class="milestone ${pct===0?'pending':''}">
