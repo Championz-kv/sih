@@ -7,7 +7,7 @@
 -- Form entry                    → column
 -- ------------------------------------------------------------------
 -- Case ID * (e.g. 1042)         → problem_id        (FK → problems.case_no)
--- Problem title *               → problem_title
+-- Project title *               → project_title
 -- Project short summary *       → summary
 -- Lead organisation (auto)      → lead_organisation
 -- Date of starting the project* → start_date
@@ -23,13 +23,15 @@ create table public.projects (
   -- 'PRJ-03xx'); nullable here so the backend can assign it on approval
   project_code      text unique,
 
-  /* ---- form: Case ID * → linked problem ----
+  /* ---- form: Case ID * → linked problem (free text, e.g. 1042 or
+     SS/JH/2026/1042). Must be the SAME type as problems.case_no — an FK
+     requires identical types on both sides.
      IMPORTANT: an FK target must be a PRIMARY KEY or UNIQUE column.
      If problems.case_no is not unique yet, run the helper ALTER below. */
-  problem_id        integer not null references public.problems (case_no),
+  problem_id        text not null references public.problems (case_no),
 
-  /* ---- form: Problem title * ---- */
-  problem_title     text not null,
+  /* ---- form: Project title * ---- */
+  project_title     text not null,
 
   /* ---- form: Project short summary * ---- */
   summary           text not null,
@@ -66,8 +68,14 @@ create index projects_lead_organisation_idx on public.projects (lead_organisatio
 -- (PostgreSQL refuses an FK reference to a non-unique column.)
 -- ============================================================================
 -- alter table public.problems add constraint problems_case_no_key unique (case_no);
--- If case_no stores text codes like 'SS/JH/2026/1042' instead of numbers,
--- change problem_id's type to match:  problem_id text not null ...
+--
+-- problem_id is TEXT, so problems.case_no must be TEXT too (an FK requires
+-- identical types on both sides). If you ALREADY created this table with the
+-- old integer problem_id / problem_title columns, migrate like this:
+--   alter table public.projects alter column problem_id type text using problem_id::text;
+--   alter table public.projects rename column problem_title to project_title;
+-- (If problems.case_no is still integer, convert it to text FIRST or the
+-- foreign key will break.)
 
 -- ============================================================================
 -- RECOMMENDED — Row Level Security (a table without RLS is readable/writable

@@ -19,11 +19,11 @@
 
   <div class="card card-pad" style="max-width:860px;">
     <div class="field"><label>Case ID *</label>
-      <input class="input mono" id="fProblemId" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
+      <input class="input mono" id="fProblemId" type="text" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
       <p class="hint">The case this project addresses — the title fills in automatically for known cases.</p>
     </div>
 
-    <div class="field"><label>Problem title *</label>
+    <div class="field"><label>Project title *</label>
       <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Case ID, or type it here">
     </div>
 
@@ -107,8 +107,8 @@ function handleDocFiles(fileList){
 
 /* ---------- problem title auto-fill from known cases ---------- */
 function autofillProblemTitle(){
-  const id = parseInt(val('fProblemId'), 10);
-  const known = PROBLEMS.find(p => p.id === id);
+  const id = val('fProblemId').trim();
+  const known = PROBLEMS.find(p => String(p.id) === id);
   if(known) document.getElementById('fProblemTitle').value = known.title;
 }
 
@@ -169,16 +169,14 @@ function clearForm(){
 async function saveProject(){
   const need = [];
   if(!val('fProblemId'))    need.push('Case ID');
-  if(!val('fProblemTitle')) need.push('Problem title');
+  if(!val('fProblemTitle')) need.push('Project title');
   if(!val('fSummary'))      need.push('Project short summary');
   if(!val('fStart'))        need.push('Start date');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
 
-  const problemId = parseInt(val('fProblemId'), 10);
-  if(!Number.isInteger(problemId) || problemId <= 0){
-    toast('Case ID must be a number (e.g. 1042)');
-    return;
-  }
+  /* Case ID is free text (e.g. 1042 or SS/JH/2026/1042) — sent as-is;
+     the FK to problems.case_no is what guarantees it is a real case. */
+  const problemId = val('fProblemId').trim();
 
   const btn = document.getElementById('addProjectBtn');
   btn.disabled = true;
@@ -194,7 +192,7 @@ async function saveProject(){
     const { data: row, error: insErr } = await sbClient.from('projects')
       .insert({
         problem_id:        problemId,
-        problem_title:     val('fProblemTitle'),
+        project_title:     val('fProblemTitle'),
         summary:           val('fSummary'),
         lead_organisation: val('fLead') || MY_ORG,
         start_date:        val('fStart'),
