@@ -158,7 +158,6 @@
         <div class="field"><label>Phone <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="tel" id="fPhone" placeholder="+91 …"></div>
       </div>
 
-      <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkAnon"><span>Post anonymously — don't show my name on the public page.</span></label>
       <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkTerms"><span>I agree to the <a href="#" onclick="return false;">terms of use</a> and community code of conduct.</span></label>
       <label class="check-row" style="margin:6px 0 16px;"><input type="checkbox" id="chkConsent"><span>I confirm the information provided is accurate to the best of my knowledge, and I consent to it being published publicly after review.</span></label>
 
@@ -383,8 +382,13 @@ function postFinal(){
       const draftId = sessionStorage.getItem('ss_draft_id');
       let saved;
       if(draftId){
+        /* if the draft row was deleted meanwhile, submit as a fresh problem */
         saved = await sbClient.from('problems')
-          .update(payload).eq('id', draftId).select('case_no').single();
+          .update(payload).eq('id', draftId).select('case_no').maybeSingle();
+        if(!saved.data){
+          saved = await sbClient.from('problems')
+            .insert(payload).select('case_no').single();
+        }
       } else {
         saved = await sbClient.from('problems')
           .insert(payload).select('case_no').single();
@@ -453,7 +457,6 @@ function collectFormData(){
     ai_reviewed: aiVerified === true,
     contact_email: val('fEmail'),
     contact_phone: val('fPhone'),
-    is_anonymous: !!(document.getElementById('chkAnon') && document.getElementById('chkAnon').checked),
     submitted_by: currentUserId
   };
 }
@@ -610,26 +613,10 @@ function clearStep1(){
   renderEvidence();
   toast('Form cleared');
 }
-/* "Continue with draft" — pull the user's most recent draft row and reload
-   the page so the DOMContentLoaded resume logic pre-fills everything. */
-async function continueDraft(){
-  if(!currentUserId){ go('login.html'); return; }
-  try{
-    const { data, error } = await sbClient.from('problems')
-      .select('id')
-      .eq('submitted_by', currentUserId)
-      .eq('problem_state', 'draft')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if(error) throw error;
-    if(!data){ toast('No saved draft found — start a new report below.'); return; }
-    sessionStorage.setItem('ss_draft_id', data.id);
-    location.reload();
-  }catch(err){
-    console.error('[submit] continueDraft failed:', err);
-    toast('Could not load draft — ' + err.message);
-  }
+/* "Continue with draft" — drafts are now managed from the My Problems page,
+   where each draft row has its own Continue action. */
+function continueDraft(){
+  go('my-problems.html');
 }
 /* Save the current wizard state as a draft row in the problems table. */
 async function saveDraft(){
@@ -641,13 +628,21 @@ async function saveDraft(){
 
     const draftId = sessionStorage.getItem('ss_draft_id');
     if(draftId){
-      const { error } = await sbClient.from('problems').update(payload).eq('id', draftId);
-      if(error) throw error;
+      /* maybeSingle: if the draft was deleted from My Problems in another tab,
+         fall back to inserting a fresh draft so nothing is lost */
+      const res = await sbClient.from('problems')
+        .update(payload).eq('id', draftId).select('id').maybeSingle();
+      if(res.error) throw res.error;
+      if(!res.data){
+        const ins = await sbClient.from('problems').insert(payload).select('id').single();
+        if(ins.error) throw ins.error;
+        sessionStorage.setItem('ss_draft_id', ins.data.id);
+      }
     } else {
-      const { data, error } = await sbClient.from('problems')
+      const ins = await sbClient.from('problems')
         .insert(payload).select('id').single();
-      if(error) throw error;
-      sessionStorage.setItem('ss_draft_id', data.id);
+      if(ins.error) throw ins.error;
+      sessionStorage.setItem('ss_draft_id', ins.data.id);
     }
     toast('Draft saved');
   }catch(err){
@@ -671,8 +666,6 @@ function prefillFromDraft(d, applyLocation){
   }
   document.getElementById('fEmail').value = d.contact_email || '';
   document.getElementById('fPhone').value = d.contact_phone || '';
-  const anon = document.getElementById('chkAnon');
-  if(anon) anon.checked = !!d.is_anonymous;
 
   /* media_urls → evidence-bucket URLs stay attached to the form; other links
      go back into the link rows */
@@ -867,10 +860,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
     .catch(() => {});
 
-  /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ---- */
+  /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ----
+     The marker is kept (not cleared) so further edits keep updating the same
+     draft row; it is cleared only when the problem is finally submitted. */
   const draftId = sessionStorage.getItem('ss_draft_id');
   if(draftId){
-    sessionStorage.removeItem('ss_draft_id');
     try{
       const { data: draft, error } = await sbClient.from('problems')
         .select('*').eq('id', draftId).maybeSingle();
