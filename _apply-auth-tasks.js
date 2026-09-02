@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, 'client');
+// hello how do yo do
 
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>\n<script src="js/supabase-client.js"></script>\n';
 const DATA_TAG = '<script src="js/data.js"></script>';
