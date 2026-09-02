@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Workspace — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="myprojects" data-auth="required">
+<div id="app-topbar"></div>
+<div id="app-sidebar"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="breadcrumb"><a href="my-projects.html" id="crumbHref">My Projects</a> <span>/</span> <span id="wsCode">…</span></div>
+  <div class="page-head">
+    <div>
+      <span class="eyebrow" id="wsStage">PROPOSED</span>
+      <h1 id="wsTitle" style="margin-top:4px;">Project title</h1>
+      <p class="sub" id="wsLinked">Linked to case —</p>
+    </div>
+    <div class="page-head-actions">
+      <button class="btn btn-outline btn-sm" onclick="loadDbProject()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <div class="pipeline" style="margin-bottom:22px;" id="wsPipeline"></div>
+
+  <div id="dbProjBody">
+    <div class="empty" style="padding:40px 20px;"><h4>Loading project…</h4><p>Fetching the saved row from the database.</p></div>
+  </div>
+</main>
+
+<div id="modal-mount"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script>
+<script>
+/* Workspace page for a row actually saved in the Supabase `projects` table
+   (created by the Create Project form). Opened from My Projects with ?id=.
+   Same visual language as the demo workspaces in project.html. */
+const PIPELINE_STAGES = ["Proposed","Approved","Research","Development","Prototype","Testing","Deployment","Completed"];
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  document.getElementById('crumbHref').href = 'my-projects.html' + paramStr();
+  loadDbProject();
+});
+
+async function loadDbProject(){
+  const id = new URLSearchParams(location.search).get('id');
+  const body = document.getElementById('dbProjBody');
+  if(!id){ body.innerHTML = missHTML('No project id in the link.'); return; }
+  if(typeof sbClient === 'undefined'){ body.innerHTML = missHTML('Supabase is not reachable right now.'); return; }
+  const { data: pr, error } = await sbClient.from('projects').select('*').eq('project_id', id).maybeSingle();
+  if(error){ body.innerHTML = missHTML(error.message); return; }
+  if(!pr){ body.innerHTML = missHTML('This project may have been removed from the database.'); return; }
+  renderProject(pr);
+}
+
+function missHTML(msg){
+  return `<div class="empty" style="padding:46px 20px;"><h4>Project could not be opened</h4><p>${esc(msg)}</p>
+    <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="go('my-projects.html')">← Back to My Projects</button></div>`;
+}
+
+function renderProject(pr){
+  const stage = pr.stage || 'Proposed';
+  const idx = Math.max(0, PIPELINE_STAGES.indexOf(stage));
+  const progress = Math.max(0, Math.min(100, pr.progress || 0));
+  const docs = Array.isArray(pr.documents) ? pr.documents : [];
+
+  document.getElementById('wsCode').textContent = pr.project_code || ('DB-' + String(pr.project_id).slice(0, 8).toUpperCase());
+  document.getElementById('wsStage').textContent = stage.toUpperCase();
+  document.getElementById('wsTitle').textContent = pr.project_title || 'Untitled project';
+  document.title = (pr.project_title || 'Project') + ' — SolveSamaj';
+
+  const caseMatch = PROBLEMS.find(p => String(p.id) === String(pr.problem_id || ''));
+  document.getElementById('wsLinked').innerHTML = pr.problem_id
+    ? ('Linked to case ' + (caseMatch
+        ? `<a href="problem.html${paramStr({ id: caseMatch.id })}">#${esc(pr.problem_id)} — ${esc(caseMatch.title)}</a>`
+        : `<span class="mono">#${esc(pr.problem_id)}</span>`))
+    : 'Not linked to a case yet';
+
+  document.getElementById('wsPipeline').innerHTML = PIPELINE_STAGES.map((label, i) =>
+    `<div class="pipe-step"><div class="n">${i < idx ? '✓' : (i + 1)}</div><div class="lbl">${label}</div></div>`).join("");
+
+  const docsHTML = docs.length ? docs.map(d => `
+      <div class="person-row">
+        <div class="av" style="border-radius:6px;">📄</div>
+        <div style="flex:1; min-width:0;"><b>${esc(d.name || 'document')}</b><span>${d.size_kb ? d.size_kb + ' KB' : ''}${d.path ? ' · ' + esc(d.path) : ''}</span></div>
+        ${d.url ? `<a class="btn btn-outline btn-sm" href="${esc(d.url)}" target="_blank" rel="noopener">Open</a>` : ''}
+      </div>`).join("")
+    : `<p style="font-size:12px; color:var(--text-faint); margin:0;">No documents were attached to this project.</p>`;
+
+  document.getElementById('dbProjBody').innerHTML = `
+    <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Project summary</h4>
+        <p style="font-size:13px; white-space:pre-wrap; margin:0;">${esc(pr.summary || 'No summary provided.')}</p>
+        <div class="milestone" style="margin-top:16px;">
+          <div class="mtop"><b>Overall progress</b><span>${progress}%</span></div>
+          <div class="track"><div class="fill" style="width:${progress}%;"></div></div>
+        </div>
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:18px 0 10px;">Documents <span class="count-pill">${docs.length}</span></h4>
+        ${docsHTML}
+      </div>
+      <div class="card card-pad">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">At a glance</h4>
+        <div class="barlist" style="gap:12px;">
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Lead organisation</span><b>${esc(pr.lead_organisation || '—')}</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Participating orgs</span><b>1</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Started</span><b>${formatDate(pr.start_date)}</b></div>
+          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Overall progress</span><b>${progress}%</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card card-pad" style="margin-top:16px;">
+      <div class="section-head">
+        <h2>Funding needs <span class="count-pill" id="projFundCount"></span></h2>
+        <button class="btn btn-outline btn-sm" onclick="openRequestFund('project', CUR_REF)">+ Request funds for this project</button>
+      </div>
+      <div id="projFundList"></div>
+    </div>`;
+
+  window.CUR_REF = pr.project_code || pr.project_id;
+  window.renderFunding = function(){
+    const list = FUND_REQUESTS.filter(f => f.kind === 'project' && f.ref === window.CUR_REF);
+    document.getElementById('projFundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
+    document.getElementById('projFundList').innerHTML = list.length ? list.map(fr => `
+      <div style="padding:14px 0; border-bottom:1px dashed var(--border);">
+        <div class="row-flex" style="justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div><b style="font-size:14px;">${esc(fr.title)}</b><div class="pcard-id mono">${fr.id} · posted by ${esc(fr.postedBy)}</div></div>
+          ${fundIsFunded(fr) ? '<span class="stamp stamp-validated">Fully funded</span>' : '<span class="stamp stamp-open">Open</span>'}
+        </div>
+        <p style="font-size:12.5px; margin:6px 0 12px;">${esc(fr.desc)}</p>
+        ${fundProgressHTML(fr)}
+        <div style="display:flex; flex-direction:column; gap:2px;">${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}</div>
+        ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:4px 0 8px;">No contributions yet — post the need and let backers find it.</p>'}
+        ${fundIsFunded(fr) ? '<p style="font-size:12px; color:var(--ledger); margin:8px 0 0;"><b>Fully funded.</b> Thank you to every backer.</p>'
+          : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
+      </div>`).join("")
+      : `<div class="empty" style="padding:26px 16px;"><h4>No funding needs posted for this project</h4><p>Hardware, logistics, field trials — if the team needs money for it, post a request and the community can back any portion of it.</p></div>`;
+  };
+  window.renderFunding();
+}
+</script>
+</body>
+</html>

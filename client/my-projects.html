@@ -37,17 +37,13 @@
 <script src="js/shell.js"></script>
 <script>
 /* ---- My Projects (organisation) ----
-   Projects created by the signed-in organisation. Ownership comes from the
-   shared helpers in app.js (MY_ORG / myOrgProjects) — the demo org claims
-   projects where it leads or collaborates, padded so the section always
-   demos with two already-created projects. Card markup is identical to the
-   Projects page. */
+   Two openable sources:
+   1. Projects actually saved in the Supabase `projects` table (the Create
+      Project form) — fetched live on load, opened in db-project.html.
+   2. Demo projects from data.js claimed by the demo organisation
+      (MY_ORG / myOrgProjects in app.js) — opened in project.html. */
 
-/* Projects saved through the Create Project form (create-project.html) —
-   held in sessionStorage for this session until the backend persists them. */
-let demoCreatedProjects = [];
-try{ demoCreatedProjects = JSON.parse(sessionStorage.getItem('ss_demo_projects') || '[]'); }
-catch(e){ demoCreatedProjects = []; }
+let dbProjects = [];
 
 function createProject(){
   /* Opens the Create Project form (mirrors the Report-a-Problem interface). */
@@ -60,10 +56,36 @@ function openMyProject(code){
   else toast('Project workspace for ' + code + ' opens once the backend is live');
 }
 
-function renderMyProjects(){
-  const list = demoCreatedProjects.concat(myOrgProjects());
-  document.getElementById('pageCount').textContent = list.length;
-  document.getElementById('myProjectsGrid').innerHTML = list.map(pr => `
+function openDbProject(id){ go('db-project.html', { id: id }); }
+
+/* Card for a row saved in the `projects` table — opens db-project.html. */
+function dbCardHTML(pr){
+  const code = pr.project_code || ('DB-' + String(pr.project_id || '').slice(0, 8).toUpperCase());
+  const docs = Array.isArray(pr.documents) ? pr.documents.length : 0;
+  const linked = pr.problem_id
+    ? 'Linked to case #' + esc(pr.problem_id) + ' · lead ' + esc(pr.lead_organisation || '')
+    : 'Created by ' + esc(pr.lead_organisation || '') + ' · no linked case yet';
+  return `
+    <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="openDbProject('${esc(pr.project_id)}')">
+      <div class="row-flex" style="justify-content:space-between;">
+        <span class="pcard-id mono">${esc(code)}</span>
+        <span class="eyebrow">${esc(pr.stage || 'Proposed')}</span>
+      </div>
+      <h3 style="font-size:15.5px; margin:0;">${esc(pr.project_title || 'Untitled project')}</h3>
+      <p style="font-size:12px; margin:0; color:var(--text-faint);">${linked}</p>
+      <div class="milestone" style="margin:0;">
+        <div class="mtop"><b>Overall progress</b><span>${pr.progress || 0}%</span></div>
+        <div class="track"><div class="fill" style="width:${pr.progress || 0}%;"></div></div>
+      </div>
+      <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
+        <span>1 org${docs ? ' · ' + docs + ' document' + (docs === 1 ? '' : 's') : ''}</span><span class="mono">since ${formatDate(pr.start_date)}</span>
+      </div>
+    </div>`;
+}
+
+/* Card for the demo projects from data.js — opens project.html. */
+function demoCardHTML(pr){
+  return `
     <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="openMyProject('${pr.code}')">
       <div class="row-flex" style="justify-content:space-between;">
         <span class="pcard-id mono">${pr.code}</span>
@@ -78,12 +100,30 @@ function renderMyProjects(){
       <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
         <span>${pr.orgs.length} org${pr.orgs.length === 1 ? '' : 's'}${pr.team ? ' · ' + pr.team + ' member' + (pr.team === 1 ? '' : 's') : ''}</span><span class="mono">since ${formatDate(pr.start)}</span>
       </div>
-    </div>`).join("");
+    </div>`;
+}
+
+function renderMyProjects(){
+  const total = dbProjects.length + myOrgProjects().length;
+  document.getElementById('pageCount').textContent = total;
+  document.getElementById('myProjectsGrid').innerHTML = (dbProjects.map(dbCardHTML).join("") + myOrgProjects().map(demoCardHTML).join(""))
+    || `<div class="empty" style="grid-column:1/-1;"><h4>No projects yet</h4><p>Use “+ Create Project” to start one — it will be saved to the database and appear here, ready to open.</p></div>`;
+}
+
+/* Saved rows straight from the database (newest first). Silent on failure —
+   the demo list still renders, and the RLS select policy is public anyway. */
+async function loadDbProjects(){
+  if(typeof sbClient === 'undefined') return;
+  const { data, error } = await sbClient.from('projects').select('*').order('created_at', { ascending: false });
+  if(error){ console.warn('[my-projects] saved projects unavailable:', error.message); return; }
+  dbProjects = data || [];
+  renderMyProjects();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   renderMyProjects();
+  loadDbProjects();
 });
 </script>
 </body>

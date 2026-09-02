@@ -68,9 +68,8 @@
    interface). "Add project" inserts a row into the Supabase `projects`
    table and uploads every attached document to the `project_docs`
    storage bucket (one folder per project row id; files already in the
-   folder are skipped silently — no error shown). The row is also
-   mirrored into the session list so it shows under My Projects until
-   that page reads from the database.
+   folder are skipped silently — no error shown). My Projects lists
+   saved rows straight from the database.
    ================================================================== */
 const val = id => (document.getElementById(id)?.value || '').trim();
 
@@ -232,20 +231,8 @@ async function saveProject(){
       }
     }
 
-    /* 4 — mirror into the session list so My Projects shows it this session */
-    let saved = [];
-    try{ saved = JSON.parse(sessionStorage.getItem('ss_demo_projects') || '[]'); }catch(e){ saved = []; }
-    saved.unshift({
-      code: 'PRJ-0' + (361 + saved.length),
-      title: val('fProblemTitle'),
-      problem: problemId,
-      stage: 'Proposed', lead: val('fLead') || MY_ORG,
-      orgs: [val('fLead') || MY_ORG],
-      start: val('fStart'), progress: 0,
-      docs: docsMeta.map(d => [d.name, d.size_kb ? d.size_kb + ' KB' : ''])
-    });
-    try{ sessionStorage.setItem('ss_demo_projects', JSON.stringify(saved)); }catch(e){}
-
+    /* My Projects reads saved rows straight from the database — no session
+       mirror needed anymore. */
     toast('Project added to the desk' + (docsMeta.length ? ' — ' + docsMeta.length + ' document' + (docsMeta.length === 1 ? '' : 's') + ' linked.' : '.'));
     setTimeout(() => go('my-projects.html'), 900);
   }catch(e){
