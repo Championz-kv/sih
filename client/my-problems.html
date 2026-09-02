@@ -35,74 +35,20 @@
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
 <script>
-/* My Problems — real data: only problems whose submitted_by matches the
-   signed-in account. Dummy/demo rows (no submitted_by, or another
-   account's rows) can never appear here. */
-function escMyProblems(s){
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-}
-async function loadMyProblems(){
-  const body = document.getElementById('myProblemsBody');
-  const countEl = document.getElementById('pageCount');
-
-  /* Who is signed in? (This page is data-auth="required" — shell.js
-     already redirects guests; the guard below is belt-and-braces.) */
-  let uid = null;
-  try{
-    const { data } = await sbClient.auth.getSession();
-    uid = (data && data.session && data.session.user) ? data.session.user.id : null;
-  }catch(e){ /* fall through to the cached profile */ }
-  if(!uid){
-    const cached = getSessionProfile();
-    uid = (cached && cached.id) || null;
-  }
-  if(!uid){
-    countEl.textContent = '';
-    body.innerHTML = '<tr><td colspan="7"><div class="empty" style="padding:26px 16px;"><h4>Not signed in</h4><p>Sign in to see the problems linked to your account.</p></div></td></tr>';
-    return;
-  }
-
-  /* Only rows whose submitted_by = this account's id — nothing else. */
-  try{
-    const { data, error } = await sbClient.from('problems')
-      .select('id, title, district, block, severity, urgency, created_at')
-      .eq('submitted_by', uid)
-      .order('created_at', { ascending: false });
-
-    if(error){
-      console.error('[my-problems] query failed:', error.message);
-      countEl.textContent = '';
-      body.innerHTML = '<tr><td colspan="7"><div class="empty" style="padding:26px 16px;"><h4>Could not load your problems</h4><p>' + escMyProblems(error.message) + '</p></div></td></tr>';
-      return;
-    }
-
-    countEl.textContent = data.length;
-
-    if(!data.length){
-      body.innerHTML = '<tr><td colspan="7"><div class="empty" style="padding:26px 16px;"><h4>Nothing here yet</h4><p>Problems you submit will appear here, linked to your account automatically.</p></div></td></tr>';
-      return;
-    }
-
-    body.innerHTML = data.map(p => `
-    <tr style="cursor:pointer;" onclick="go('problem.html', {id:'${escMyProblems(p.id)}'})">
-      <td class="mono">#${escMyProblems(p.id)}</td>
-      <td>${escMyProblems(p.title)}</td>
-      <td>${escMyProblems((p.district || '—') + (p.block ? ' · ' + p.block : ''))}</td>
-      <td>${stampHTML('submitted')}</td>
-      <td class="mono">${escMyProblems(p.severity || '—')}</td>
-      <td class="mono">${formatDate((p.created_at || '').slice(0,10))}</td>
-      <td><a href="problem.html${paramStr({id:p.id})}" onclick="event.stopPropagation();">View →</a></td>
-    </tr>`).join("");
-  }catch(e){
-    console.error('[my-problems] unexpected failure:', e);
-    countEl.textContent = '';
-    body.innerHTML = '<tr><td colspan="7"><div class="empty" style="padding:26px 16px;"><h4>Could not load your problems</h4><p>Check your connection and refresh the page.</p></div></td></tr>';
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
-  loadMyProblems();
+  const mine = PROBLEMS.slice(0,5);
+  document.getElementById('pageCount').textContent = mine.length;
+  document.getElementById('myProblemsBody').innerHTML = mine.map(p => `
+    <tr style="cursor:pointer;" onclick="go('problem.html', {id:${p.id}})">
+      <td class="mono">#${p.id}</td>
+      <td>${p.title}</td>
+      <td>${categoryTagHTML(p.category)}</td>
+      <td>${stampHTML(p.status)}</td>
+      <td class="mono">${p.supporters}</td>
+      <td class="mono">${formatDate(p.date)}</td>
+      <td><a href="problem.html${paramStr({id:p.id})}" onclick="event.stopPropagation();">View →</a></td>
+    </tr>`).join("");
 });
 </script>
 </body>
