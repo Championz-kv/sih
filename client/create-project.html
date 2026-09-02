@@ -200,7 +200,16 @@ async function saveProject(){
       })
       .select('project_id')
       .single();
-    if(insErr){ toast('Could not add project: ' + insErr.message); return; }
+    if(insErr){
+      if(insErr.code === '42501' || /row-level security/i.test(insErr.message || '')){
+        toast('The database blocked this save (RLS policy missing). Run db/fix_projects_rls.sql in the Supabase SQL Editor, then try again.');
+      } else if(insErr.code === '42P01' || /does not exist/i.test(insErr.message || '')){
+        toast('The projects table does not exist yet — run db/projects_table.sql in the Supabase SQL Editor first.');
+      } else {
+        toast('Could not add project: ' + insErr.message);
+      }
+      return;
+    }
 
     /* 2 — evidence files → project_docs bucket (duplicates skipped silently) */
     let docsMeta = [], failedUploads = 0;
@@ -215,7 +224,13 @@ async function saveProject(){
     const { error: updErr } = await sbClient.from('projects')
       .update({ documents: docsMeta })
       .eq('project_id', row.project_id);
-    if(updErr) toast('Project added, but its document list could not be saved: ' + updErr.message);
+    if(updErr){
+      if(updErr.code === '42501' || /row-level security/i.test(updErr.message || '')){
+        toast('Project added, but the document-list update was blocked by the database (RLS). Run db/fix_projects_rls.sql — the next save will sync the documents.');
+      } else {
+        toast('Project added, but its document list could not be saved: ' + updErr.message);
+      }
+    }
 
     /* 4 — mirror into the session list so My Projects shows it this session */
     let saved = [];

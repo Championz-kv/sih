@@ -76,6 +76,9 @@ create index projects_lead_organisation_idx on public.projects (lead_organisatio
 --   alter table public.projects rename column problem_title to project_title;
 -- (If problems.case_no is still integer, convert it to text FIRST or the
 -- foreign key will break.)
+--
+-- If INSERTS fail with "new row violates row-level security policy",
+-- run db/fix_projects_rls.sql — it (re)creates the RLS policies.
 
 -- ============================================================================
 -- RECOMMENDED — Row Level Security (a table without RLS is readable/writable
