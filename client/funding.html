@@ -72,10 +72,10 @@ window.renderFunding = function(){
   document.getElementById('fundLedger').innerHTML = [
     [requested, 'Requested', ''],
     [received,  'Received', 'd-up ▲ verified'],
-    [awaiting,  'Awaiting verification', 'd-down ⏳ pending'],
+    [awaiting,  'Awaiting verification', 'd-warn ⏳ pending'],
     [backers,   'Backers', '— orgs + individuals'],
   ].map(([v, l, d]) => `
-    <div class="ledger-cell"><span class="v">${l === 'Backers' ? v : inr(v)}</span><span class="l">${l}</span>${d ? `<span class="d ${String(d).startsWith('d-up') ? 'd-up' : String(d).startsWith('d-down') ? 'd-down' : ''}">${d.replace(/^(d-up|d-down)\s?/, '')}</span>` : ''}</div>`).join('');
+    <div class="ledger-cell"><span class="v">${l === 'Backers' ? v : inr(v)}</span><span class="l">${l}</span>${d ? `<span class="d ${String(d).startsWith('d-up') ? 'd-up' : String(d).startsWith('d-down') ? 'd-down' : String(d).startsWith('d-warn') ? 'd-warn' : ''}">${d.replace(/^(d-up|d-down|d-warn)\s?/, '')}</span>` : ''}</div>`).join('');
 
   document.getElementById('fundAllCount').textContent = FUND_REQUESTS.length + ' request' + (FUND_REQUESTS.length === 1 ? '' : 's');
 

@@ -135,8 +135,7 @@ html[data-theme="dark"] .lp-float i{ background:rgba(255,212,0,0.12); color:var(
 /* ---------------- generic sections ---------------- */
 .lp-section{ padding:86px 0; }
 .lp-alt{ background:var(--surface-2); }
-.lp-eyebrow{ font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--setu-2); font-weight:600; margin-bottom:12px; }
-html[data-theme="dark"] .lp-eyebrow{ color:var(--setu); }
+.lp-eyebrow{ font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); font-weight:600; margin-bottom:12px; }
 .lp-h2{ font-family:var(--font-display); font-weight:700; letter-spacing:-0.02em; font-size:clamp(1.7rem,3vw,2.4rem); color:var(--ink); margin:0 0 12px; line-height:1.15; }
 .lp-sub{ font-size:14.5px; color:var(--text-soft); max-width:560px; margin:0; }
 .lp-center{ text-align:center; }

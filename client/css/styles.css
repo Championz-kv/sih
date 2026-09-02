@@ -110,10 +110,9 @@ img,svg{ display:block; max-width:100%; }
   font-size:11px;
   letter-spacing:.14em;
   text-transform:uppercase;
-  color:var(--setu-2);
+  color:var(--text-faint);
   font-weight:600;
 }
-html[data-theme="dark"] .eyebrow{ color:var(--setu); }
 
 /* ================= APP SHELL ================= */
 .app{ display:flex; min-height:100vh; }
@@ -385,7 +384,7 @@ html[data-theme="dark"] .guide-banner.gb-ochre{ background:linear-gradient(130de
 .ledger-cell .v{ font-family:var(--font-mono); font-size:23px; font-weight:600; color:var(--ink); display:block; }
 .ledger-cell .l{ font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); margin-top:3px; display:block; }
 .ledger-cell .d{ font-size:10.5px; margin-top:5px; font-family:var(--font-mono); }
-.d-up{ color:var(--ledger); } .d-down{ color:var(--rust); }
+.d-up{ color:var(--ledger); } .d-down{ color:var(--rust); } .d-warn{ color:var(--ochre-2); }
 .ledger-cell{ box-shadow:inset 0 2.5px 0 var(--border-2); position:relative; }
 .ledger-cell:nth-child(6n+1){ box-shadow:inset 0 2.5px 0 var(--setu); } .ledger-cell:nth-child(6n+1) .v{ color:var(--setu-2); }
 .ledger-cell:nth-child(6n+2){ box-shadow:inset 0 2.5px 0 var(--ledger); } .ledger-cell:nth-child(6n+2) .v{ color:var(--ledger); }
