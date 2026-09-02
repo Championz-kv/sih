@@ -247,3 +247,72 @@ function wireGlobalSearch(){
     if(e.key === 'Enter'){ go('explore.html', { q: input.value }); }
   });
 }
+
+/* ---------------- live supporter counts (DB-backed: problems.support) -------
+   The problems table stores each case's supporter count in its `support`
+   column, keyed by the problem id. Demo data in data.js uses the property
+   name `supporters`, so the helpers below read the DB column and overlay
+   the value onto the PROBLEMS list — every renderer keeps using
+   p.supporters and card hearts / the detail page stay in sync with the DB
+   (single source of truth, no duplicate counter).
+
+   Every helper degrades silently to the demo values when Supabase is
+   unreachable (offline / CDN blocked), matching shell.js behaviour. */
+const SS_SUPPORTED_KEY = 'ss-supported';            /* ids supported this session */
+function supportedSet(){
+  try{ return new Set(JSON.parse(sessionStorage.getItem(SS_SUPPORTED_KEY) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function hasSupported(id){ return supportedSet().has(String(id)); }
+function markSupported(id){
+  const s = supportedSet(); s.add(String(id));
+  try{ sessionStorage.setItem(SS_SUPPORTED_KEY, JSON.stringify(Array.from(s))); }catch(e){}
+}
+function supportApiReady(){ return typeof sbClient !== 'undefined' && !!sbClient; }
+
+/* Every problem row the visitor can read: { id -> support }. null on failure. */
+async function fetchSupportCounts(){
+  if(!supportApiReady()) return null;
+  try{
+    const { data, error } = await sbClient.from('problems').select('id, support');
+    if(error) throw error;
+    const map = {};
+    (data || []).forEach(r => {
+      const v = (typeof r.support === 'number') ? r.support : parseInt(r.support, 10);
+      map[r.id] = isNaN(v) ? 0 : v;
+    });
+    return map;
+  }catch(e){
+    console.warn('[support] count fetch failed:', (e && e.message) || e);
+    return null;
+  }
+}
+
+/* Overlay DB counts onto the demo PROBLEMS list, in place. Returns how many
+   entries were updated (0 → nothing changed, callers skip the re-render). */
+function applySupportCounts(map){
+  if(!map || typeof PROBLEMS === 'undefined') return 0;
+  let n = 0;
+  PROBLEMS.forEach(p => {
+    if(map[p.id] !== undefined){ p.supporters = map[p.id]; n++; }
+  });
+  return n;
+}
+
+/* +1 on problems.support for one id. Resolves with the authoritative new
+   count (re-read via RETURNING) or throws — callers decide how to recover. */
+async function incrementSupport(id){
+  if(!supportApiReady()) throw new Error('Supabase unavailable');
+  const { data: row, error: readErr } = await sbClient.from('problems')
+    .select('id, support').eq('id', id).maybeSingle();
+  if(readErr) throw readErr;
+  if(!row) throw new Error('problems has no row for id ' + id);
+  const cur = (typeof row.support === 'number') ? row.support : parseInt(row.support, 10);
+  const next = (isNaN(cur) ? 0 : cur) + 1;
+  const { data: updated, error: upErr } = await sbClient.from('problems')
+    .update({ support: next }).eq('id', id).select('id, support');
+  if(upErr) throw upErr;
+  if(!updated || !updated.length) throw new Error('support update matched no row (RLS policy?)');
+  const v = (typeof updated[0].support === 'number') ? updated[0].support : parseInt(updated[0].support, 10);
+  return isNaN(v) ? next : v;
+}
