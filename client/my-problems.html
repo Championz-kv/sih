@@ -20,7 +20,7 @@
   </div>
   <div class="card">
     <table class="datatable">
-      <thead><tr><th>Case</th><th>Title</th><th>Category</th><th>Status</th><th>Filed</th><th></th></tr></thead>
+      <thead><tr><th>Case</th><th>Title</th><th>Status</th><th>Filed</th><th></th></tr></thead>
       <tbody id="myProblemsBody"></tbody>
     </table>
   </div>
@@ -80,13 +80,13 @@ async function loadMyProblems(){
 
   const body = document.getElementById('myProblemsBody');
   const { data: rows, error } = await sbClient.from('problems')
-    .select('id, case_no, title, categories, problem_state, created_at')
+    .select('id, case_no, title, problem_state, created_at')
     .eq('submitted_by', user.id)
     .order('created_at', { ascending: false });
 
   if(error){
     console.error('[my-problems] load failed:', error);
-    body.innerHTML = `<tr><td colspan="6"><div class="empty"><h4>Could not load your problems</h4><p>${esc(error.message)}</p></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="5"><div class="empty"><h4>Could not load your problems</h4><p>${esc(error.message)}</p></div></td></tr>`;
     toast('Could not load problems — ' + error.message);
     return;
   }
@@ -95,7 +95,7 @@ async function loadMyProblems(){
   document.getElementById('pageCount').textContent = list.length;
 
   if(!list.length){
-    body.innerHTML = `<tr><td colspan="6"><div class="empty">
+    body.innerHTML = `<tr><td colspan="5"><div class="empty">
       <h4>No problems posted yet</h4>
       <p>Report your first problem to get started.</p>
     </div></td></tr>`;
@@ -104,8 +104,6 @@ async function loadMyProblems(){
 
   body.innerHTML = list.map(p => {
     const isDraft = p.problem_state === 'draft';
-    const cat = (Array.isArray(p.categories) && p.categories[0]) || '';
-    const catHtml = cat ? categoryTagHTML(cat) : '<span style="color:var(--text-faint);">—</span>';
     const date = p.created_at ? formatDate(String(p.created_at).slice(0,10)) : '—';
     const id = esc(p.id);
     /* drafts continue in the report form (prefilled); submitted ones open their page */
@@ -117,7 +115,6 @@ async function loadMyProblems(){
       <tr style="cursor:pointer;" onclick="${rowGo}">
         <td class="mono">${esc(p.case_no) || '—'}</td>
         <td>${esc(p.title)}</td>
-        <td>${catHtml}</td>
         <td>${stateStamp(p.problem_state)}</td>
         <td class="mono">${date}</td>
         <td><span style="display:inline-flex; align-items:center; gap:10px;">${action}
