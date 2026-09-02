@@ -145,7 +145,7 @@ function problemCardHTML(p){
     </div>
     <div class="pcard-foot">
       <span class="loc">${sevDotHTML(p.severity)}&nbsp;${p.district} · ${p.block}</span>
-      <span class="pcard-stats"><span>👤 ${p.affected.toLocaleString()}</span><span>♥ ${p.supporters}</span></span>
+      <span class="pcard-stats"><span>👤 ${(p.supporters || 0).toLocaleString()}</span></span>
     </div>
   </div>`;
 }

@@ -172,6 +172,21 @@
 <div id="modal-mount"></div>
 <div class="toast-wrap" id="toastWrap"></div>
 
+<!-- AI reviewing overlay — shown while Sahayak categorizes; cancel returns to step 1 -->
+<div class="modal-overlay" id="aiReviewOverlay" style="position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center;">
+  <div class="modal" style="max-width:440px; text-align:center;">
+    <div class="modal-head" style="justify-content:center;"><h3 style="font-size:18px;">✦ Sahayak is reviewing</h3></div>
+    <div class="modal-body" style="padding:6px 8px 4px;">
+      <p style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
+      <p class="hint" style="margin-top:10px;">This usually takes a few seconds.</p>
+    </div>
+    <div class="modal-foot" style="justify-content:center; gap:10px;">
+      <button class="btn btn-ghost" type="button" onclick="cancelAiReviewBack()">← Back</button>
+      <button class="btn btn-outline" type="button" onclick="cancelAiReviewStay()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/india-districts-fallback.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-client.js"></script>
@@ -186,6 +201,7 @@ const val = id => (document.getElementById(id)?.value || '').trim();
 let step = 1;
 let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
 let aiVerified = false; // do the user's current choices match the AI?
+let aiCancelled = false; // user pressed Cancel on the AI-review overlay
 let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
 
 function goStep(n){
@@ -265,11 +281,33 @@ function setSahayaLoading(on){
     pane.style.opacity = on ? '0.7' : '';
     pane.style.pointerEvents = on ? 'none' : '';
   }
+  /* Popup overlay with bigger text + Cancel */
+  const ov = document.getElementById('aiReviewOverlay');
+  if(ov) ov.style.display = on ? 'flex' : 'none';
+}
+
+/* Cancel the AI review — release the guard so the user can retry. */
+function stopAiReview(){
+  aiCancelled = true;
+  sahayaBusy = false;              /* release the guard so Next works immediately */
+  setSahayaLoading(false);
+}
+/* ← Back — stop AI and return to form 1. */
+function cancelAiReviewBack(){
+  stopAiReview();
+  goStep(1);
+}
+/* Cancel — stop AI but stay on form 2 with the "will need review" fallback so
+   the user can keep editing manually. */
+function cancelAiReviewStay(){
+  stopAiReview();
+  setNeedsReview();
 }
 
 async function runAiCategorize(){
   if(sahayaBusy) return;
   sahayaBusy = true;
+  aiCancelled = false;
   setSahayaLoading(true);
 
   const title = val('fTitle');
@@ -285,20 +323,23 @@ async function runAiCategorize(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, description, district, state, affected_count })
     });
+    if(aiCancelled) return;              /* user cancelled — ignore late response */
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const result = await res.json();
     if(result && result.error) throw new Error(result.error);
 
     applyAiResult(result);
+    if(aiCancelled) return;              /* user cancelled while applying */
     setAiVerified();
   }catch(err){
+    if(aiCancelled) return;              /* cancelled — no error toast */
     console.error('[sahayak] categorize failed:', err);
     toast('Sahayak could not categorize — please select manually');
     setNeedsReview();
     /* Step 2 is already active — the user can pick categories by hand. */
   }finally{
-    setSahayaLoading(false);
     sahayaBusy = false;
+    if(!aiCancelled) setSahayaLoading(false);   /* don't pop the overlay if user cancelled */
   }
 }
 
