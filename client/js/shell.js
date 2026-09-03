@@ -196,22 +196,51 @@ function renderModals(){
       <div class="modal-head"><h3 id="taskModalTitle">Add a new task</h3><button class="close-x" onclick="closeModal('addTaskModal')">✕</button></div>
       <div class="modal-body">
         <div class="field"><label>Task name</label><input class="input" id="taskNameInput" placeholder="e.g. Draft field report"></div>
-        <div class="field"><label>Owner</label>
-          <select class="input" id="taskOwnerSelect">${ORGS.map(o => '<option>' + o.name + '</option>').join('')}</select>
+        <div class="field"><label>Organisation</label>
+          <select class="input" id="taskOrgSelect">${ORGS.map(o => '<option>' + o.name + '</option>').join('')}</select>
         </div>
         <div class="field"><label>Status</label>
           <select class="input" id="taskStatusSelect">
-            <option>In progress</option>
             <option>Not started</option>
-            <option>Done</option>
-            <option>Due</option>
+            <option>In progress</option>
+            <option>Completed</option>
           </select>
         </div>
         <div class="field"><label>Due date</label><input class="input" id="taskDueInput" type="date"></div>
       </div>
       <div class="modal-foot">
+        <button class="btn btn-ghost" id="taskModalRemoveBtn" style="display:none; margin-right:auto; color:var(--rust);" onclick="removeTask()">Remove task</button>
         <button class="btn btn-outline" onclick="closeModal('addTaskModal')">Cancel</button>
         <button class="btn btn-primary" id="taskModalSubmit" onclick="addTask()">Add task</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editSummaryModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Edit project summary</h3><button class="close-x" onclick="closeModal('editSummaryModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Project summary</label>
+          <textarea class="input" id="summaryInput" rows="6" placeholder="Describe the project in a few lines..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('editSummaryModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSummary()">Save summary</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="milestonesModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Project milestones</h3><button class="close-x" onclick="closeModal('milestonesModal')">✕</button></div>
+      <div class="modal-body">
+        <p class="hint" style="margin-top:0;">The 8 stages of the project cycle. Tick a stage once it is completed — checked stages show a ✓ on the pipeline.</p>
+        <div id="milestonesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('milestonesModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMilestones()">Save milestones</button>
       </div>
     </div>
   </div>

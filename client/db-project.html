@@ -24,6 +24,7 @@
     </div>
     <div class="page-head-actions">
       
+      <button class="btn btn-outline btn-sm" onclick="openMilestonesModal()">Milestones</button>
       <button class="btn btn-outline btn-sm" onclick="openModal('inviteModal')">Invite collaborator</button>
       <button class="btn btn-primary btn-sm" onclick="postUpdate()">Post update</button>
     </div>
@@ -43,7 +44,10 @@
   <div class="tabpanel active" id="tab-ov">
     <div class="grid grid-3" style="grid-template-columns:2fr 1fr;">
       <div class="card card-pad">
-        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Project summary</h4>
+        <div class="row-flex" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0;">Project summary</h4>
+          <button class="btn btn-ghost btn-sm" onclick="openEditSummaryModal()">✎ Edit summary</button>
+        </div>
         <p id="wsSummary" style="font-size:13px; white-space:pre-wrap;">Summary text.</p>
         <div class="milestone" style="margin-top:16px;">
           <div class="mtop"><b>Overall progress</b><span id="ovProgress">0%</span></div>
@@ -58,7 +62,6 @@
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Lead organization</span><b id="wsLead">&mdash;</b></div>
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Participating orgs</span><b id="wsOrgCount">&mdash;</b></div>
           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Started</span><b id="wsStart">&mdash;</b></div>
-          <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Overall progress</span><b id="wsProgress">&mdash;</b></div>
         </div>
       </div>
     </div>
@@ -185,7 +188,8 @@ function renderProject(pr){
   document.getElementById('wsLead').textContent = pr.lead_organisation || '\u2014';
   document.getElementById('wsOrgCount').textContent = '1';
   document.getElementById('wsStart').textContent = formatDate(pr.start_date);
-  document.getElementById('wsProgress').textContent = progress + '%';
+  window.CUR_PROJECT_ORGS = [pr.lead_organisation].filter(Boolean);
+  window.CUR_STAGE_IDX = idx;
 
   document.getElementById('wsUpdates').innerHTML =
     '<div class="notif-item"><span class="notif-dot" style="background:' + avatarColor(pr.lead_organisation || 'System') + ';"></span>' +
