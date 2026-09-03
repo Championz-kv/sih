@@ -388,19 +388,32 @@ function renderOrgFunding(p){
     : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No contributions recorded yet.</p>'}`;
 }
 
+/* A unique-constraint violation on profiles.phone (Postgres 23505) means
+   another account already owns that number. */
+function isPhoneDupError(e){
+  return !!e && (
+    /profiles_phone_key/i.test(e.message || '') ||
+    (e.code === '23505' && /phone/i.test(e.message || ''))
+  );
+}
+
 /* Save — collects every field (incl. the three comma-separated chip
    columns) and updates the signed-in org's own profiles row. */
 async function saveOrgProfile(){
   const session = await currentOrgSession();
   if(!session || !session.user){ go('login.html'); return; }
 
+  /* Blank phone must be written as NULL, never ''. The unique constraint
+     profiles_phone_key allows many NULLs but only ONE '' — a blank phone
+     used to fail the whole save with "duplicate key … profiles_phone_key"
+     whenever any other row already stored an empty phone. */
   const payload = {
     full_name: document.getElementById('oName').value.trim(),
     org_type: document.getElementById('oType').value || null,
     about: document.getElementById('oAbout').value.trim(),
     state: document.getElementById('oState').value || null,
     district: document.getElementById('oDist').value || null,
-    phone: document.getElementById('oPhone').value.trim(),
+    phone: document.getElementById('oPhone').value.trim() || null,
     email: document.getElementById('oEmail').value.trim(),
     address: document.getElementById('oAddress').value.trim(),
     link_other: [...document.querySelectorAll('#orgLinkRows .link-input')]
@@ -411,35 +424,52 @@ async function saveOrgProfile(){
   };
   if(!payload.full_name){ toast('Organization name is required'); return; }
 
-  const btn = document.getElementById('orgSaveBtn');
-  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
-
-  const upd = await sbClient.from('profiles')
-    .update(payload)
-    .eq('id', session.user.id)
-    .select('id');
-  let error = upd.error;
-
-  /* Row missing (signed up before the trigger existed) → create it with
-     everything the form has, so nothing the org typed is lost. */
-  if(!error && (!upd.data || !upd.data.length)){
+  /* One write attempt = update own row; if the row does not exist yet
+     (signed up before the trigger existed) create it with everything the
+     form has, so nothing the org typed is lost. */
+  async function attempt(p){
+    const upd = await sbClient.from('profiles')
+      .update(p)
+      .eq('id', session.user.id)
+      .select('id');
+    if(upd.error) return { error: upd.error };
+    if(upd.data && upd.data.length) return { ok: true };
     const md = session.user.user_metadata || {};
     const local = (session.user.email || '').split('@')[0] || '';
     const ins = await sbClient.from('profiles').upsert(
-      Object.assign({ id: session.user.id, username: local.replace(/^phone_91/, ''), role: md.role || 'org_member' }, payload),
+      Object.assign({ id: session.user.id, username: local.replace(/^phone_91/, ''), role: md.role || 'org_member' }, p),
       { onConflict: 'id' }
     );
-    error = ins.error;
+    return ins.error ? { error: ins.error } : { ok: true };
+  }
+
+  const btn = document.getElementById('orgSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  let result = await attempt(payload);
+  let phoneTaken = false;
+  if(result.error && isPhoneDupError(result.error)){
+    /* The phone is owned by a different account → retry without the
+       optional phone so the rest of the profile still saves. */
+    phoneTaken = true;
+    const { phone: _taken, ...withoutPhone } = payload;
+    result = await attempt(withoutPhone);
   }
 
   if(btn){ btn.disabled = false; btn.textContent = 'Save profile'; }
-  if(error){ toast('Failed to save — ' + error.message); return; }
-  toast('Profile saved successfully');
+  if(result.error){ toast('Failed to save — ' + result.error.message); return; }
 
-  /* keep the topbar in sync without a reload */
+  toast(phoneTaken
+    ? 'Profile saved — but that phone number is already linked to another account. Change or clear the Phone field to store it.'
+    : 'Profile saved successfully');
+
+  /* keep the topbar in sync without a reload (never cache a taken phone) */
   try{
+    const savedPayload = phoneTaken
+      ? (() => { const { phone: _p, ...rest } = payload; return rest; })()
+      : payload;
     const stored = JSON.parse(sessionStorage.getItem('ss_profile') || '{}');
-    Object.assign(stored, payload);
+    Object.assign(stored, savedPayload);
     sessionStorage.setItem('ss_profile', JSON.stringify(stored));
     applyRoleUI(currentRole(), stored);
   }catch(e){}

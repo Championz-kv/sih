@@ -222,14 +222,26 @@ async function loadProfile(){
     if(cached) applyProfileToForm(cached, null);
   }
 }
+/* A unique-constraint violation on profiles.phone (Postgres 23505) means
+   another account already owns that number. */
+function isPhoneDupError(e){
+  return !!e && (
+    /profiles_phone_key/i.test(e.message || '') ||
+    (e.code === '23505' && /phone/i.test(e.message || ''))
+  );
+}
+
 async function saveProfile(){
   const session = await currentSession();
   if(!session || !session.user){ go('login.html'); return; }
 
+  /* Blank phone must be written as NULL, never ''. The unique constraint
+     profiles_phone_key allows many NULLs but only ONE '' — a blank phone
+     used to fail the whole save whenever another row stored ''. */
   const payload = {
     full_name: document.getElementById('cName').value.trim(),
     email: document.getElementById('cEmail').value.trim(),
-    phone: document.getElementById('cPhone').value.trim(),
+    phone: document.getElementById('cPhone').value.trim() || null,
     about: document.getElementById('cAbout').value.trim(),
     address: document.getElementById('cAddr').value.trim(),
     link_other: [...document.querySelectorAll('.link-input')]
@@ -237,12 +249,23 @@ async function saveProfile(){
   };
   if(!payload.full_name){ toast('Full name is required'); return; }
 
-  const { error } = await sbClient.from('profiles')
+  let res = await sbClient.from('profiles')
     .update(payload)
     .eq('id', session.user.id);
 
-  if(error){ toast('Failed to save — ' + error.message); return; }
-  toast('Profile saved successfully');
+  /* Phone already linked to another account → save everything else and
+     tell the user; one optional field must not block the profile. */
+  let phoneTaken = false;
+  if(res.error && isPhoneDupError(res.error)){
+    phoneTaken = true;
+    const { phone: _taken, ...withoutPhone } = payload;
+    res = await sbClient.from('profiles').update(withoutPhone).eq('id', session.user.id);
+  }
+
+  if(res.error){ toast('Failed to save — ' + res.error.message); return; }
+  toast(phoneTaken
+    ? 'Profile saved — but that phone number is already linked to another account. Change or clear the Phone field to store it.'
+    : 'Profile saved successfully');
 
   /* keep the topbar in sync without a reload */
   try{

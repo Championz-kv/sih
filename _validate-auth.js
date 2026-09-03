@@ -223,18 +223,18 @@ const cp = fs.readFileSync(path.join(root, 'citizen-profile.html'), 'utf8');
 const cpChecks = [
   ['about field has id cAbout', /textarea class="input" id="cAbout"/.test(cp)],
   ['link inputs use .link-input (static + dynamic rows)', (cp.match(/class="input link-input"/g) || []).length === 2],
-  ['username/email readonly with notes', cp.includes('id="cUser" value="guest" readonly') && cp.includes('(username cannot be changed)')],
+  ['username field readonly with note (value set dynamically from profile/auth)', cp.includes('id="cUser" placeholder="your-username" readonly') && cp.includes('(username cannot be changed)') && cp.includes("$('#cUser').value = username;")],
   ['email editable and saved', !/id="cEmail"[^>]*readonly/.test(cp) && cp.includes("email: document.getElementById('cEmail').value.trim()")],
-  ['loads profile with full column list', cp.includes("select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited')")],
+  ['loads profile with full column list', cp.includes("select('id, username, full_name, email, phone, about, address, link_other, funding_verified, funding_awaited, problems_posted, cases_supported')")],
   ['falls back to select(*) when a column is missing', cp.includes("select('*')")],
   ['missing row → auto-created via upsert', cp.includes("upsert") && cp.includes("ignoreDuplicates: true")],
-  ['load errors surfaced via toast', cp.includes("toast('Could not load profile — ' +")],
+  ['DB failure falls back to cached profile kept in the form (silent, no placeholder data)', cp.includes('applyProfileToForm(cached, null)')],
   ['no session redirects to login', cp.includes("go('login.html')")],
   ['save uses sbClient update on profiles', /from\('profiles'\)[\s\S]{0,40}\.update\(payload\)/.test(cp)],
   ['uses link_other column (not link_others)', cp.includes('link_other') && !cp.includes('link_others')],
   ['links joined as newline string on save', cp.includes(".join('\\n')")],
   ['ss_profile synced after save', cp.includes("sessionStorage.getItem('ss_profile')")],
-  ['civic counts via head:true', (cp.match(/count:'exact', head:true/g) || []).length === 2],
+  ['civic counts read from the profile row (problems_posted, cases_supported), no head-count queries', cp.includes('problems_posted, cases_supported') && !/head\s*:\s*true/.test(cp)],
   ['page requires auth via body flag', cp.includes('data-auth="required"')],
 ];
 for(const [name, pass] of cpChecks){
