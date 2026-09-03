@@ -21,21 +21,31 @@
   <div class="grid grid-3" style="grid-template-columns:2fr 1fr; align-items:start;">
     <div class="card card-pad">
       <div class="field-row">
-        <div class="field"><label>Organization name</label><input class="input" value="MMMUT — Madan Mohan Malaviya University of Technology"></div>
+        <div class="field"><label>Organization name</label><input class="input" id="oName" placeholder="Registered organization name"></div>
         <div class="field"><label>Organization type</label>
-          <select class="input"><option>University / College</option><option>NGO</option><option>Startup</option><option>Industry</option><option>MSME</option><option>Research Institution</option><option>CSR Organization</option><option>Government Organization</option></select>
+          <select class="input" id="oType">
+            <option value="">— Select type —</option>
+            <option value="uni">University / College</option>
+            <option value="ngo">NGO</option>
+            <option value="startup">Startup</option>
+            <option value="industry">Industry</option>
+            <option value="msme">MSME</option>
+            <option value="research">Research Institution</option>
+            <option value="csr">CSR Organization</option>
+            <option value="govt">Government Organization</option>
+          </select>
         </div>
       </div>
-      <div class="field"><label>About</label><textarea class="input">A public technical university engaged in applied research, student innovation projects, and rural technology deployment across Uttar Pradesh.</textarea></div>
+      <div class="field"><label>About</label><textarea class="input" id="oAbout" placeholder="What the organization does, focus areas, past work…"></textarea></div>
       <div class="field">
         <label>Areas of expertise</label>
-        <div class="chip-select">
-          <span class="chip-opt sel">Civil & Structural Engineering</span>
-          <span class="chip-opt sel">Electrical and Electronics</span>
+        <div class="chip-select" id="expChips">
+          <span class="chip-opt">Civil & Structural Engineering</span>
+          <span class="chip-opt">Electrical and Electronics</span>
           <span class="chip-opt">Mechanical Engineering</span>
           <span class="chip-opt">Chemical Engineering</span>
-          <span class="chip-opt sel">IT / Computer Science & AI</span>
-          <span class="chip-opt sel">Electronics & Embedded Systems</span>
+          <span class="chip-opt">IT / Computer Science & AI</span>
+          <span class="chip-opt">Electronics & Embedded Systems</span>
           <span class="chip-opt">Environmental solutions</span>
           <span class="chip-opt">Agricultural technology</span>
           <span class="chip-opt">Biomedical technology</span>
@@ -49,31 +59,31 @@
           <span class="chip-opt">Education & Pedagogy</span>
           <span class="chip-opt">Psychology & Behavioral Science</span>
           <span class="chip-opt">Business, Entrepreneurship & Management</span>
-          <span class="chip-opt sel">Renewable Energy & Clean Technology</span>
-          <span class="chip-opt sel">Funding, Donation and Sponsorships</span>
+          <span class="chip-opt">Renewable Energy & Clean Technology</span>
+          <span class="chip-opt">Funding, Donation and Sponsorships</span>
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>State</label><select class="input"><option>Uttar Pradesh</option></select></div>
-        <div class="field"><label>District / City</label><input class="input" value="Gorakhpur"></div>
+        <div class="field"><label>State</label><select class="input" id="oState"><option value="">— Select state —</option><option value="Uttar Pradesh">Uttar Pradesh</option></select></div>
+        <div class="field"><label>District / City</label><input class="input" id="oDistrict" placeholder="District or city"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Phone</label><input class="input" type="tel" placeholder="+91 …"></div>
-        <div class="field"><label>Email</label><input class="input" type="email" placeholder="contact@university.ac.in"></div>
+        <div class="field"><label>Phone</label><input class="input" id="oPhone" type="tel" placeholder="+91 …"></div>
+        <div class="field"><label>Email</label><input class="input" id="oEmail" type="email" placeholder="contact@university.ac.in"></div>
       </div>
-      <div class="field"><label>Address</label><textarea class="input" placeholder="Campus address, block, district, State…"></textarea></div>
+      <div class="field"><label>Address</label><textarea class="input" id="oAddress" placeholder="Campus address, block, district, State…"></textarea></div>
       <div class="field"><label>Links <span style="font-weight:400; color:var(--text-faint);">(website, profiles)</span></label>
-        <div id="orgLinkRows"><div class="link-row"><input class="input" type="url" placeholder="https://university.ac.in"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+        <div id="orgLinkRows"><div class="link-row"><input class="input link-input" type="url" placeholder="https://university.ac.in"><button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
         <button class="btn btn-ghost btn-sm" type="button" onclick="addOrgLinkRow()">+ Add another link</button>
       </div>
       <div class="field">
         <label>Available resources</label>
-        <div class="chip-select">
-          <span class="chip-opt sel">Student Teams</span>
-          <span class="chip-opt sel">Faculty Mentors & Advisors</span>
-          <span class="chip-opt sel">Research Laboratories</span>
+        <div class="chip-select" id="resChips">
+          <span class="chip-opt">Student Teams</span>
+          <span class="chip-opt">Faculty Mentors & Advisors</span>
+          <span class="chip-opt">Research Laboratories</span>
           <span class="chip-opt">Prototyping & Fabrication Facilities</span>
-          <span class="chip-opt sel">Funding / Grants</span>
+          <span class="chip-opt">Funding / Grants</span>
           <span class="chip-opt">Field Survey Teams</span>
           <span class="chip-opt">Legal & Compliance Experts</span>
           <span class="chip-opt">Incubation & Startup Support</span>
@@ -88,10 +98,10 @@
       </div>
       <div class="field">
         <label>Collaboration preferences</label>
-        <div class="chip-select">
-          <span class="chip-opt sel">Student Project (academic credit)</span>
-          <span class="chip-opt sel">Research & Publication</span>
-          <span class="chip-opt sel">Prototype Development</span>
+        <div class="chip-select" id="prefChips">
+          <span class="chip-opt">Student Project (academic credit)</span>
+          <span class="chip-opt">Research & Publication</span>
+          <span class="chip-opt">Prototype Development</span>
           <span class="chip-opt">Technical Consultation</span>
           <span class="chip-opt">Policy Advisory</span>
           <span class="chip-opt">Pilot Program Deployment</span>
@@ -104,7 +114,7 @@
         </div>
       </div>
       <div class="row-flex" style="justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="toast('Profile saved (placeholder)')">Save profile</button>
+        <button class="btn btn-primary" id="orgSaveBtn" onclick="saveOrgProfile()">Save profile</button>
       </div>
     </div>
     <div>
@@ -125,7 +135,7 @@
       <div class="card card-pad" style="margin-top:16px;">
         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Funding footprint</h4>
         <div id="orgFunding"></div>
-        <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Verified contributions by MMMUT across the desk — the public record of who funded how much.</p>
+        <p style="font-size:11.5px; color:var(--text-faint); margin:12px 0 0;">Verified contributions by your organization across the desk — the public record of who funded how much.</p>
       </div>
     </div>
   </div>
@@ -141,7 +151,7 @@
 <script src="js/shell.js"></script>
 <script>
 function orgLinkRowHTML(){
-  return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+  return '<div class="link-row"><input class="input link-input" type="url" placeholder="https://…">' +
     '<button class="link-del" type="button" title="Remove this link" aria-label="Remove this link" onclick="removeOrgLinkRow(this)">' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
 }
@@ -153,32 +163,184 @@ function removeOrgLinkRow(btn){
 }
 </script>
 
-<script>document.addEventListener('DOMContentLoaded', () => { renderShell(); setDonorBadge(); });</script>
+<script>document.addEventListener('DOMContentLoaded', () => {
+  /* Make chips selectable first so a first-time org can fill the form
+     even while the profile is still loading. */
+  wireOrgChips();
+  loadOrgProfile();
+  renderShell();
+});</script>
 <script>
-/* Donor is non-togglable: it reflects whether MMMUT has made a verified donation */
-function setDonorBadge(){
-  const el = document.getElementById('orgDonorBadge');
-  if(!el) return;
-  const donated = orgDonated('MMMUT') > 0;
-  el.textContent = donated ? 'Yes ✓' : 'No';
-  el.style.color = donated ? 'var(--ledger)' : 'var(--text-faint)';
+/* ---- Org profile ↔ Supabase (profiles table) ----
+   Loads the signed-in org_member's row — including the org columns
+   org_type / expertise / resources / preferences — and saves edits back.
+   Same pattern as citizen-profile.html: cache-first prefill, fresh DB
+   copy, row auto-create if missing, no fake default data anywhere. */
+
+/* Chips toggle on click (same interaction as the problem form tags). */
+function wireOrgChips(){
+  ['expChips','resChips','prefChips'].forEach(id => {
+    const wrap = document.getElementById(id);
+    if(!wrap) return;
+    wrap.addEventListener('click', e => {
+      const chip = e.target.closest('.chip-opt');
+      if(chip) chip.classList.toggle('sel');
+    });
+  });
+}
+
+/* Selected chip labels → comma-separated string for the DB column */
+function orgChipTexts(id){
+  return [...document.querySelectorAll('#' + id + ' .chip-opt.sel')]
+    .map(c => c.textContent.trim()).join(', ');
+}
+
+/* Comma-separated DB value → select the matching chips, clear the rest */
+function applyOrgChips(id, csv){
+  const wanted = new Set((csv || '').split(',').map(s => s.trim()).filter(Boolean));
+  document.querySelectorAll('#' + id + ' .chip-opt').forEach(chip => {
+    chip.classList.toggle('sel', wanted.has(chip.textContent.trim()));
+  });
+}
+
+/* Select helper: set the saved value, injecting it as an option if the
+   hardcoded option list doesn't contain it (never lose saved data). */
+function setOrgSelect(sel, value){
+  if(!sel) return;
+  if(!value){ sel.value = ''; return; }
+  if(![...sel.options].some(o => o.value === value)){
+    const opt = document.createElement('option');
+    opt.value = value; opt.textContent = value;
+    sel.appendChild(opt);
+  }
+  sel.value = value;
+}
+
+/* Newline-separated link_other → one filled row per non-empty link */
+function fillOrgLinkRows(linkOthers){
+  const wrap = document.getElementById('orgLinkRows');
+  wrap.innerHTML = '';
+  const list = (linkOthers || '').split('\n').map(s => s.trim()).filter(Boolean);
+  (list.length ? list : ['']).forEach(v => {
+    wrap.insertAdjacentHTML('beforeend', orgLinkRowHTML());
+    wrap.lastElementChild.querySelector('input').value = v;
+  });
+}
+
+/* Apply a profile object to every field of the form. Used for both the
+   instant cached prefill and the fresh database copy. */
+function applyOrgProfileToForm(p, user){
+  const md = (user && user.user_metadata) || {};
+  document.getElementById('oName').value = (p && (p.full_name || '').trim()) || md.full_name || md.name || '';
+  setOrgSelect(document.getElementById('oType'), (p && p.org_type) || '');
+  document.getElementById('oAbout').value = (p && p.about) || '';
+  setOrgSelect(document.getElementById('oState'), (p && p.state) || '');
+  document.getElementById('oDistrict').value = (p && p.district) || '';
+  document.getElementById('oPhone').value = (p && p.phone) || '';
+  document.getElementById('oEmail').value = (p && p.email) || (user && user.email) || '';
+  document.getElementById('oAddress').value = (p && p.address) || '';
+  fillOrgLinkRows((p && p.link_other) || '');
+  applyOrgChips('expChips', p && p.expertise);
+  applyOrgChips('resChips', p && p.resources);
+  applyOrgChips('prefChips', p && p.preferences);
+}
+
+async function currentOrgSession(){
+  const { data } = await sbClient.auth.getSession();
+  return (data && data.session) || null;
+}
+
+async function loadOrgProfile(){
+  /* Prefill from the cached profile instantly — it was saved into
+     sessionStorage by shell.js from the profiles table at login, so the
+     form never sits empty during the DB round-trip. */
+  let cached = getSessionProfile();
+  const session = await Promise.race([
+    currentOrgSession(),
+    new Promise(res => setTimeout(() => res(null), 4000))
+  ]);
+  if(!session || !session.user){ go('login.html'); return; }
+  const user = session.user;
+  if(cached && cached.id !== user.id) cached = null;
+
+  try{
+    if(cached) applyOrgProfileToForm(cached, user);
+
+    /* Fresh copy straight from the database. */
+    let profile = cached;
+    const full = await sbClient.from('profiles')
+      .select('id, username, full_name, email, phone, about, address, link_other, role, org_type, expertise, resources, preferences, state, district, funding_verified, funding_awaited')
+      .eq('id', user.id)
+      .maybeSingle();
+    if(full.error){
+      console.warn('[org-profile] full select failed, falling back to select(*) —', full.error.message);
+      const star = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if(star.error) throw new Error(star.error.message);
+      profile = star.data;
+    } else {
+      profile = full.data;
+    }
+
+    /* No row yet (signed up before the trigger existed) → create it. */
+    if(!profile){
+      const md = user.user_metadata || {};
+      const local = (user.email || '').split('@')[0] || '';
+      await sbClient.from('profiles').upsert(
+        { id: user.id, username: local.replace(/^phone_91/, ''), full_name: md.full_name || md.name || '', email: user.email || '', role: md.role || 'org_member' },
+        { onConflict: 'id', ignoreDuplicates: true }
+      );
+      const again = await sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      profile = again.data || null;
+    }
+
+    /* Absolute last resort — still per-user auth data, never a fake default.
+       The form stays functional and Save will create the row. */
+    if(!profile){
+      const md = user.user_metadata || {};
+      profile = {
+        id: user.id,
+        username: ((user.email || '').split('@')[0]).replace(/^phone_91/, ''),
+        full_name: md.full_name || md.name || '',
+        email: user.email || '',
+        role: md.role || 'org_member'
+      };
+    }
+
+    saveSessionProfile(profile);
+    applyOrgProfileToForm(profile, user);
+    try{ renderOrgFunding(profile); }catch(e){ console.warn('[org-profile] funding card failed:', e); }
+  }catch(e){
+    console.error('[org-profile] load error:', e);
+    /* Even a DB failure leaves the cached profile in the form. */
+    if(cached) applyOrgProfileToForm(cached, null);
+  }
 }
 </script>
 <script>
-/* Funding footprint for MMMUT (this profile's organization) */
-(function(){
-  const ORG = 'MMMUT';
-  const rows = [];
-  FUND_REQUESTS.forEach(f => f.pledges.forEach(p => {
-    if(p.by !== ORG) return;
-    rows.push({ fr:f, p:p });
-  }));
-  const received = rows.filter(r => r.p.status === 'received').reduce((s,r) => s + r.p.amount, 0);
-  const pledged  = rows.filter(r => r.p.status === 'pledged').reduce((s,r) => s + r.p.amount, 0);
+/* Funding footprint — amounts come from the profile's own funding columns
+   (the same ledger citizen profiles use). The demo pledge list only lights
+   up for the bundled sample org; real orgs start empty until the funding
+   module is connected. The donor badge is derived, not user-togglable. */
+function renderOrgFunding(p){
+  const verified = p.funding_verified ?? 0;
+  const awaited  = p.funding_awaited ?? 0;
+  let rows = [];
+  try{
+    const short = (p.full_name || '').split('—')[0].split(' - ')[0].trim();
+    FUND_REQUESTS.forEach(f => f.pledges.forEach(pl => {
+      if(pl.by === short) rows.push({ fr:f, p:pl });
+    }));
+  }catch(e){}
+  const donated = verified > 0 || rows.some(r => r.p.status === 'received');
+  const badge = document.getElementById('orgDonorBadge');
+  if(badge){
+    badge.textContent = donated ? 'Yes ✓' : 'No';
+    badge.style.color = donated ? 'var(--ledger)' : 'var(--text-faint)';
+  }
   document.getElementById('orgFunding').innerHTML = `
     <div class="grid grid-2" style="margin-bottom:12px;">
-      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(received)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
-      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(pledged)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ink); display:block;">${inr(verified)}</span><span style="font-size:11px; color:var(--text-faint);">Verified donations</span></div>
+      <div><span class="mono" style="font-size:19px; font-weight:600; color:var(--ochre-2); display:block;">${inr(awaited)}</span><span style="font-size:11px; color:var(--text-faint);">Awaiting verification</span></div>
     </div>
     ${rows.length ? rows.map(({fr, p}) => `
       <div class="person-row">
@@ -187,7 +349,64 @@ function setDonorBadge(){
         ${p.status === 'received' ? '<span class="stamp stamp-validated">Received</span>' : '<span class="stamp stamp-pending">Pledged</span>'}
       </div>`).join('')
     : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No contributions recorded yet.</p>'}`;
-})();
+}
+
+/* Save — collects every field (incl. the three comma-separated chip
+   columns) and updates the signed-in org's own profiles row. */
+async function saveOrgProfile(){
+  const session = await currentOrgSession();
+  if(!session || !session.user){ go('login.html'); return; }
+
+  const payload = {
+    full_name: document.getElementById('oName').value.trim(),
+    org_type: document.getElementById('oType').value || null,
+    about: document.getElementById('oAbout').value.trim(),
+    state: document.getElementById('oState').value || null,
+    district: document.getElementById('oDistrict').value.trim(),
+    phone: document.getElementById('oPhone').value.trim(),
+    email: document.getElementById('oEmail').value.trim(),
+    address: document.getElementById('oAddress').value.trim(),
+    link_other: [...document.querySelectorAll('#orgLinkRows .link-input')]
+      .map(i => i.value.trim()).filter(Boolean).join('\n'),
+    expertise: orgChipTexts('expChips'),
+    resources: orgChipTexts('resChips'),
+    preferences: orgChipTexts('prefChips')
+  };
+  if(!payload.full_name){ toast('Organization name is required'); return; }
+
+  const btn = document.getElementById('orgSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  const upd = await sbClient.from('profiles')
+    .update(payload)
+    .eq('id', session.user.id)
+    .select('id');
+  let error = upd.error;
+
+  /* Row missing (signed up before the trigger existed) → create it with
+     everything the form has, so nothing the org typed is lost. */
+  if(!error && (!upd.data || !upd.data.length)){
+    const md = session.user.user_metadata || {};
+    const local = (session.user.email || '').split('@')[0] || '';
+    const ins = await sbClient.from('profiles').upsert(
+      Object.assign({ id: session.user.id, username: local.replace(/^phone_91/, ''), role: md.role || 'org_member' }, payload),
+      { onConflict: 'id' }
+    );
+    error = ins.error;
+  }
+
+  if(btn){ btn.disabled = false; btn.textContent = 'Save profile'; }
+  if(error){ toast('Failed to save — ' + error.message); return; }
+  toast('Profile saved successfully');
+
+  /* keep the topbar in sync without a reload */
+  try{
+    const stored = JSON.parse(sessionStorage.getItem('ss_profile') || '{}');
+    Object.assign(stored, payload);
+    sessionStorage.setItem('ss_profile', JSON.stringify(stored));
+    applyRoleUI(currentRole(), stored);
+  }catch(e){}
+}
 </script>
 </body>
 </html>
