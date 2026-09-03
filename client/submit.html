@@ -158,7 +158,6 @@
         <div class="field"><label>Phone <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="tel" id="fPhone" placeholder="+91 …"></div>
       </div>
 
-      <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkAnon"><span>Post anonymously — don't show my name on the public page.</span></label>
       <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkTerms"><span>I agree to the <a href="#" onclick="return false;">terms of use</a> and community code of conduct.</span></label>
       <label class="check-row" style="margin:6px 0 16px;"><input type="checkbox" id="chkConsent"><span>I confirm the information provided is accurate to the best of my knowledge, and I consent to it being published publicly after review.</span></label>
 
@@ -172,6 +171,21 @@
 
 <div id="modal-mount"></div>
 <div class="toast-wrap" id="toastWrap"></div>
+
+<!-- AI reviewing overlay — shown while Sahayak categorizes; cancel returns to step 1 -->
+<div class="modal-overlay" id="aiReviewOverlay" style="position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center;">
+  <div class="modal" style="max-width:440px; text-align:center;">
+    <div class="modal-head" style="justify-content:center;"><h3 style="font-size:18px;">✦ Sahayak is reviewing</h3></div>
+    <div class="modal-body" style="padding:6px 8px 4px;">
+      <p style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
+      <p class="hint" style="margin-top:10px;">This usually takes a few seconds.</p>
+    </div>
+    <div class="modal-foot" style="justify-content:center; gap:10px;">
+      <button class="btn btn-ghost" type="button" onclick="cancelAiReviewBack()">← Back</button>
+      <button class="btn btn-outline" type="button" onclick="cancelAiReviewStay()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/india-districts-fallback.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -187,6 +201,7 @@ const val = id => (document.getElementById(id)?.value || '').trim();
 let step = 1;
 let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
 let aiVerified = false; // do the user's current choices match the AI?
+let aiCancelled = false; // user pressed Cancel on the AI-review overlay
 let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
 
 function goStep(n){
@@ -266,11 +281,33 @@ function setSahayaLoading(on){
     pane.style.opacity = on ? '0.7' : '';
     pane.style.pointerEvents = on ? 'none' : '';
   }
+  /* Popup overlay with bigger text + Cancel */
+  const ov = document.getElementById('aiReviewOverlay');
+  if(ov) ov.style.display = on ? 'flex' : 'none';
+}
+
+/* Cancel the AI review — release the guard so the user can retry. */
+function stopAiReview(){
+  aiCancelled = true;
+  sahayaBusy = false;              /* release the guard so Next works immediately */
+  setSahayaLoading(false);
+}
+/* ← Back — stop AI and return to form 1. */
+function cancelAiReviewBack(){
+  stopAiReview();
+  goStep(1);
+}
+/* Cancel — stop AI but stay on form 2 with the "will need review" fallback so
+   the user can keep editing manually. */
+function cancelAiReviewStay(){
+  stopAiReview();
+  setNeedsReview();
 }
 
 async function runAiCategorize(){
   if(sahayaBusy) return;
   sahayaBusy = true;
+  aiCancelled = false;
   setSahayaLoading(true);
 
   const title = val('fTitle');
@@ -286,20 +323,23 @@ async function runAiCategorize(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, description, district, state, affected_count })
     });
+    if(aiCancelled) return;              /* user cancelled — ignore late response */
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const result = await res.json();
     if(result && result.error) throw new Error(result.error);
 
     applyAiResult(result);
+    if(aiCancelled) return;              /* user cancelled while applying */
     setAiVerified();
   }catch(err){
+    if(aiCancelled) return;              /* cancelled — no error toast */
     console.error('[sahayak] categorize failed:', err);
     toast('Sahayak could not categorize — please select manually');
     setNeedsReview();
     /* Step 2 is already active — the user can pick categories by hand. */
   }finally{
-    setSahayaLoading(false);
     sahayaBusy = false;
+    if(!aiCancelled) setSahayaLoading(false);   /* don't pop the overlay if user cancelled */
   }
 }
 
@@ -375,6 +415,7 @@ function postFinal(){
   postBtn.disabled = true;
   (async () => {
     try{
+      await uploadEvidenceFiles();        /* evidence → evidences bucket */
       const payload = collectFormData();
       /* AI-verified cases post straight through; anything else needs review. */
       payload.problem_state = (aiVerified === true) ? 'reviewed' : 'unreviewed';
@@ -382,8 +423,13 @@ function postFinal(){
       const draftId = sessionStorage.getItem('ss_draft_id');
       let saved;
       if(draftId){
+        /* if the draft row was deleted meanwhile, submit as a fresh problem */
         saved = await sbClient.from('problems')
-          .update(payload).eq('id', draftId).select('case_no').single();
+          .update(payload).eq('id', draftId).select('case_no').maybeSingle();
+        if(!saved.data){
+          saved = await sbClient.from('problems')
+            .insert(payload).select('case_no').single();
+        }
       } else {
         saved = await sbClient.from('problems')
           .insert(payload).select('case_no').single();
@@ -442,8 +488,8 @@ function collectFormData(){
     block:          val('fBlock'),
     location_text:  val('fLocation'),
     affected_count: (!isNaN(aff) ? aff : null),
-    media_urls: [...document.querySelectorAll('#linkRows .link-row input')]
-                  .map(i => i.value.trim()).filter(Boolean),
+    media_urls: [...evidenceUrls, ...[...document.querySelectorAll('#linkRows .link-row input')]
+                  .map(i => i.value.trim()).filter(Boolean)],
     categories: [...document.querySelectorAll('#categoryGroups .chip-opt.sel')]
                   .map(el => el.textContent.trim()),
     hashtags:    val('fTags'),
@@ -452,38 +498,132 @@ function collectFormData(){
     ai_reviewed: aiVerified === true,
     contact_email: val('fEmail'),
     contact_phone: val('fPhone'),
-    is_anonymous: !!(document.getElementById('chkAnon') && document.getElementById('chkAnon').checked),
     submitted_by: currentUserId
   };
 }
 
-/* ---------- evidence attachments — click opens the PC file picker (drag & drop too) ---------- */
-let evidenceFiles = [];
+/* ---------- evidence attachments — click opens the PC file picker (drag & drop too) ----------
+   Files upload to the `evidences` storage bucket whenever the form is saved
+   (draft or final submit), and the public URLs are stored in media_urls. */
+let evidenceFiles = [];   // File objects chosen but not yet uploaded
+let evidenceUrls = [];    // public URLs already in the evidences bucket
+
+const EVIDENCE_BUCKET = 'evidences';
+const EVIDENCE_MAX_BYTES = 50 * 1024 * 1024;   /* Supabase per-file limit */
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function isEvidenceUrl(u){ return String(u).indexOf('/object/public/evidences/') >= 0; }
+function evidenceFileName(url){
+  try{ return decodeURIComponent(String(url).split('/').pop() || ''); }
+  catch(e){ return String(url).split('/').pop() || ''; }
+}
+function fmtBytes(n){
+  if(!n) return '';
+  if(n >= 1024*1024) return (n/1024/1024).toFixed(1) + ' MB';
+  return Math.max(1, Math.round(n/1024)) + ' KB';
+}
+
 function renderEvidence(){
   const wrap = document.getElementById('evidenceList');
-  wrap.innerHTML = evidenceFiles.map((f, i) => `
+  const items = [
+    ...evidenceUrls.map((u, i) => ({ kind:'url',  i, name: evidenceFileName(u), meta: 'in evidences bucket' })),
+    ...evidenceFiles.map((f, i) => ({ kind:'file', i, name: f.name, meta: fmtBytes(f.size) })),
+  ];
+  wrap.innerHTML = items.map(it => `
     <div class="link-row" style="margin-bottom:0;">
       <div class="person-row" style="flex:1; min-width:0; padding:0;">
         <div class="av" style="border-radius:6px;">📄</div>
-        <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(f.name)}</b><span>${f.size ? (f.size/1024).toFixed(0) + ' KB' : ''}</span></div>
+        <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(it.name)}</b><span>${esc(it.meta)}</span></div>
       </div>
-      <button class="link-del" type="button" title="Remove this document" onclick="removeEvidence(${i})">
+      <button class="link-del" type="button" title="Remove this document" onclick="removeEvidence('${it.kind}', ${it.i})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
         </svg>
       </button>
     </div>`).join('');
 }
-function removeEvidence(i){
-  evidenceFiles.splice(i, 1);
+function removeEvidence(kind, i){
+  if(kind === 'url') evidenceUrls.splice(i, 1);
+  else evidenceFiles.splice(i, 1);
   renderEvidence();
 }
 function handleEvidenceFiles(fileList){
   const arr = Array.from(fileList || []);
   if(!arr.length) return;
-  evidenceFiles = evidenceFiles.concat(arr);
+  let added = 0;
+  arr.forEach(f => {
+    /* already attached (same name+size pending, or a bucket URL with the same
+       file name) → skip silently: don't add it, don't show an error */
+    if(evidenceFiles.some(x => x.name === f.name && x.size === f.size)) return;
+    if(evidenceUrls.some(u => evidenceFileName(u) === f.name)) return;
+    if(f.size > EVIDENCE_MAX_BYTES){ toast(f.name + ' is larger than 50 MB — skipped'); return; }
+    evidenceFiles.push(f); added++;
+  });
   renderEvidence();
-  toast(arr.length + ' document' + (arr.length === 1 ? '' : 's') + ' attached');
+  if(added) toast(added + ' document' + (added === 1 ? '' : 's') + ' attached');
+}
+
+/* ---- evidences bucket ---- */
+function safeEvidenceName(name){
+  const base = String(name).replace(/^.*[\\/]/, '');   /* strip any folder path */
+  return base.replace(/[^\w.\-()]+/g, '_').slice(-120);/* url-safe, keep extension */
+}
+/* true if `path` already exists in the evidences bucket — never throws,
+   never surfaces an error (a blind listing just means "treat as new"). */
+async function evidenceFileExists(path){
+  try{
+    const parts = String(path).split('/');
+    const name = parts.pop();
+    const folder = parts.join('/');
+    const { data, error } = await sbClient.storage.from(EVIDENCE_BUCKET)
+      .list(folder, { limit: 1, search: name });
+    if(error) return false;
+    return (data || []).some(f => f.name === name);
+  }catch(e){ return false; }
+}
+function evidencePublicUrl(path){
+  try{
+    const { data } = sbClient.storage.from(EVIDENCE_BUCKET).getPublicUrl(path);
+    return (data && data.publicUrl) || null;
+  }catch(e){ return null; }
+}
+/* Upload one file → public URL. If it already exists in the bucket, reuse the
+   existing object silently (no error shown, no duplicate upload). */
+async function uploadEvidenceFile(file){
+  if(!currentUserId || !file) return null;
+  const path = currentUserId + '/' + safeEvidenceName(file.name);
+  try{
+    if(await evidenceFileExists(path)) return evidencePublicUrl(path);
+    const { error } = await sbClient.storage.from(EVIDENCE_BUCKET)
+      .upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if(error){
+      /* upload raced with another tab or the listing missed it — re-check and
+         reuse the existing object silently */
+      if(await evidenceFileExists(path)) return evidencePublicUrl(path);
+      console.error('[submit] evidence upload failed:', error.message);
+      toast('Could not upload ' + file.name + ' — ' + error.message);
+      return null;
+    }
+    return evidencePublicUrl(path);
+  }catch(e){
+    console.error('[submit] evidence upload failed:', e);
+    return null;
+  }
+}
+/* Upload every pending file; successful ones move into evidenceUrls. */
+async function uploadEvidenceFiles(){
+  if(!evidenceFiles.length) return;
+  const pending = evidenceFiles.slice();
+  for(const f of pending){
+    const url = await uploadEvidenceFile(f);
+    if(url){
+      evidenceUrls.push(url);
+      evidenceFiles.splice(evidenceFiles.indexOf(f), 1);
+      renderEvidence();
+    }
+  }
 }
 
 /* ---------- step 1 helpers ---------- */
@@ -510,46 +650,40 @@ function clearStep1(){
   ['fTitle','fDesc','fBlock','fAffected','fTags','fLocation'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.querySelectorAll('#linkRows .link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
   evidenceFiles = [];
+  evidenceUrls = [];
   renderEvidence();
   toast('Form cleared');
 }
-/* "Continue with draft" — pull the user's most recent draft row and reload
-   the page so the DOMContentLoaded resume logic pre-fills everything. */
-async function continueDraft(){
-  if(!currentUserId){ go('login.html'); return; }
-  try{
-    const { data, error } = await sbClient.from('problems')
-      .select('id')
-      .eq('submitted_by', currentUserId)
-      .eq('problem_state', 'draft')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if(error) throw error;
-    if(!data){ toast('No saved draft found — start a new report below.'); return; }
-    sessionStorage.setItem('ss_draft_id', data.id);
-    location.reload();
-  }catch(err){
-    console.error('[submit] continueDraft failed:', err);
-    toast('Could not load draft — ' + err.message);
-  }
+/* "Continue with draft" — drafts are now managed from the My Problems page,
+   where each draft row has its own Continue action. */
+function continueDraft(){
+  go('my-problems.html');
 }
 /* Save the current wizard state as a draft row in the problems table. */
 async function saveDraft(){
   if(!currentUserId){ go('login.html'); return; }
   try{
+    await uploadEvidenceFiles();          /* evidence → evidences bucket */
     const payload = collectFormData();
     payload.problem_state = 'draft';
 
     const draftId = sessionStorage.getItem('ss_draft_id');
     if(draftId){
-      const { error } = await sbClient.from('problems').update(payload).eq('id', draftId);
-      if(error) throw error;
+      /* maybeSingle: if the draft was deleted from My Problems in another tab,
+         fall back to inserting a fresh draft so nothing is lost */
+      const res = await sbClient.from('problems')
+        .update(payload).eq('id', draftId).select('id').maybeSingle();
+      if(res.error) throw res.error;
+      if(!res.data){
+        const ins = await sbClient.from('problems').insert(payload).select('id').single();
+        if(ins.error) throw ins.error;
+        sessionStorage.setItem('ss_draft_id', ins.data.id);
+      }
     } else {
-      const { data, error } = await sbClient.from('problems')
+      const ins = await sbClient.from('problems')
         .insert(payload).select('id').single();
-      if(error) throw error;
-      sessionStorage.setItem('ss_draft_id', data.id);
+      if(ins.error) throw ins.error;
+      sessionStorage.setItem('ss_draft_id', ins.data.id);
     }
     toast('Draft saved');
   }catch(err){
@@ -573,16 +707,19 @@ function prefillFromDraft(d, applyLocation){
   }
   document.getElementById('fEmail').value = d.contact_email || '';
   document.getElementById('fPhone').value = d.contact_phone || '';
-  const anon = document.getElementById('chkAnon');
-  if(anon) anon.checked = !!d.is_anonymous;
 
-  /* links → media_urls */
+  /* media_urls → evidence-bucket URLs stay attached to the form; other links
+     go back into the link rows */
   const rowsWrap = document.getElementById('linkRows');
+  const media = Array.isArray(d.media_urls) ? d.media_urls : [];
+  evidenceUrls = media.filter(isEvidenceUrl);
+  const linkUrls = media.filter(u => !isEvidenceUrl(u));
   rowsWrap.querySelectorAll('.link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
-  (Array.isArray(d.media_urls) ? d.media_urls : []).filter(Boolean).forEach((u, i) => {
+  linkUrls.filter(Boolean).forEach((u, i) => {
     if(i === 0){ rowsWrap.querySelector('.link-row input').value = u; }
     else { addLinkRow(); const rows = rowsWrap.querySelectorAll('.link-row'); rows[rows.length-1].querySelector('input').value = u; }
   });
+  renderEvidence();
 
   /* state / district (dropdowns must already be populated) */
   applyLocation(d.state, d.district);
@@ -764,10 +901,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
     .catch(() => {});
 
-  /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ---- */
+  /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ----
+     The marker is kept (not cleared) so further edits keep updating the same
+     draft row; it is cleared only when the problem is finally submitted. */
   const draftId = sessionStorage.getItem('ss_draft_id');
   if(draftId){
-    sessionStorage.removeItem('ss_draft_id');
     try{
       const { data: draft, error } = await sbClient.from('problems')
         .select('*').eq('id', draftId).maybeSingle();

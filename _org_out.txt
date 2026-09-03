@@ -1,0 +1,16 @@
+<anonymous_script>:3
+var fs=require("fs");window.INDIA_DISTRICTS_FALLBACK=null;eval(fs.readFileSync("client/js/india-districts-fallback.js","utf8"));return window.INDIA_DISTRICTS_FALLBACK;
+       ^
+
+ReferenceError: require is not defined
+    at eval (eval at <anonymous> (c:\Users\kv\programs\solvesamaj\_chk-org2.js:82:16), <anonymous>:3:8)
+    at Object.<anonymous> (c:\Users\kv\programs\solvesamaj\_chk-org2.js:85:46)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.0

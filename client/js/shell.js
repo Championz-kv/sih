@@ -20,7 +20,7 @@ const NAV = [
   { group:'citizen', label:'Problem Side', items:[
     { page:'citizenprofile', href:'citizen-profile.html', label:'My Profile', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.1-6 8-6s8 2.7 8 6"/>' },
     { page:'submit',      href:'submit.html', label:'Report a Problem', icon:'<path d="M12 5v14M5 12h14"/>' },
-    { page:'myproblems',  href:'my-problems.html', label:'My Problems', icon:'<path d="M9 12h6M9 16h6M9 8h6"/><rect x="4" y="4" width="16" height="16" rx="2"/>', count:PROBLEMS.slice(0,5).length },
+    { page:'myproblems',  href:'my-problems.html', label:'My Problems', icon:'<path d="M9 12h6M9 16h6M9 8h6"/><rect x="4" y="4" width="16" height="16" rx="2"/>', count:null },
   ]},
   { group:'org', label:'Solver Side', items:[
     { page:'orgprofile', href:'org-profile.html', label:'Organization Profile', icon:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
@@ -498,6 +498,36 @@ function closeSidebar(){
 }
 
 /* ---------------- boot ---------------- */
+/* Fetch the live "My Problems" count for the signed-in user and update the
+   sidebar pill in place. count:null in NAV means "no static badge"; the real
+   number comes from DB. */
+async function refreshProblemCount(){
+  try{
+    const item = document.querySelector('.nav-item[data-page="myproblems"]');
+    if(!item) return;
+    let count = null;
+    if(typeof sbClient !== 'undefined' && sbClient){
+      const { data: sess } = await sbClient.auth.getSession();
+      const user = sess && sess.session && sess.session.user;
+      if(user){
+        const { count: c, error } = await sbClient.from('problems')
+          .select('id', { count: 'exact', head: true })
+          .eq('submitted_by', user.id);
+        if(error) throw error;
+        count = c;
+      }
+    }
+    let pill = item.querySelector('.count');
+    if(count != null){
+      if(!pill){ pill = document.createElement('span'); pill.className = 'count'; item.appendChild(pill); }
+      pill.textContent = count;
+    }else if(pill){
+      pill.remove();
+    }
+  }catch(e){
+    console.warn('[shell] problem count refresh failed:', e && e.message || e);
+  }
+}
 /* Floating Sahayak widget — auto-mounted on every page except chatbot.html
    (which runs the full-page chat over the same shared transcript). */
 if((document.body.dataset.page || '') !== 'chatbot'){
@@ -530,6 +560,8 @@ async function renderShell(){
 
   applyRoleUI(currentRole(), profile);
   wireGlobalSearch();
+  /* Real "My Problems" badge from Supabase (no more fake 5). */
+  refreshProblemCount();
 
   const menuToggle = document.getElementById('menuToggle');
   if(menuToggle) menuToggle.addEventListener('click', () => {

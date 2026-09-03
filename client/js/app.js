@@ -145,7 +145,7 @@ function problemCardHTML(p){
     </div>
     <div class="pcard-foot">
       <span class="loc">${sevDotHTML(p.severity)}&nbsp;${p.district} · ${p.block}</span>
-      <span class="pcard-stats"><span>👤 ${p.affected.toLocaleString()}</span><span>♥ ${p.supporters}</span></span>
+      <span class="pcard-stats"><span>👤 ${(p.supporters || 0).toLocaleString()}</span></span>
     </div>
   </div>`;
 }
@@ -205,8 +205,14 @@ function closeModal(id){ const m = document.getElementById(id); if(m) m.classLis
 document.addEventListener('click', (e) => {
   if(e.target.classList && e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
+/* Single generic chip toggle for the whole site (org profile chips, submit
+   page previews, etc.). Uses closest() so it keeps working even if a chip
+   later contains nested elements. Pages must NOT register a second
+   document-level .chip-opt listener — two handlers would toggle .sel twice
+   per click, so chips would appear unresponsive (see org-profile.html). */
 document.addEventListener('click', (e) => {
-  if(e.target.classList && e.target.classList.contains('chip-opt')) e.target.classList.toggle('sel');
+  const chip = e.target && e.target.closest ? e.target.closest('.chip-opt') : null;
+  if(chip) chip.classList.toggle('sel');
 });
 
 /* ---------------- search / sort / filter (used on explore & directory pages) ---------------- */
@@ -246,4 +252,99 @@ function wireGlobalSearch(){
   input.addEventListener('keydown', (e) => {
     if(e.key === 'Enter'){ go('explore.html', { q: input.value }); }
   });
+}
+
+/* ---------------- live supporter counts + per-account support toggle --------
+   problems.support holds each case's supporter count. WHO backed it lives in
+   profiles.supported_problems (bigint[] of problem ids), and profiles.
+   cases_supported is that account's total. The Support button on problem.html
+   is a two-way toggle — see toggleSupport() below. There is no per-session /
+   localStorage lock anymore: the profile row IS the source of truth, so the
+   state follows the account (across devices and refreshes) and a supporter
+   can never double-count a case.
+
+   Demo data in data.js uses the property name `supporters`, so the count
+   helpers below read the DB column and overlay the value onto the PROBLEMS
+   list — every renderer keeps using p.supporters and card hearts / the detail
+   page stay in sync with the DB (single source of truth).
+
+   Every helper degrades silently to the demo values when Supabase is
+   unreachable (offline / CDN blocked), matching shell.js behaviour. */
+function supportApiReady(){ return typeof sbClient !== 'undefined' && !!sbClient; }
+/* Coerce a DB number (Postgres may hand back a string) to a safe integer. */
+function num(v){ const n = (typeof v === 'number') ? v : parseInt(v, 10); return isNaN(n) ? 0 : n; }
+
+/* Every problem row the visitor can read: { id -> support }. null on failure. */
+async function fetchSupportCounts(){
+  if(!supportApiReady()) return null;
+  try{
+    const { data, error } = await sbClient.from('problems').select('id, support');
+    if(error) throw error;
+    const map = {};
+    (data || []).forEach(r => { map[r.id] = num(r.support); });
+    return map;
+  }catch(e){
+    console.warn('[support] count fetch failed:', (e && e.message) || e);
+    return null;
+  }
+}
+
+/* Overlay DB counts onto the demo PROBLEMS list, in place. Returns how many
+   entries were updated (0 → nothing changed, callers skip the re-render). */
+function applySupportCounts(map){
+  if(!map || typeof PROBLEMS === 'undefined') return 0;
+  let n = 0;
+  PROBLEMS.forEach(p => {
+    if(map[p.id] !== undefined){ p.supporters = map[p.id]; n++; }
+  });
+  return n;
+}
+
+/* One Support-button click — a two-way toggle, applied live to the DB:
+     • not backed yet   → problems.support +1, profiles.cases_supported +1,
+                          and this problem id appended to supported_problems
+     • already backed   → both counters −1 (never below 0) and the id removed
+                          from supported_problems.
+   Reads the two current rows, writes both, resolves with the NEW state so
+   the caller can repaint its button and counts. Throws when either write
+   fails or either row is missing. */
+async function toggleSupport(problemId, userId){
+  if(!supportApiReady()) throw new Error('Supabase unavailable');
+  const pid = Number(problemId);
+  const [probRes, profRes] = await Promise.all([
+    sbClient.from('problems').select('id, support').eq('id', pid).maybeSingle(),
+    sbClient.from('profiles').select('id, cases_supported, supported_problems').eq('id', userId).maybeSingle()
+  ]);
+  if(probRes.error) throw probRes.error;
+  if(!probRes.data) throw new Error('problems has no row for id ' + pid);
+  if(profRes.error) throw profRes.error;
+  if(!profRes.data) throw new Error('No profile row for your account — sign in or save your profile first');
+
+  const prob = probRes.data, prof = profRes.data;
+  const backed = new Set(Array.isArray(prof.supported_problems) ? prof.supported_problems.map(x => Number(x)) : []);
+  const wasBacked = backed.has(pid);
+
+  const support = wasBacked
+    ? Math.max(0, num(prob.support) - 1)
+    : num(prob.support) + 1;
+  const cases_supported = wasBacked
+    ? Math.max(0, num(prof.cases_supported) - 1)
+    : num(prof.cases_supported) + 1;
+  if(wasBacked) backed.delete(pid); else backed.add(pid);
+  const supported_problems = Array.from(backed);
+
+  const [updProb, updProf] = await Promise.all([
+    sbClient.from('problems').update({ support }).eq('id', pid).select('id, support'),
+    sbClient.from('profiles').update({ cases_supported, supported_problems }).eq('id', userId).select('id')
+  ]);
+  if(updProb.error) throw updProb.error;
+  if(!updProb.data || !updProb.data.length) throw new Error('support update matched no problems row (RLS policy?)');
+  if(updProf.error) throw updProf.error;
+
+  return {
+    supported: !wasBacked,
+    support: num(updProb.data[0].support),
+    cases_supported,
+    supported_problems
+  };
 }

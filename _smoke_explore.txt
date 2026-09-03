@@ -1,0 +1,459 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore Problems — SolveSamaj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="explore">
+
+  <header class="topbar">
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <a class="brand" href="index.html?role=guest&amp;theme=light" style="text-decoration:none;">
+      <div class="brand-mark">S</div>
+      <div class="brand-text"><b>SolveSamaj</b><span>Innovation Portal</span></div>
+    </a>
+    <div class="topbar-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="globalSearch" placeholder="Search problems, organizations, case no...">
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-right">
+      
+      <button class="icon-btn theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+      </button>
+      
+      <button class="btn btn-primary" onclick="go('login.html')">Sign in</button>
+    </div>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-group"><a class="nav-item" data-page="overview" href="dashboard.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path></svg>Overview</a><a class="nav-item active" data-page="explore" href="explore.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>Explore Problems</a><a class="nav-item" data-page="orgdirectory" href="organizations.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"></circle><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"></path><circle cx="17" cy="8" r="3"></circle><path d="M15.5 14.2c3.4.4 6 2.8 6 5.8"></path></svg>Organization Directory</a></div><div class="nav-group" data-role-group="citizen" style="display:none;"><div class="nav-group-label">Problem Side</div><a class="nav-item" data-page="citizenprofile" href="citizen-profile.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-3.3 3.1-6 8-6s8 2.7 8 6"></path></svg>My Profile</a><a class="nav-item" data-page="submit" href="submit.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Report a Problem</a><a class="nav-item" data-page="myproblems" href="my-problems.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>My Problems<span class="count">5</span></a></div><div class="nav-group" data-role-group="org" style="display:none;"><div class="nav-group-label">Solver Side</div><a class="nav-item" data-page="orgprofile" href="org-profile.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Organization Profile</a><a class="nav-item" data-page="discover" href="discover.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>Matched Problems<span class="count">7</span></a><a class="nav-item" data-page="interests" href="interests.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>Interests<span class="count">5</span></a></div><div class="nav-group"><div class="nav-group-label">Collaboration</div><a class="nav-item" data-page="projects" href="projects.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>Projects</a></div><div class="nav-group"><div class="nav-group-label">Insights</div><a class="nav-item" data-page="analytics" href="analytics.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Public Analytics</a></div><div class="nav-group" data-role-group="admin" style="display:none;"><div class="nav-group-label">Administration</div><a class="nav-item" data-page="admin" href="admin.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>Admin Dashboard</a><a class="nav-item" data-page="verify" href="verify.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="10"></circle></svg>Verification Queue<span class="count">2</span></a><a class="nav-item" data-page="review" href="review.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Problem Review<span class="count">4</span></a></div><div class="nav-group"><a class="nav-item" data-page="chatbot" href="chatbot.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>AI Assistant</a><a class="nav-item" data-page="team" href="team.html?role=guest&amp;theme=light"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>About &amp; Team</a></div>
+    <div class="sidebar-foot"><p class="mono">SolveSamaj v0.2 · Team KUEST-L · Prototype</p></div>
+  </nav>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<main class="main">
+  <div class="page-head">
+    <div><h1>Explore Problems</h1><p class="sub">Every validated societal challenge on the desk, open for search, support, and collaboration.</p></div>
+    <div class="page-head-actions">
+      <button class="btn btn-primary btn-sm" onclick="go('submit.html')">+ Report a Problem</button>
+    </div>
+  </div>
+
+  <div class="filters-layout">
+    <div class="filter-box card card-pad" style="padding:14px 15px;">
+      <div class="field" style="margin-bottom:12px;">
+        <input class="input" id="exploreSearch" placeholder="Search title, tag, district...">
+      </div>
+      <div class="filter-group collapsed" id="filterCategory"><h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Category <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></h5><div class="filter-body filter-body-cats"><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#B23A63;"></span>Healthcare<span class="n">5</span></div><label class="check-row"><input type="checkbox" value="Hospital Access &amp; Infrastructure"><span class="cat-dot" style="background:#B23A63;"></span>Hospital Access &amp; Infrastructure<span class="n">2</span></label><label class="check-row"><input type="checkbox" value="Primary &amp; Preventive Healthcare"><span class="cat-dot" style="background:#B23A63;"></span>Primary &amp; Preventive Healthcare<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Emergency &amp; Trauma Care"><span class="cat-dot" style="background:#B23A63;"></span>Emergency &amp; Trauma Care<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Maternal &amp; Child Health"><span class="cat-dot" style="background:#B23A63;"></span>Maternal &amp; Child Health<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Mental Health &amp; Counseling"><span class="cat-dot" style="background:#B23A63;"></span>Mental Health &amp; Counseling<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Disease Outbreak &amp; Epidemics"><span class="cat-dot" style="background:#B23A63;"></span>Disease Outbreak &amp; Epidemics<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Medicine Availability &amp; Affordability"><span class="cat-dot" style="background:#B23A63;"></span>Medicine Availability &amp; Affordability<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Healthcare for Elderly &amp; Disabled"><span class="cat-dot" style="background:#B23A63;"></span>Healthcare for Elderly &amp; Disabled<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Nutrition &amp; Malnutrition"><span class="cat-dot" style="background:#B23A63;"></span>Nutrition &amp; Malnutrition<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Drug Abuse &amp; Rehabilitation"><span class="cat-dot" style="background:#B23A63;"></span>Drug Abuse &amp; Rehabilitation<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#2568A8;"></span>Water &amp; Sanitation<span class="n">5</span></div><label class="check-row"><input type="checkbox" value="Drinking Water Access"><span class="cat-dot" style="background:#2568A8;"></span>Drinking Water Access<span class="n">2</span></label><label class="check-row"><input type="checkbox" value="Water Quality &amp; Contamination"><span class="cat-dot" style="background:#2568A8;"></span>Water Quality &amp; Contamination<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Groundwater Depletion"><span class="cat-dot" style="background:#2568A8;"></span>Groundwater Depletion<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Irrigation &amp; Farming Water"><span class="cat-dot" style="background:#2568A8;"></span>Irrigation &amp; Farming Water<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Sewage &amp; Wastewater"><span class="cat-dot" style="background:#2568A8;"></span>Sewage &amp; Wastewater<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Open Defecation &amp; Toilet Access"><span class="cat-dot" style="background:#2568A8;"></span>Open Defecation &amp; Toilet Access<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Waterlogging &amp; Drainage"><span class="cat-dot" style="background:#2568A8;"></span>Waterlogging &amp; Drainage<span class="n">1</span></label><label class="check-row"><input type="checkbox" value="Flood Control &amp; River Management"><span class="cat-dot" style="background:#2568A8;"></span>Flood Control &amp; River Management<span class="n">1</span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#5C7A29;"></span>Agriculture &amp; Food<span class="n">5</span></div><label class="check-row"><input type="checkbox" value="Crop Yield &amp; Soil Health"><span class="cat-dot" style="background:#5C7A29;"></span>Crop Yield &amp; Soil Health<span class="n">1</span></label><label class="check-row"><input type="checkbox" value="Pest &amp; Disease Control"><span class="cat-dot" style="background:#5C7A29;"></span>Pest &amp; Disease Control<span class="n">1</span></label><label class="check-row"><input type="checkbox" value="Farmer Income &amp; Market Access"><span class="cat-dot" style="background:#5C7A29;"></span>Farmer Income &amp; Market Access<span class="n">2</span></label><label class="check-row"><input type="checkbox" value="Post-Harvest Loss &amp; Storage"><span class="cat-dot" style="background:#5C7A29;"></span>Post-Harvest Loss &amp; Storage<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Irrigation Technology"><span class="cat-dot" style="background:#5C7A29;"></span>Irrigation Technology<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Animal Husbandry &amp; Dairy"><span class="cat-dot" style="background:#5C7A29;"></span>Animal Husbandry &amp; Dairy<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Fisheries &amp; Aquaculture"><span class="cat-dot" style="background:#5C7A29;"></span>Fisheries &amp; Aquaculture<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Food Adulteration &amp; Safety"><span class="cat-dot" style="background:#5C7A29;"></span>Food Adulteration &amp; Safety<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Seed &amp; Fertilizer Access"><span class="cat-dot" style="background:#5C7A29;"></span>Seed &amp; Fertilizer Access<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#C9622E;"></span>Infrastructure<span class="n">2</span></div><label class="check-row dimmed"><input type="checkbox" value="Railways"><span class="cat-dot" style="background:#C9622E;"></span>Railways<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Airways"><span class="cat-dot" style="background:#C9622E;"></span>Airways<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Road &amp; Bridge Connectivity"><span class="cat-dot" style="background:#C9622E;"></span>Road &amp; Bridge Connectivity<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Rural Electrification"><span class="cat-dot" style="background:#C9622E;"></span>Rural Electrification<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Housing &amp; Shelter"><span class="cat-dot" style="background:#C9622E;"></span>Housing &amp; Shelter<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Public Building Maintenance"><span class="cat-dot" style="background:#C9622E;"></span>Public Building Maintenance<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Street Lighting"><span class="cat-dot" style="background:#C9622E;"></span>Street Lighting<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Telecom &amp; Internet Connectivity"><span class="cat-dot" style="background:#C9622E;"></span>Telecom &amp; Internet Connectivity<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Public Transport Access"><span class="cat-dot" style="background:#C9622E;"></span>Public Transport Access<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#6E4FA0;"></span>Education<span class="n">3</span></div><label class="check-row"><input type="checkbox" value="School Access &amp; Dropout"><span class="cat-dot" style="background:#6E4FA0;"></span>School Access &amp; Dropout<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Teacher Shortage &amp; Quality"><span class="cat-dot" style="background:#6E4FA0;"></span>Teacher Shortage &amp; Quality<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Adult Literacy"><span class="cat-dot" style="background:#6E4FA0;"></span>Adult Literacy<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Vocational &amp; Skill Training"><span class="cat-dot" style="background:#6E4FA0;"></span>Vocational &amp; Skill Training<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Higher Education Access"><span class="cat-dot" style="background:#6E4FA0;"></span>Higher Education Access<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Digital Learning Infrastructure"><span class="cat-dot" style="background:#6E4FA0;"></span>Digital Learning Infrastructure<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Disability-Inclusive Education"><span class="cat-dot" style="background:#6E4FA0;"></span>Disability-Inclusive Education<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Student Project and Innovation"><span class="cat-dot" style="background:#6E4FA0;"></span>Student Project and Innovation<span class="n">1</span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#2F8F5B;"></span>Environment<span class="n">2</span></div><label class="check-row dimmed"><input type="checkbox" value="Air Pollution"><span class="cat-dot" style="background:#2F8F5B;"></span>Air Pollution<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Soil Degradation &amp; Erosion"><span class="cat-dot" style="background:#2F8F5B;"></span>Soil Degradation &amp; Erosion<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Deforestation &amp; Illegal Logging"><span class="cat-dot" style="background:#2F8F5B;"></span>Deforestation &amp; Illegal Logging<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Wildlife &amp; Biodiversity Loss"><span class="cat-dot" style="background:#2F8F5B;"></span>Wildlife &amp; Biodiversity Loss<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Industrial &amp; Chemical Pollution"><span class="cat-dot" style="background:#2F8F5B;"></span>Industrial &amp; Chemical Pollution<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Plastic &amp; Solid Waste"><span class="cat-dot" style="background:#2F8F5B;"></span>Plastic &amp; Solid Waste<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="E-Waste Management"><span class="cat-dot" style="background:#2F8F5B;"></span>E-Waste Management<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Climate Adaptation &amp; Resilience"><span class="cat-dot" style="background:#2F8F5B;"></span>Climate Adaptation &amp; Resilience<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#B8860B;"></span>Energy<span class="n">1</span></div><label class="check-row"><input type="checkbox" value="Rural Electrification &amp; Power Cuts"><span class="cat-dot" style="background:#B8860B;"></span>Rural Electrification &amp; Power Cuts<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Affordable Clean Cooking Fuel"><span class="cat-dot" style="background:#B8860B;"></span>Affordable Clean Cooking Fuel<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Solar &amp; Renewable Adoption"><span class="cat-dot" style="background:#B8860B;"></span>Solar &amp; Renewable Adoption<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Energy Efficiency in Buildings"><span class="cat-dot" style="background:#B8860B;"></span>Energy Efficiency in Buildings<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#8A6A3D;"></span>Livelihoods &amp; Economy<span class="n">2</span></div><label class="check-row"><input type="checkbox" value="Unemployment &amp; Underemployment"><span class="cat-dot" style="background:#8A6A3D;"></span>Unemployment &amp; Underemployment<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Tribal &amp; Marginalized Community Livelihoods"><span class="cat-dot" style="background:#8A6A3D;"></span>Tribal &amp; Marginalized Community Livelihoods<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Women's Economic Empowerment"><span class="cat-dot" style="background:#8A6A3D;"></span>Women's Economic Empowerment<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Migrant Worker Welfare"><span class="cat-dot" style="background:#8A6A3D;"></span>Migrant Worker Welfare<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Child Labour"><span class="cat-dot" style="background:#8A6A3D;"></span>Child Labour<span class="n"></span></label><label class="check-row"><input type="checkbox" value="MSME &amp; Small Business Support"><span class="cat-dot" style="background:#8A6A3D;"></span>MSME &amp; Small Business Support<span class="n">1</span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#0F7173;"></span>Governance &amp; Public Services<span class="n"></span></div><label class="check-row dimmed"><input type="checkbox" value="Corruption &amp; Bribery"><span class="cat-dot" style="background:#0F7173;"></span>Corruption &amp; Bribery<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Delay in Government Schemes"><span class="cat-dot" style="background:#0F7173;"></span>Delay in Government Schemes<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Land Records &amp; Property Disputes"><span class="cat-dot" style="background:#0F7173;"></span>Land Records &amp; Property Disputes<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Legal Aid Access"><span class="cat-dot" style="background:#0F7173;"></span>Legal Aid Access<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Police &amp; Safety Concerns"><span class="cat-dot" style="background:#0F7173;"></span>Police &amp; Safety Concerns<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Voter Awareness &amp; Participation"><span class="cat-dot" style="background:#0F7173;"></span>Voter Awareness &amp; Participation<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#A32F2F;"></span>Disaster &amp; Safety<span class="n"></span></div><label class="check-row dimmed"><input type="checkbox" value="Flood Preparedness &amp; Relief"><span class="cat-dot" style="background:#A32F2F;"></span>Flood Preparedness &amp; Relief<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Drought &amp; Water Scarcity"><span class="cat-dot" style="background:#A32F2F;"></span>Drought &amp; Water Scarcity<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Earthquake Preparedness"><span class="cat-dot" style="background:#A32F2F;"></span>Earthquake Preparedness<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Industrial Accident Safety"><span class="cat-dot" style="background:#A32F2F;"></span>Industrial Accident Safety<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Fire Safety in Public Spaces"><span class="cat-dot" style="background:#A32F2F;"></span>Fire Safety in Public Spaces<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Road Accident Hotspots"><span class="cat-dot" style="background:#A32F2F;"></span>Road Accident Hotspots<span class="n"></span></label></div><div class="filter-cat-group"><div class="filter-subhead"><span class="cat-dot" style="background:#4552B8;"></span>Social Issues<span class="n">1</span></div><label class="check-row dimmed"><input type="checkbox" value="Caste Discrimination"><span class="cat-dot" style="background:#4552B8;"></span>Caste Discrimination<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Gender-Based Violence"><span class="cat-dot" style="background:#4552B8;"></span>Gender-Based Violence<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Child Marriage"><span class="cat-dot" style="background:#4552B8;"></span>Child Marriage<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Trafficking &amp; Exploitation"><span class="cat-dot" style="background:#4552B8;"></span>Trafficking &amp; Exploitation<span class="n"></span></label><label class="check-row"><input type="checkbox" value="Accessibility for Persons with Disabilities"><span class="cat-dot" style="background:#4552B8;"></span>Accessibility for Persons with Disabilities<span class="n">1</span></label><label class="check-row dimmed"><input type="checkbox" value="Elderly Care &amp; Abandonment"><span class="cat-dot" style="background:#4552B8;"></span>Elderly Care &amp; Abandonment<span class="n"></span></label><label class="check-row dimmed"><input type="checkbox" value="Donation for Needy"><span class="cat-dot" style="background:#4552B8;"></span>Donation for Needy<span class="n"></span></label></div></div></div>
+      <div class="filter-group collapsed" id="filterSeverity">
+        <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Severity <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></h5>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" value="critical"><span class="sev-dot sev-critical"></span>&nbsp;Critical</label>
+          <label class="check-row"><input type="checkbox" value="high"><span class="sev-dot sev-high"></span>&nbsp;High</label>
+          <label class="check-row"><input type="checkbox" value="medium"><span class="sev-dot sev-medium"></span>&nbsp;Medium</label>
+          <label class="check-row"><input type="checkbox" value="low"><span class="sev-dot sev-low"></span>&nbsp;Low</label>
+        </div>
+      </div>
+      <div class="filter-group collapsed" id="filterStatus">
+        <h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Status <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></h5>
+        <div class="filter-body">
+          <label class="check-row"><input type="checkbox" value="validated"> Validated</label>
+          <label class="check-row"><input type="checkbox" value="review"> Under review</label>
+          <label class="check-row"><input type="checkbox" value="open"> Open for solutions</label>
+          <label class="check-row"><input type="checkbox" value="progress"> Project active</label>
+          <label class="check-row"><input type="checkbox" value="resolved"> Resolved</label>
+        </div>
+      </div>
+      <div class="filter-group" style="border-bottom:none;">
+        <button class="btn btn-outline btn-sm btn-block" onclick="clearExploreFilters()">Clear filters</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head">
+        <span class="sub mono" id="exploreCount">10 matching problems</span>
+        <select class="input" id="exploreSort" style="width:auto; padding:7px 10px; font-size:12.5px;">
+          <option value="supporters">Sort: Most supporters</option>
+          <option value="urgent">Sort: Most urgent</option>
+          <option value="newest">Sort: Newest</option>
+          <option value="affected">Sort: Most affected</option>
+        </select>
+      </div>
+      <div class="problem-grid" id="exploreGrid">
+  <div class="card pcard" style="--accent:#5C7A29;" onclick="go('problem.html', {id:1156})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1156</div>
+        <h3>No cold-storage access for tomato farmers</h3>
+      </div>
+      <span class="stamp stamp-validated">Validated</span>
+    </div>
+    <p class="desc">Farmers lose an estimated 30% of tomato yield post-harvest due to the nearest cold storage being over 40km away, leading to distress sales.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Post-Harvest Loss &amp; Storage</span><span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Farmer Income &amp; Market Access</span><span class="tag">#coldchain</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-medium"></span>&nbsp;Ranchi · Bero</span>
+      <span class="pcard-stats"><span>👤 2,400</span><span>♥ 211</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#2568A8;" onclick="go('problem.html', {id:1042})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1042</div>
+        <h3>Drainage failure floods school access road every monsoon</h3>
+      </div>
+      <span class="stamp stamp-progress">Project Active</span>
+    </div>
+    <p class="desc">The only road connecting Village X to the block highway becomes impassable for 6–8 weeks every monsoon because the drainage channel silts up, cutting off ~3,000 residents and forcing children to skip school.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Water &amp; Sanitation" style="color:#2568A8; background:rgba(37,104,168,0.12); border-color:rgba(37,104,168,0.32);"><span class="cat-dot" style="background:#2568A8;"></span>Waterlogging &amp; Drainage</span><span class="tag tag-domain" title="Category: Infrastructure" style="color:#C9622E; background:rgba(201,98,46,0.12); border-color:rgba(201,98,46,0.32);"><span class="cat-dot" style="background:#C9622E;"></span>Road &amp; Bridge Connectivity</span><span class="tag tag-domain" title="Category: Education" style="color:#6E4FA0; background:rgba(110,79,160,0.12); border-color:rgba(110,79,160,0.32);"><span class="cat-dot" style="background:#6E4FA0;"></span>School Access &amp; Dropout</span><span class="tag">#monsoon</span><span class="tag">#drainage</span><span class="tag tag-more">+2</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-high"></span>&nbsp;Ranchi · Ormanjhi</span>
+      <span class="pcard-stats"><span>👤 3,000</span><span>♥ 183</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#B23A63;" onclick="go('problem.html', {id:1201})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1201</div>
+        <h3>Primary health centre lacks a functioning ultrasound unit</h3>
+      </div>
+      <span class="stamp stamp-review">Under Review</span>
+    </div>
+    <p class="desc">Pregnant women in three panchayats must travel 25km for basic prenatal ultrasound, delaying detection of high-risk pregnancies.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Healthcare" style="color:#B23A63; background:rgba(178,58,99,0.12); border-color:rgba(178,58,99,0.32);"><span class="cat-dot" style="background:#B23A63;"></span>Primary &amp; Preventive Healthcare</span><span class="tag tag-domain" title="Category: Healthcare" style="color:#B23A63; background:rgba(178,58,99,0.12); border-color:rgba(178,58,99,0.32);"><span class="cat-dot" style="background:#B23A63;"></span>Maternal &amp; Child Health</span><span class="tag tag-domain" title="Category: Healthcare" style="color:#B23A63; background:rgba(178,58,99,0.12); border-color:rgba(178,58,99,0.32);"><span class="cat-dot" style="background:#B23A63;"></span>Hospital Access &amp; Infrastructure</span><span class="tag">#maternal-health</span><span class="tag">#phc</span><span class="tag tag-more">+2</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-high"></span>&nbsp;Bokaro · Chandankiyari</span>
+      <span class="pcard-stats"><span>👤 5,600</span><span>♥ 142</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#2568A8;" onclick="go('problem.html', {id:1108})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1108</div>
+        <h3>Groundwater contamination near tannery cluster</h3>
+      </div>
+      <span class="stamp stamp-open">Open for Solutions</span>
+    </div>
+    <p class="desc">Well-water testing shows elevated chromium levels affecting drinking water for four hamlets downstream of a small tannery cluster.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Water &amp; Sanitation" style="color:#2568A8; background:rgba(37,104,168,0.12); border-color:rgba(37,104,168,0.32);"><span class="cat-dot" style="background:#2568A8;"></span>Water Quality &amp; Contamination</span><span class="tag tag-domain" title="Category: Water &amp; Sanitation" style="color:#2568A8; background:rgba(37,104,168,0.12); border-color:rgba(37,104,168,0.32);"><span class="cat-dot" style="background:#2568A8;"></span>Drinking Water Access</span><span class="tag tag-domain" title="Category: Environment" style="color:#2F8F5B; background:rgba(47,143,91,0.12); border-color:rgba(47,143,91,0.32);"><span class="cat-dot" style="background:#2F8F5B;"></span>Industrial &amp; Chemical Pollution</span><span class="tag">#groundwater</span><span class="tag">#pollution</span><span class="tag tag-more">+2</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-critical"></span>&nbsp;Dhanbad · Baliapur</span>
+      <span class="pcard-stats"><span>👤 1,200</span><span>♥ 96</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#2F8F5B;" onclick="go('problem.html', {id:1267})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1267</div>
+        <h3>River erosion threatens riverside settlement</h3>
+      </div>
+      <span class="stamp stamp-open">Open for Solutions</span>
+    </div>
+    <p class="desc">Seasonal flooding has eroded over 40 metres of riverbank in the last three years, now within 15 metres of the nearest homes.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Environment" style="color:#2F8F5B; background:rgba(47,143,91,0.12); border-color:rgba(47,143,91,0.32);"><span class="cat-dot" style="background:#2F8F5B;"></span>Soil Degradation &amp; Erosion</span><span class="tag tag-domain" title="Category: Water &amp; Sanitation" style="color:#2568A8; background:rgba(37,104,168,0.12); border-color:rgba(37,104,168,0.32);"><span class="cat-dot" style="background:#2568A8;"></span>Flood Control &amp; River Management</span><span class="tag tag-domain" title="Category: Infrastructure" style="color:#C9622E; background:rgba(201,98,46,0.12); border-color:rgba(201,98,46,0.32);"><span class="cat-dot" style="background:#C9622E;"></span>Housing &amp; Shelter</span><span class="tag">#erosion</span><span class="tag">#riverbank</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-critical"></span>&nbsp;Sahibganj · Rajmahal</span>
+      <span class="pcard-stats"><span>👤 850</span><span>♥ 77</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#6E4FA0;" onclick="go('problem.html', {id:1288})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1288</div>
+        <h3>Learning gap in government middle school science labs</h3>
+      </div>
+      <span class="stamp stamp-validated">Validated</span>
+    </div>
+    <p class="desc">Of 12 middle schools in the block, only 2 have a functioning science lab, limiting practical learning ahead of board exams.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Education" style="color:#6E4FA0; background:rgba(110,79,160,0.12); border-color:rgba(110,79,160,0.32);"><span class="cat-dot" style="background:#6E4FA0;"></span>Student Project and Innovation</span><span class="tag tag-domain" title="Category: Education" style="color:#6E4FA0; background:rgba(110,79,160,0.12); border-color:rgba(110,79,160,0.32);"><span class="cat-dot" style="background:#6E4FA0;"></span>Vocational &amp; Skill Training</span><span class="tag">#stem</span><span class="tag">#science</span><span class="tag">#schools</span><span class="tag tag-more">+3</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-low"></span>&nbsp;Ranchi · Kanke</span>
+      <span class="pcard-stats"><span>👤 2,100</span><span>♥ 64</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#B8860B;" onclick="go('problem.html', {id:1233})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1233</div>
+        <h3>Frequent transformer burnouts cut power to weaving cluster</h3>
+      </div>
+      <span class="stamp stamp-progress">Project Active</span>
+    </div>
+    <p class="desc">A cottage-industry weaving cluster of 80+ households loses 3–4 working days a month to transformer failures on an overloaded feeder line.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Energy" style="color:#B8860B; background:rgba(184,134,11,0.12); border-color:rgba(184,134,11,0.32);"><span class="cat-dot" style="background:#B8860B;"></span>Rural Electrification &amp; Power Cuts</span><span class="tag tag-domain" title="Category: Livelihoods &amp; Economy" style="color:#8A6A3D; background:rgba(138,106,61,0.12); border-color:rgba(138,106,61,0.32);"><span class="cat-dot" style="background:#8A6A3D;"></span>MSME &amp; Small Business Support</span><span class="tag tag-domain" title="Category: Livelihoods &amp; Economy" style="color:#8A6A3D; background:rgba(138,106,61,0.12); border-color:rgba(138,106,61,0.32);"><span class="cat-dot" style="background:#8A6A3D;"></span>Unemployment &amp; Underemployment</span><span class="tag">#electricity</span><span class="tag">#powercuts</span><span class="tag tag-more">+2</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-medium"></span>&nbsp;Jamshedpur · Potka</span>
+      <span class="pcard-stats"><span>👤 400</span><span>♥ 58</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#4552B8;" onclick="go('problem.html', {id:1305})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1305</div>
+        <h3>No wheelchair-accessible ramp at district hospital OPD</h3>
+      </div>
+      <span class="stamp stamp-resolved">Resolved</span>
+    </div>
+    <p class="desc">The district hospital's main OPD block has stairs only, making outpatient visits difficult for elderly and disabled patients.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Social Issues" style="color:#4552B8; background:rgba(69,82,184,0.12); border-color:rgba(69,82,184,0.32);"><span class="cat-dot" style="background:#4552B8;"></span>Accessibility for Persons with Disabilities</span><span class="tag tag-domain" title="Category: Healthcare" style="color:#B23A63; background:rgba(178,58,99,0.12); border-color:rgba(178,58,99,0.32);"><span class="cat-dot" style="background:#B23A63;"></span>Hospital Access &amp; Infrastructure</span><span class="tag tag-domain" title="Category: Healthcare" style="color:#B23A63; background:rgba(178,58,99,0.12); border-color:rgba(178,58,99,0.32);"><span class="cat-dot" style="background:#B23A63;"></span>Healthcare for Elderly &amp; Disabled</span><span class="tag">#accessibility</span><span class="tag">#elderly</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-medium"></span>&nbsp;Dhanbad · Dhanbad Sadar</span>
+      <span class="pcard-stats"><span>👤 900</span><span>♥ 39</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#2568A8;" onclick="go('problem.html', {id:1319})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1319</div>
+        <h3>Broken handpump serving three hamlets</h3>
+      </div>
+      <span class="stamp stamp-review">Under Review</span>
+    </div>
+    <p class="desc">The only functioning handpump for roughly 600 people across three hamlets has been broken for five weeks, forcing a 2km walk for water.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Water &amp; Sanitation" style="color:#2568A8; background:rgba(37,104,168,0.12); border-color:rgba(37,104,168,0.32);"><span class="cat-dot" style="background:#2568A8;"></span>Drinking Water Access</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-high"></span>&nbsp;Ranchi · Namkum</span>
+      <span class="pcard-stats"><span>👤 600</span><span>♥ 31</span></span>
+    </div>
+  </div>
+  <div class="card pcard" style="--accent:#5C7A29;" onclick="go('problem.html', {id:1314})">
+    <div class="pcard-top">
+      <div>
+        <div class="pcard-id mono">#1314</div>
+        <h3>Crop pest outbreak unreported to Krishi Kendra</h3>
+      </div>
+      <span class="stamp stamp-review">Under Review</span>
+    </div>
+    <p class="desc">A fall-armyworm outbreak is spreading across maize fields with no formal channel for farmers to alert the local agriculture extension office.</p>
+    <div class="pcard-tags">
+      <span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Pest &amp; Disease Control</span><span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Crop Yield &amp; Soil Health</span><span class="tag tag-domain" title="Category: Agriculture &amp; Food" style="color:#5C7A29; background:rgba(92,122,41,0.12); border-color:rgba(92,122,41,0.32);"><span class="cat-dot" style="background:#5C7A29;"></span>Farmer Income &amp; Market Access</span>
+    </div>
+    <div class="pcard-foot">
+      <span class="loc"><span class="sev-dot sev-high"></span>&nbsp;Gumla · Gumla Sadar</span>
+      <span class="pcard-stats"><span>👤 1,800</span><span>♥ 22</span></span>
+    </div>
+  </div></div>
+    </div>
+  </div>
+</main>
+
+<div id="modal-mount">
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Log in to SolveSamaj</h3><button class="close-x" onclick="closeModal('loginModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="tabbar" style="margin-bottom:16px;">
+          <button class="tabbtn active" data-ltab="citizen" onclick="switchLoginTab('citizen')">Citizen</button>
+          <button class="tabbtn" data-ltab="org" onclick="switchLoginTab('org')">Organization</button>
+          <button class="tabbtn" data-ltab="admin" onclick="switchLoginTab('admin')">Admin</button>
+        </div>
+        <div class="field"><label>Email or mobile number</label><input class="input" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input class="input" type="password" placeholder="••••••••"></div>
+        <p class="hint">Placeholder screen — no authentication is wired up yet. "Continue" will just switch your viewing role and take you to that dashboard.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('loginModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="mockLogin()">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="interestModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Express Interest</h3><button class="close-x" onclick="closeModal('interestModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Proposed approach</label><textarea class="input" placeholder="How would your organization approach this problem?"></textarea></div>
+        <div class="field"><label>Resources you'd bring</label><input class="input" placeholder="e.g. IoT lab, 6 student researchers, 2 faculty mentors"></div>
+        <div class="field"><label>Estimated timeline</label>
+          <select class="input"><option>1–3 months</option><option>3–6 months</option><option>6–12 months</option><option>12+ months</option></select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('interestModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="closeModal('interestModal'); toast('Interest sent to the problem owner (placeholder)')">Send interest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="inviteModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Invite a Collaborator</h3><button class="close-x" onclick="closeModal('inviteModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Organization</label><input class="input" placeholder="Search verified organizations..."></div>
+        <div class="field"><label>Role in project</label>
+          <select class="input"><option>Technical partner</option><option>Implementation partner</option><option>Funding partner</option><option>Research partner</option></select>
+        </div>
+        <div class="field"><label>Note</label><textarea class="input" placeholder="Briefly explain what you need from them"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('inviteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="closeModal('inviteModal'); toast('Invitation sent (placeholder)')">Send invitation</button>
+      </div>
+    </div>
+
+  <div class="modal-overlay" id="donateModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Support this request</h3><button class="close-x" onclick="closeModal('donateModal')">✕</button></div>
+      <div class="modal-body">
+        <p id="donateReqTitle" style="font-weight:600; margin:0 0 2px;"></p>
+        <p id="donateReqMeta" class="hint" style="margin-top:0;"></p>
+        <div class="field"><label>I'm contributing as</label>
+          <select class="input" id="donorType" onchange="donorTypeChanged()">
+            <option value="individual">Individual</option>
+            <option value="org">Organization</option>
+          </select>
+        </div>
+        <div class="field" id="donorIndField"><label>Your name</label><input class="input" id="donorName" placeholder="e.g. Ravi Kumar"></div>
+        <div class="field" id="donorOrgField" style="display:none;"><label>Organization</label>
+          <select class="input" id="donorOrg"><option>MMMUT</option><option>NIT Jamshedpur</option><option>Civica NGO</option><option>AgroLink Startup</option><option>Vidya Foundation</option><option>Sahyog NGO</option><option>PowerGrid Interns Collective</option><option>Sensfirm Robotics</option></select>
+        </div>
+        <div class="field"><label>Amount (₹)</label><input class="input" id="donorAmount" type="number" min="100" step="100" placeholder="Partial amounts are welcome">
+          <p class="hint">Payment is simulated in this prototype — the case/project owner verifies each receipt.</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('donateModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitDonation()">Record contribution</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="requestFundModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Request funds</h3><button class="close-x" onclick="closeModal('requestFundModal')">✕</button></div>
+      <div class="modal-body">
+        <p class="hint" style="margin-top:0;">Posted publicly so organizations and individuals can pledge support. You verify each receipt as payments come in.</p>
+        <div class="field"><label>Purpose — what the funds are for</label><input class="input" id="rfTitle" placeholder="e.g. Water testing kits &amp; lab analysis"></div>
+        <div class="field"><label>Details</label><textarea class="input" id="rfDesc" placeholder="Breakdown, vendors, timeline…"></textarea></div>
+        <div class="field"><label>Target amount (₹)</label><input class="input" id="rfTarget" type="number" min="500" step="500"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('requestFundModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFundRequest()">Post request</button>
+      </div>
+    </div>
+  </div></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shell.js"></script><script src="js/chat-brain.js"></script><script src="js/chat-widget.js"></script>
+<script>
+function toggleFilterGroup(headerEl){ headerEl.closest('.filter-group').classList.toggle('collapsed'); }
+function clearExploreFilters(){
+  document.getElementById('exploreSearch').value = '';
+  document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => cb.checked = false);
+  renderExplore();
+}
+function getChecked(containerId){
+  return Array.from(document.querySelectorAll('#'+containerId+' input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+function renderExplore(){
+  const q = document.getElementById('exploreSearch').value;
+  const sortMode = document.getElementById('exploreSort').value;
+  const cats = getChecked('filterCategory');
+  const sevs = getChecked('filterSeverity');
+  const stats = getChecked('filterStatus');
+
+  let list = searchProblems(PROBLEMS, q);
+  list = filterProblems(list, { categories:cats, severities:sevs, statuses:stats });
+  list = sortProblems(list, sortMode);
+
+  document.getElementById('exploreCount').textContent = `${list.length} matching problem${list.length===1?'':'s'}`;
+  document.getElementById('exploreGrid').innerHTML = list.length ? list.map(problemCardHTML).join("")
+    : `<div class="empty" style="grid-column:1/-1;"><h4>No problems match those filters</h4><p>Try widening your search or clearing a filter.</p></div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+
+  const params = new URLSearchParams(location.search);
+
+  /* Category filter — the full posting taxonomy, grouped by heading.
+     Problems may carry several sub-tags: a case counts toward every tag it
+     carries, and filterProblems() matches any of them. Zero-count tags stay
+     visible but dimmed so the whole taxonomy remains discoverable. */
+  const tagCounts = {};
+  PROBLEMS.forEach(p => problemCats(p).forEach(t => tagCounts[t] = (tagCounts[t]||0)+1));
+  const catHTML = PROBLEM_CATEGORY_GROUPS.map(gr => {
+    const total = gr.tags.reduce((s,t)=> s+(tagCounts[t]||0), 0);
+    const rows = gr.tags.map(t => {
+      const n = tagCounts[t] || 0;
+      return `<label class="check-row${n ? '' : ' dimmed'}">` +
+        `<input type="checkbox" value="${t}">` +
+        `<span class="cat-dot" style="background:${gr.color};"></span>${t}` +
+        `<span class="n">${n || ''}</span></label>`;
+    }).join("");
+    return `<div class="filter-cat-group">` +
+      `<div class="filter-subhead"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}<span class="n">${total || ''}</span></div>` +
+      rows + `</div>`;
+  }).join("");
+  document.getElementById('filterCategory').innerHTML =
+    '<h5 class="filter-toggle" onclick="toggleFilterGroup(this)">Category <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></h5>' +
+    '<div class="filter-body filter-body-cats">' + catHTML + '</div>';
+
+  if(params.get('q')) document.getElementById('exploreSearch').value = params.get('q');
+
+  document.getElementById('exploreSearch').addEventListener('input', renderExplore);
+  document.getElementById('exploreSort').addEventListener('change', renderExplore);
+  document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', renderExplore);
+  });
+
+  renderExplore();
+
+  /* Live supporter counts — overlay problems.support from the DB onto the
+     demo list, then re-render so every ♥ on the cards matches the detail
+     page exactly (same column, no duplicate counter). Demo values stay as
+     the offline fallback when Supabase is unreachable. */
+  fetchSupportCounts().then(map => {
+    if(applySupportCounts(map)) renderExplore();
+  });
+});
+</script>
+
+
+<div id="cwRoot" class="cw-root">
+  <div class="cw-panel" id="cwPanel">
+    <div class="cw-head">
+      <span class="cw-av">S</span>
+      <div style="flex:1;min-width:0;">
+        <b>Sahayak</b>
+        <span>AI assistant · online</span>
+      </div>
+      <button class="cw-ico" id="cwClear" title="Clear conversation"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+      <button class="cw-ico" id="cwClose" title="Minimise"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg></button>
+    </div>
+    <div class="cw-log" id="cwLog"></div>
+    <form class="cw-input" id="cwForm">
+      <input id="cwText" placeholder="Ask Sahayak…" autocomplete="off">
+      <button class="cw-send" type="submit" aria-label="Send"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+    </form>
+  </div>
+  <button class="cw-btn" id="cwBtn" aria-label="Open Sahayak AI assistant"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"></rect><path d="M12 7V4M8 4h8"></path><circle cx="9" cy="13" r="1"></circle><circle cx="15" cy="13" r="1"></circle></svg></button></div></body></html>
