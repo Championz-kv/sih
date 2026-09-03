@@ -172,9 +172,10 @@
 <div id="modal-mount"></div>
 <div class="toast-wrap" id="toastWrap"></div>
 
-<!-- AI reviewing overlay — shown while Sahayak checks for duplicates & categorizes; 
-     cancel/back return to step 1. On a possible duplicate the body swaps to the
-     matching-case warning with the existing problem hyperlinked. -->
+<!-- AI reviewing overlay — shown while Sahayak checks the report (content/abuse,
+     duplicates) & categorizes; cancel/back return to step 1. The body swaps to
+     a flagged-report warning (gibberish/nonsense/abusive) or a possible-
+     duplicate warning with the existing problem hyperlinked. -->
 <div class="modal-overlay" id="aiReviewOverlay" style="position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center;">
   <div class="modal" style="max-width:480px; text-align:center;">
     <div class="modal-head" style="justify-content:center;"><h3 style="font-size:18px;">✦ Sahayak is reviewing</h3></div>
@@ -182,6 +183,7 @@
       <p id="aiReviewMsg" style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
       <p class="hint" id="aiReviewHint" style="margin-top:10px;">This usually takes a few seconds.</p>
       <div id="dupNotice" style="display:none; text-align:left; margin-top:8px;"></div>
+      <div id="contentNotice" style="display:none; text-align:left; margin-top:8px;"></div>
     </div>
     <div class="modal-foot" style="justify-content:center; gap:10px;">
       <button class="btn btn-ghost" type="button" id="aiBackBtn" onclick="cancelAiReviewBack()">← Back</button>
@@ -208,6 +210,9 @@ let aiVerified = false; // do the user's current choices match the AI?
 let aiCancelled = false; // user pressed Cancel on the AI-review overlay
 let skipDupCheck = false; // true once the user says "continue anyway" on a possible duplicate
 let dupBlocked = false;   // true while a possible-duplicate warning is on screen
+let contentBlocked = false; // true while a gibberish/nonsense/abuse warning is on screen
+let contentOkKey = null;  // title+desc fingerprint that already passed the content check (skips re-checking on "continue anyway")
+let contentFocusField = null; // field to focus after "← Back to edit" on a flagged report
 let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
 
 function goStep(n){
@@ -297,15 +302,24 @@ function stopAiReview(){
   aiCancelled = true;
   sahayaBusy = false;              /* release the guard so Next works immediately */
   dupBlocked = false;
+  contentBlocked = false;
   hideDupNotice();
+  hideContentNotice();
   setSahayaLoading(false);
 }
 /* ← Back — stop AI and return to form 1 (reset the dedupe skip so the next
-   attempt re-runs the duplicate check with the edited report). */
+   attempt re-runs the duplicate check with the edited report). If the report
+   was flagged by the content check, focus the offending field for editing. */
 function cancelAiReviewBack(){
+  const focusId = contentFocusField;
+  contentFocusField = null;
   stopAiReview();
   skipDupCheck = false;
   goStep(1);
+  if(focusId){
+    const el = document.getElementById(focusId);
+    if(el) setTimeout(() => { try{ el.focus(); }catch(e){} }, 60);
+  }
 }
 /* Cancel — stop AI but stay on form 2 with the "will need review" fallback so
    the user can keep editing manually. */
@@ -366,6 +380,55 @@ function continueAfterDup(){
   runAiReview();
 }
 
+/* Citizen-facing copy for the three content-flag categories. */
+const CONTENT_COPY = {
+  abusive: {
+    title: 'Your report contains abusive or harsh language.',
+    body: 'SolveSamaj is a public civic platform — reports must stay respectful. Please remove the abusive words and describe the problem politely.'
+  },
+  gibberish: {
+    title: 'Your report looks like gibberish.',
+    body: 'The text seems to be random characters that Sahayak cannot read. Please describe the problem in your own words — what is wrong, since when, and where.'
+  },
+  nonsense: {
+    title: 'Your report doesn\u2019t make sense yet.',
+    body: 'The words don\u2019t clearly describe a real problem. Please rewrite it so it explains the issue — what is broken, since when, and who is affected.'
+  }
+};
+
+/* Content check flagged the draft (gibberish / nonsense / abusive) — swap the
+   overlay to a rewrite warning. Hard gate: ← Back to edit only. */
+function showContentNotice(c){
+  const cat = CONTENT_COPY[c.category] || CONTENT_COPY.nonsense;
+  const where = c.field === 'title' ? 'in the <b>title</b>'
+    : c.field === 'description' ? 'in the <b>description</b>'
+    : c.field === 'both' ? 'in the <b>title and description</b>' : '';
+  const d = document.getElementById('contentNotice');
+  const msg = document.getElementById('aiReviewMsg');
+  const hint = document.getElementById('aiReviewHint');
+  if(d){
+    d.style.display = '';
+    d.innerHTML =
+      '<div style="border-left:3px solid #d64545; background:rgba(214,69,69,.10); padding:10px 12px; border-radius:8px;">' +
+        '<p style="margin:0 0 4px; font-size:14.5px;"><b>' + cat.title + '</b>' + (where ? ' <span style="font-weight:400;">(flagged ' + where + ')</span>' : '') + '</p>' +
+        (c.note ? '<p style="margin:0 0 4px; font-size:12.5px; color:var(--text-soft); line-height:1.5;">' + String(c.note).replace(/</g, '&lt;') + '</p>' : '') +
+        '<p style="margin:0; font-size:12.5px; color:var(--text-soft); line-height:1.5;">' + cat.body + '</p>' +
+      '</div>';
+  }
+  if(msg) msg.style.display = 'none';
+  if(hint) hint.style.display = 'none';
+  const cStay = document.getElementById('aiCancelStayBtn'); if(cStay) cStay.style.display = 'none';
+  const cDup  = document.getElementById('dupContinueBtn'); if(cDup) cDup.style.display = 'none';
+  const back  = document.getElementById('aiBackBtn'); if(back) back.textContent = '← Back to edit';
+}
+
+/* Restore the overlay to its plain "reviewing & categorizing" state. */
+function hideContentNotice(){
+  const d = document.getElementById('contentNotice');
+  if(d){ d.style.display = 'none'; d.innerHTML = ''; }
+  const back = document.getElementById('aiBackBtn'); if(back) back.textContent = '← Back';
+}
+
 /* Fetch candidate problems in the SAME state (same-district rows first, then
    the rest of the state) so the AI can spot genuine duplicates. Public rows
    are readable under RLS; drafts/removed are always excluded. Resolves with
@@ -405,7 +468,9 @@ async function runAiReview(){
   sahayaBusy = true;
   aiCancelled = false;
   dupBlocked = false;
+  contentBlocked = false;
   hideDupNotice();
+  hideContentNotice();
   setSahayaLoading(true);
 
   const title = val('fTitle');
@@ -416,6 +481,41 @@ async function runAiReview(){
   const affected_count = aff ? parseInt(aff, 10) : null;
 
   try{
+    /* ---------- Phase 0 · content quality & abuse check (Sahayak) ----------
+       The draft must be a genuine, readable, respectful report BEFORE it is
+       compared with existing problems. Flags gibberish ("sjnfjn efw er gw"),
+       word-salad nonsense ("help world say good time data") and abusive or
+       harsh language — but never mere typos or Hinglish. Any API failure
+       FAILS OPEN so filing is never blocked on a checker outage. The check
+       is skipped when the exact same title+description already passed (the
+       "continue anyway" re-entry after a duplicate warning). */
+    const contentKey = title + '\u0000' + description;
+    if(contentOkKey !== contentKey){
+      setSahayaMsg('Checking your report…',
+        'Sahayak first makes sure the report is clear and respectful, then looks for similar problems.');
+      let content = null;
+      try{
+        const cc = await fetch('/api/check-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description })
+        });
+        if(cc.ok) content = await cc.json();
+      }catch(e){
+        console.warn('[sahayak] content check failed — continuing:', (e && e.message) || e);
+        content = null;
+      }
+      if(aiCancelled) return;
+      if(content && content.flagged === true){
+        contentBlocked = true;
+        contentFocusField = (content.field === 'description') ? 'fDesc' : 'fTitle';
+        showContentNotice(content);
+        return;   /* keep the overlay on the rewrite warning — ← Back to edit only */
+      }
+      contentOkKey = contentKey;
+    }
+    hideContentNotice();
+
     /* ---------- Phase 1 · duplicate check (Sahayak) ----------
        Ask the AI whether this problem already exists near the same district.
        An empty candidates list (no problems filed there yet) skips the call
@@ -471,8 +571,8 @@ async function runAiReview(){
     /* Step 2 is already active — the user can pick categories by hand. */
   }finally{
     sahayaBusy = false;
-    /* If a duplicate is on screen, leave the overlay open (Back / continue). */
-    if(!aiCancelled && !dupBlocked) setSahayaLoading(false);
+    /* If a content/duplicate warning is on screen, leave the overlay open. */
+    if(!aiCancelled && !dupBlocked && !contentBlocked) setSahayaLoading(false);
   }
 }
 
