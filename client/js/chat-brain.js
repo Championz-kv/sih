@@ -4,8 +4,8 @@
    every other page. One localStorage transcript ('ss-chat') keeps the
    conversation continuous across pages.
 
-   AI INTEGRATION: see AI_SETTINGS below — flip  mode:'placeholder'
-   to  mode:'api'  (and set apiUrl) to plug in a real model endpoint.
+   AI INTEGRATION: LIVE by default — aiReply() posts to /api/chat (Sahayak,
+   Gemini) with graceful offline fallback. See AI_SETTINGS below.
    aiReply(message, history[]) -> Promise<string|html>
    =================================================================== */
 (function(){
@@ -29,11 +29,11 @@
 })();
 
 /* ── AI SETTINGS ────────────────────────────────────────────────────
-   mode:'placeholder' → keyword demo replies below (current default)
-   mode:'api'         → POST { message, history } to apiUrl and expect
-                        JSON { reply:"…" } back. One word flips you live. */
+   mode:'api'         → LIVE: POST { message, history } to apiUrl (Sahayak,
+                        Gemini via /api/chat) and expect { reply:"…" } back.
+   mode:'placeholder' → keyword demo replies below (offline fallback brain). */
 const AI_SETTINGS = {
-  mode  : 'placeholder',
+  mode  : 'api',
   apiUrl: '/api/chat',
 };
 
@@ -67,14 +67,23 @@ window.placeholderReply = function(message){
 /* ---- public entry point — used by the FULL PAGE and the WIDGET alike ---- */
 window.aiReply = async function(message, history){
   if(AI_SETTINGS.mode === 'api'){
-    const res = await fetch(AI_SETTINGS.apiUrl, {
-      method : 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body   : JSON.stringify({ message, history })
-    });
-    if(!res.ok) throw new Error('AI endpoint returned ' + res.status);
-    const data = await res.json();
-    return data.reply;                       // plain text or simple html
+    try{
+      const res = await fetch(AI_SETTINGS.apiUrl, {
+        method : 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body   : JSON.stringify({ message, history })
+      });
+      if(!res.ok) throw new Error('AI endpoint returned ' + res.status);
+      const data = await res.json();
+      if(data && typeof data.reply === 'string' && data.reply.trim()) return data.reply;
+      throw new Error('empty reply');
+    }catch(err){
+      /* The live brain is down (network, deploy, key) — degrade gracefully to
+         the offline keyword answers instead of showing an error bubble. */
+      console.warn('[sahayak] live brain unavailable — offline answers:', (err && err.message) || err);
+      return "I can't reach my full knowledge right now, but here's the quick version 👇 " +
+             window.placeholderReply(message);
+    }
   }
   /* placeholder mode: simulated latency + keyword-flavoured canned replies */
   return new Promise((resolve) => {
