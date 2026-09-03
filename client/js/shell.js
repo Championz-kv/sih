@@ -203,7 +203,7 @@ function renderModals(){
           <select class="input" id="taskStatusSelect">
             <option>In progress</option>
             <option>Not started</option>
-            <option>Completed</option>
+            <option>Done</option>
             <option>Due</option>
           </select>
         </div>
