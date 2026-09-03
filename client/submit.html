@@ -58,7 +58,7 @@
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Block / Village / City *</label><input class="input" id="fBlock" placeholder="e.g. Ormanjhi block"></div>
+        <div class="field"><label>Block / Village / City <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" id="fBlock" placeholder="e.g. Ormanjhi block"></div>
         <div class="field"><label>Landmark / exact location <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
           <input class="input" id="fLocation" placeholder="e.g. near Govt school, NH-33 turn">
           <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="toast('Map picker placeholder')" type="button">Pick on map</button>
@@ -172,17 +172,21 @@
 <div id="modal-mount"></div>
 <div class="toast-wrap" id="toastWrap"></div>
 
-<!-- AI reviewing overlay — shown while Sahayak categorizes; cancel returns to step 1 -->
+<!-- AI reviewing overlay — shown while Sahayak checks for duplicates & categorizes; 
+     cancel/back return to step 1. On a possible duplicate the body swaps to the
+     matching-case warning with the existing problem hyperlinked. -->
 <div class="modal-overlay" id="aiReviewOverlay" style="position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center;">
-  <div class="modal" style="max-width:440px; text-align:center;">
+  <div class="modal" style="max-width:480px; text-align:center;">
     <div class="modal-head" style="justify-content:center;"><h3 style="font-size:18px;">✦ Sahayak is reviewing</h3></div>
     <div class="modal-body" style="padding:6px 8px 4px;">
-      <p style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
-      <p class="hint" style="margin-top:10px;">This usually takes a few seconds.</p>
+      <p id="aiReviewMsg" style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
+      <p class="hint" id="aiReviewHint" style="margin-top:10px;">This usually takes a few seconds.</p>
+      <div id="dupNotice" style="display:none; text-align:left; margin-top:8px;"></div>
     </div>
     <div class="modal-foot" style="justify-content:center; gap:10px;">
-      <button class="btn btn-ghost" type="button" onclick="cancelAiReviewBack()">← Back</button>
-      <button class="btn btn-outline" type="button" onclick="cancelAiReviewStay()">Cancel</button>
+      <button class="btn btn-ghost" type="button" id="aiBackBtn" onclick="cancelAiReviewBack()">← Back</button>
+      <button class="btn btn-outline" type="button" id="aiCancelStayBtn" onclick="cancelAiReviewStay()">Cancel</button>
+      <button class="btn btn-primary" type="button" id="dupContinueBtn" style="display:none;" onclick="continueAfterDup()">It's different — continue anyway</button>
     </div>
   </div>
 </div>
@@ -202,6 +206,8 @@ let step = 1;
 let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
 let aiVerified = false; // do the user's current choices match the AI?
 let aiCancelled = false; // user pressed Cancel on the AI-review overlay
+let skipDupCheck = false; // true once the user says "continue anyway" on a possible duplicate
+let dupBlocked = false;   // true while a possible-duplicate warning is on screen
 let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
 
 function goStep(n){
@@ -220,13 +226,13 @@ function nextFrom1(){
   const need = [];
   if(!val('fTitle'))    need.push('Problem title');
   if(!val('fDesc'))     need.push('Detailed description');
-  if(!val('fBlock'))    need.push('Block / Village / City');
   if(!val('stateSelect'))    need.push('State');
   if(!val('districtSelect')) need.push('District');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
   if(!document.querySelector('#categoryGroups .cat-panel')) buildCategoryPanels();
   goStep(2);
-  runAiCategorize();
+  skipDupCheck = false;   /* a fresh "Next" always re-runs the AI duplicate check */
+  runAiReview();
 }
 
 /* ---------- step 2 · AI categorization (Gemini via serverless proxy) ---------- */
@@ -290,11 +296,15 @@ function setSahayaLoading(on){
 function stopAiReview(){
   aiCancelled = true;
   sahayaBusy = false;              /* release the guard so Next works immediately */
+  dupBlocked = false;
+  hideDupNotice();
   setSahayaLoading(false);
 }
-/* ← Back — stop AI and return to form 1. */
+/* ← Back — stop AI and return to form 1 (reset the dedupe skip so the next
+   attempt re-runs the duplicate check with the edited report). */
 function cancelAiReviewBack(){
   stopAiReview();
+  skipDupCheck = false;
   goStep(1);
 }
 /* Cancel — stop AI but stay on form 2 with the "will need review" fallback so
@@ -304,10 +314,98 @@ function cancelAiReviewStay(){
   setNeedsReview();
 }
 
-async function runAiCategorize(){
+/* Update the overlay's message/hint while reviewing (used by the dedupe phase). */
+function setSahayaMsg(text, hint){
+  const msg = document.getElementById('aiReviewMsg');
+  if(msg && text) msg.textContent = text;
+  const hn = document.getElementById('aiReviewHint');
+  if(hn && hint) hn.textContent = hint;
+}
+
+/* Restore the overlay to its plain "reviewing & categorizing" state. */
+function hideDupNotice(){
+  const d = document.getElementById('dupNotice');
+  if(d) d.style.display = 'none';
+  const msg = document.getElementById('aiReviewMsg');
+  if(msg){ msg.style.display = ''; msg.textContent = 'AI is reviewing and categorizing your problem…'; }
+  const hint = document.getElementById('aiReviewHint');
+  if(hint){ hint.style.display = ''; hint.textContent = 'This usually takes a few seconds.'; }
+  const cStay = document.getElementById('aiCancelStayBtn'); if(cStay) cStay.style.display = '';
+  const cDup  = document.getElementById('dupContinueBtn'); if(cDup) cDup.style.display = 'none';
+}
+
+/* A near-certain duplicate was found — swap the overlay to the matching-case
+   warning with the existing problem hyperlinked, and offer Back / continue. */
+function showDupNotice(dup, district){
+  const id = dup.match_id;
+  const d = document.getElementById('dupNotice');
+  const msg = document.getElementById('aiReviewMsg');
+  const hint = document.getElementById('aiReviewHint');
+  if(d){
+    d.style.display = '';
+    d.innerHTML =
+      '<div style="border-left:3px solid var(--ochre); background:rgba(255,212,0,.10); padding:10px 12px; border-radius:8px;">' +
+        '<p style="margin:0 0 4px; font-size:14.5px;"><b>Your problem seems to be matching with</b> ' +
+          '<a href="problem.html?id=' + encodeURIComponent(id) + '" target="_blank" rel="noopener" style="font-weight:600; text-decoration:underline;">problem #' + String(id) + '</a>.</p>' +
+        '<p style="margin:0; font-size:12.5px; color:var(--text-soft); line-height:1.5;">It has already been reported in ' +
+          String(district || 'your area') + '. Open the existing case to compare — if it is the same issue you do not need to file it again. ' +
+          'You can go back to edit your report, or continue anyway if your problem is genuinely different.</p>' +
+      '</div>';
+  }
+  if(msg) msg.style.display = 'none';
+  if(hint) hint.style.display = 'none';
+  const cStay = document.getElementById('aiCancelStayBtn'); if(cStay) cStay.style.display = 'none';
+  const cDup  = document.getElementById('dupContinueBtn'); if(cDup) cDup.style.display = '';
+}
+
+/* User examined the existing case and insists theirs is different — skip the
+   duplicate check for this pass and run categorization directly. */
+function continueAfterDup(){
+  skipDupCheck = true;
+  aiCancelled = false;
+  runAiReview();
+}
+
+/* Fetch candidate problems in the SAME state (same-district rows first, then
+   the rest of the state) so the AI can spot genuine duplicates. Public rows
+   are readable under RLS; drafts/removed are always excluded. Resolves with
+   [] on any failure → the caller takes the fast path straight to
+   categorization. */
+async function fetchNearbyProblems(state, district){
+  try{
+    const { data, error } = await sbClient.from('problems')
+      .select('id, title, description, district, created_at')
+      .eq('state', state)
+      .not('problem_state', 'in', '("draft","removed")')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if(error) throw error;
+    const rows = data || [];
+    const norm = s => String(s || '').trim().toLowerCase();
+    const target = norm(district);
+    const sameDistrict = rows.filter(r => norm(r.district) && norm(r.district) === target);
+    const restOfState  = rows.filter(r => norm(r.district) !== target);
+    /* District matches first, then the rest of the state — capped so the
+       Gemini prompt stays compact and fast. */
+    return sameDistrict.concat(restOfState).slice(0, 20).map(r => ({
+      id: r.id,
+      title: r.title,
+      description: r.description || '',
+      district: r.district || '',
+      same_district: norm(r.district) === target
+    }));
+  }catch(e){
+    console.warn('[sahayak] nearby-problem fetch failed:', (e && e.message) || e);
+    return [];
+  }
+}
+
+async function runAiReview(){
   if(sahayaBusy) return;
   sahayaBusy = true;
   aiCancelled = false;
+  dupBlocked = false;
+  hideDupNotice();
   setSahayaLoading(true);
 
   const title = val('fTitle');
@@ -318,6 +416,40 @@ async function runAiCategorize(){
   const affected_count = aff ? parseInt(aff, 10) : null;
 
   try{
+    /* ---------- Phase 1 · duplicate check (Sahayak) ----------
+       Ask the AI whether this problem already exists near the same district.
+       An empty candidates list (no problems filed there yet) skips the call
+       entirely — no Gemini round-trip, straight to categorization. Any AI /
+       API failure fails OPEN so filing is never blocked on the checker. */
+    if(!skipDupCheck){
+      const nearby = await fetchNearbyProblems(state, district);
+      if(aiCancelled) return;
+      if(nearby.length){
+        setSahayaMsg('Checking for similar problems in ' + district + '…',
+          'Comparing with ' + nearby.length + ' existing case' + (nearby.length === 1 ? '' : 's') + ' near your area.');
+        let dup = null;
+        try{
+          const chk = await fetch('/api/check-dup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, district, state, existing: nearby })
+          });
+          if(chk.ok) dup = await chk.json();
+        }catch(e){
+          console.warn('[sahayak] duplicate check failed — continuing to categorize:', (e && e.message) || e);
+          dup = null;
+        }
+        if(aiCancelled) return;
+        if(dup && dup.duplicate === true && dup.match_id != null){
+          dupBlocked = true;
+          showDupNotice(dup, district);
+          return;      /* keep the overlay on the matcher warning — Back / continue only */
+        }
+      }
+    }
+
+    /* ---------- Phase 2 · categorization (Gemini via serverless proxy) ---------- */
+    hideDupNotice();
     const res = await fetch('/api/categorize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -339,7 +471,8 @@ async function runAiCategorize(){
     /* Step 2 is already active — the user can pick categories by hand. */
   }finally{
     sahayaBusy = false;
-    if(!aiCancelled) setSahayaLoading(false);   /* don't pop the overlay if user cancelled */
+    /* If a duplicate is on screen, leave the overlay open (Back / continue). */
+    if(!aiCancelled && !dupBlocked) setSahayaLoading(false);
   }
 }
 

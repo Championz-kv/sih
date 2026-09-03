@@ -1,0 +1,15 @@
+=== ROOT API DIR ===
+
+NO api dir: ENOENT: no such file or directory, scandir 'c:\Users\kv\programs\solvesamaj\api'
+
+=== CLIENT API DIR ===
+
+categorize.js
+
+=== SUBMIT/AI TESTS ===
+
+
+
+=== API CATEGORIZE HEAD (root) ===
+
+ERR ENOENT: no such file or directory, open 'c:\Users\kv\programs\solvesamaj\api\categorize.js'

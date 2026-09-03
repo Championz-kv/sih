@@ -1,0 +1,925 @@
+   1| <!DOCTYPE html>
+   2| <html lang="en" data-theme="light">
+   3| <head>
+   4| <meta charset="UTF-8">
+   5| <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   6| <title>Report a Problem — SolveSamaj</title>
+   7| <link rel="preconnect" href="https://fonts.googleapis.com">
+   8| <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   9| <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  10| <link rel="stylesheet" href="css/styles.css">
+  11| </head>
+  12| <body data-page="submit" data-auth="required">
+  13| <div id="app-topbar"></div>
+  14| <div id="app-sidebar"></div>
+  15| <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  16| 
+  17| <main class="main">
+  18|   <div class="page-head"><div><h1>Report a Problem</h1><p class="sub">Three quick steps: describe it, let AI help categorize it, agree and post.</p></div></div>
+  19| 
+  20|   <div class="card card-pad" style="max-width:860px;">
+  21|     <div class="wz-steps" id="wzSteps">
+  22|       <div class="wz-tab current" data-n="1"><span class="n">1</span><div><b>Details</b><span>The problem itself</span></div></div>
+  23|       <div class="wz-sep"></div>
+  24|       <div class="wz-tab" data-n="2"><span class="n">2</span><div><b>Categorization</b><span>AI-assisted tags</span></div></div>
+  25|       <div class="wz-sep"></div>
+  26|       <div class="wz-tab" data-n="3"><span class="n">3</span><div><b>Agree &amp; Post</b><span>Consent &amp; submit</span></div></div>
+  27|     </div>
+  28| 
+  29|     <!-- ============ STEP 1 · DETAILS ============ -->
+  30|     <section class="wz-pane active" data-step="1">
+  31|       <div class="row-flex" style="justify-content:flex-end; margin-bottom:4px;">
+  32|         <button class="btn btn-ghost btn-sm" type="button" onclick="continueDraft()">↺ Continue with draft</button>
+  33|       </div>
+  34| 
+  35|       <div class="field"><label>Problem title *</label>
+  36|         <input class="input" id="fTitle" placeholder="e.g. Drainage failure floods school access road every monsoon">
+  37|       </div>
+  38| 
+  39|       <div class="field"><label>Detailed description * <span style="font-weight:400; color:var(--text-faint);">(the more detail, the better the AI categorization)</span></label>
+  40|         <textarea class="input" id="fDesc" style="min-height:200px;" placeholder="What exactly is happening? Since when? Who is affected and how badly? What has been tried so far?"></textarea>
+  41|       </div>
+  42| 
+  43|       <div class="field">
+  44|         <label>Relevant links <span style="font-weight:400; color:var(--text-faint);">(news articles, videos, government pages…)</span></label>
+  45|         <div id="linkRows"><div class="link-row"><input class="input" type="url" placeholder="https://…"><button class="link-del" type="button" title="Remove this link" onclick="removeLinkRow(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></div>
+  46|         <button class="btn btn-ghost btn-sm" type="button" onclick="addLinkRow()">+ Add another link</button>
+  47|       </div>
+  48|       <div class="field-row">
+  49|         <div class="field"><label>State *</label>
+  50|           <select class="input" id="stateSelect">
+  51|             <option value="">Select state</option>
+  52|           </select>
+  53|         </div>
+  54|         <div class="field"><label>District *</label>
+  55|           <select class="input" id="districtSelect" disabled>
+  56|             <option value="">Select district</option>
+  57|           </select>
+  58|         </div>
+  59|       </div>
+  60|       <div class="field-row">
+  61|         <div class="field"><label>Block / Village / City *</label><input class="input" id="fBlock" placeholder="e.g. Ormanjhi block"></div>
+  62|         <div class="field"><label>Landmark / exact location <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
+  63|           <input class="input" id="fLocation" placeholder="e.g. near Govt school, NH-33 turn">
+  64|           <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="toast('Map picker placeholder')" type="button">Pick on map</button>
+  65|         </div>
+  66|       </div>
+  67| 
+  68|       <div class="field"><label>Estimated people affected <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label>
+  69|         <input class="input" type="number" id="fAffected" placeholder="e.g. 3000">
+  70|       </div>
+  71| 
+  72|       <div class="field"><label>What's needed</label>
+  73|         <div class="chip-select">
+  74|           <span class="chip-opt">Technical solution</span><span class="chip-opt">Funding</span><span class="chip-opt">Research</span>
+  75|           <span class="chip-opt">Volunteers</span><span class="chip-opt">Equipment</span><span class="chip-opt">Mentorship</span><span class="chip-opt">Government intervention</span>
+  76|         </div>
+  77|       </div>
+  78| 
+  79|       <div class="field"><label>Evidence (photos, videos, documents)</label>
+  80|         <div class="upload-zone" id="evidenceZone" style="cursor:pointer;" onclick="document.getElementById('fEvidence').click()">Drag files here, or click to browse</div>
+  81|         <input type="file" id="fEvidence" multiple hidden>
+  82|         <div id="evidenceList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+  83|       </div>
+  84| 
+  85|       <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
+  86|         <button class="btn btn-ghost" type="button" onclick="clearStep1()">✕ Clear form</button>
+  87|         <span class="row-flex" style="gap:10px;">
+  88|           <button class="btn btn-outline" type="button" onclick="saveDraft()">Save as draft</button>
+  89|           <button class="btn btn-primary" type="button" onclick="nextFrom1()">Next: Categorization →</button>
+  90|         </span>
+  91|       </div>
+  92|     </section>
+  93| 
+  94|         <!-- ============ STEP 2 · CATEGORIZATION ============ -->
+  95|     <section class="wz-pane" data-step="2">
+  96|       <div class="row-flex" style="justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
+  97|         <span id="aiBadge"></span>
+  98|         <span style="font-size:11.5px; color:var(--text-faint);">Tags, severity &amp; urgency prefilled by Sahayak AI — adjust anything before continuing.</span>
+  99|       </div>
+ 100|       <div id="aiNote" class="note ok" style="margin-bottom:18px;"></div>
+ 101| 
+ 102|       <div class="field" style="margin-bottom:20px;">
+ 103|         <label>Category</label>
+ 104|         <div class="cat-panel" style="border-color:var(--setu); margin-bottom:12px;">
+ 105|           <div class="cat-panel-head">
+ 106|             <span class="cat-dot" style="background:var(--setu);"></span>
+ 107|             Selected <span class="mono" id="selCount" style="color:var(--text-faint); font-weight:400;">(0)</span>
+ 108|           </div>
+ 109|           <div class="chip-select" id="selectedCats"></div>
+ 110|         </div>
+ 111|         <div id="categoryGroups" style="display:flex; flex-direction:column; gap:12px;"></div>
+ 112|         <p class="hint">Selected tags are collected in the Selected panel above and stay highlighted in both places.</p>
+ 113|       </div>
+ 114| 
+ 115|       <div class="field"><label>Hashtags</label>
+ 116|         <p class="hint" style="margin-top:2px;">AI-suggested — you can add or remove</p>
+ 117|         <input class="input" id="fTags" placeholder="#monsoon #drainage #road (space separated)">
+ 118|       </div>
+ 119| 
+ 120|       <div class="field-row">
+ 121|         <div class="field"><label>Severity</label>
+ 122|           <select class="input" id="fSev" onchange="refreshAiBadge()">
+ 123|             <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+ 124|           </select>
+ 125|         </div>
+ 126|         <div class="field"><label>Urgency</label>
+ 127|           <select class="input" id="fUrg" onchange="refreshAiBadge()">
+ 128|             <option>Long-term</option><option>Within months</option><option>Within days</option><option>Immediate</option>
+ 129|           </select>
+ 130|         </div>
+ 131|       </div>
+ 132| 
+ 133|       <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:18px;">
+ 134|         <button class="btn btn-ghost" type="button" onclick="goStep(1)">← Back</button>
+ 135|         <span class="row-flex" style="gap:10px;">
+ 136|           <button class="btn btn-outline" type="button" onclick="saveDraft()">Save as draft</button>
+ 137|           <button class="btn btn-primary" type="button" onclick="nextFrom2()">Next: Agree &amp; Post →</button>
+ 138|         </span>
+ 139|       </div>
+ 140|     </section>
+ 141| 
+ 142|         <!-- ============ STEP 3 · AGREE & POST ============ -->
+ 143|     <section class="wz-pane" data-step="3">
+ 144|       <div id="routeNote" class="note ok" style="margin-bottom:18px;"></div>
+ 145| 
+ 146|       <div class="card card-pad" style="background:var(--surface-2); border:none; box-shadow:none; margin-bottom:18px;">
+ 147|         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0 0 10px;">Review before posting</h4>
+ 148|         <div class="barlist" style="gap:10px;">
+ 149|           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Title</span><b id="sumTitle" style="max-width:60%; text-align:right;">—</b></div>
+ 150|           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Categories</span><b id="sumCats" style="max-width:60%; text-align:right;">—</b></div>
+ 151|           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Severity</span><b id="sumSev">—</b></div>
+ 152|           <div class="row-flex" style="justify-content:space-between; font-size:12.5px;"><span style="color:var(--text-faint);">Urgency</span><b id="sumUrg">—</b></div>
+ 153|         </div>
+ 154|       </div>
+ 155| 
+ 156|       <div class="field-row">
+ 157|         <div class="field"><label>Email <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="email" id="fEmail" placeholder="you@example.com"></div>
+ 158|         <div class="field"><label>Phone <span style="font-weight:400; color:var(--text-faint);">(optional)</span></label><input class="input" type="tel" id="fPhone" placeholder="+91 …"></div>
+ 159|       </div>
+ 160| 
+ 161|       <label class="check-row" style="margin:6px 0;"><input type="checkbox" id="chkTerms"><span>I agree to the <a href="#" onclick="return false;">terms of use</a> and community code of conduct.</span></label>
+ 162|       <label class="check-row" style="margin:6px 0 16px;"><input type="checkbox" id="chkConsent"><span>I confirm the information provided is accurate to the best of my knowledge, and I consent to it being published publicly after review.</span></label>
+ 163| 
+ 164|       <div class="row-flex" style="justify-content:space-between; gap:10px;">
+ 165|         <button class="btn btn-ghost" type="button" onclick="goStep(2)">← Back</button>
+ 166|         <button class="btn btn-primary" type="button" id="postBtn" onclick="postFinal()" disabled>Agree &amp; Post</button>
+ 167|       </div>
+ 168|     </section>
+ 169|   </div>
+ 170| </main>
+ 171| 
+ 172| <div id="modal-mount"></div>
+ 173| <div class="toast-wrap" id="toastWrap"></div>
+ 174| 
+ 175| <!-- AI reviewing overlay — shown while Sahayak categorizes; cancel returns to step 1 -->
+ 176| <div class="modal-overlay" id="aiReviewOverlay" style="position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center;">
+ 177|   <div class="modal" style="max-width:440px; text-align:center;">
+ 178|     <div class="modal-head" style="justify-content:center;"><h3 style="font-size:18px;">✦ Sahayak is reviewing</h3></div>
+ 179|     <div class="modal-body" style="padding:6px 8px 4px;">
+ 180|       <p style="font-size:16px; line-height:1.6;">AI is reviewing and categorizing your problem…</p>
+ 181|       <p class="hint" style="margin-top:10px;">This usually takes a few seconds.</p>
+ 182|     </div>
+ 183|     <div class="modal-foot" style="justify-content:center; gap:10px;">
+ 184|       <button class="btn btn-ghost" type="button" onclick="cancelAiReviewBack()">← Back</button>
+ 185|       <button class="btn btn-outline" type="button" onclick="cancelAiReviewStay()">Cancel</button>
+ 186|     </div>
+ 187|   </div>
+ 188| </div>
+ 189| 
+ 190| <script src="js/india-districts-fallback.js"></script>
+ 191| <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+ 192| <script src="js/supabase-client.js"></script>
+ 193| <script src="js/data.js"></script>
+ 194| <script src="js/app.js"></script>
+ 195| <script src="js/shell.js"></script>
+ 196| <script>
+ 197| /* ==================================================================
+ 198|    Report-a-Problem wizard — 3 steps
+ 199|    ================================================================== */
+ 200| const val = id => (document.getElementById(id)?.value || '').trim();
+ 201| let step = 1;
+ 202| let aiPick = null;      // { tags:[…], sev, urg } — what the AI suggested
+ 203| let aiVerified = false; // do the user's current choices match the AI?
+ 204| let aiCancelled = false; // user pressed Cancel on the AI-review overlay
+ 205| let currentUserId = null; // Supabase auth user id (set in DOMContentLoaded)
+ 206| 
+ 207| function goStep(n){
+ 208|   step = n;
+ 209|   document.querySelectorAll('.wz-pane').forEach(p => p.classList.toggle('active', +p.dataset.step === n));
+ 210|   document.querySelectorAll('#wzSteps .wz-tab').forEach(t => {
+ 211|     const k = +t.dataset.n;
+ 212|     t.classList.toggle('current', k === n);
+ 213|     t.classList.toggle('done', k < n);
+ 214|   });
+ 215|   window.scrollTo({ top:0, behavior:'smooth' });
+ 216| }
+ 217| 
+ 218| /* ---------- step 1 → 2 ---------- */
+ 219| function nextFrom1(){
+ 220|   const need = [];
+ 221|   if(!val('fTitle'))    need.push('Problem title');
+ 222|   if(!val('fDesc'))     need.push('Detailed description');
+ 223|   if(!val('fBlock'))    need.push('Block / Village / City');
+ 224|   if(!val('stateSelect'))    need.push('State');
+ 225|   if(!val('districtSelect')) need.push('District');
+ 226|   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
+ 227|   if(!document.querySelector('#categoryGroups .cat-panel')) buildCategoryPanels();
+ 228|   goStep(2);
+ 229|   runAiCategorize();
+ 230| }
+ 231| 
+ 232| /* ---------- step 2 · AI categorization (Gemini via serverless proxy) ---------- */
+ 233| let sahayaBusy = false;   // guard against double-submitting the AI call
+ 234| 
+ 235| const SEVERITY_LABELS = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+ 236| 
+ 237| /* Map Gemini's 1-10 urgency number onto the form's dropdown options. */
+ 238| function urgencyLabel(n){
+ 239|   n = Number(n);
+ 240|   if(isNaN(n)) return '';
+ 241|   if(n >= 9) return 'Immediate';
+ 242|   if(n >= 7) return 'Within days';
+ 243|   if(n >= 5) return 'Within months';
+ 244|   return 'Long-term';
+ 245| }
+ 246| 
+ 247| /* Set the badge/note to the "AI Verified" state (kept in sync with aiPick). */
+ 248| function setAiVerified(){
+ 249|   aiVerified = true;
+ 250|   const badge = document.getElementById('aiBadge');
+ 251|   if(badge) badge.innerHTML = '<span class="stamp stamp-validated">✓ AI Verified</span>';
+ 252|   const note = document.getElementById('routeNote');
+ 253|   if(note){
+ 254|     note.className = 'note ok';
+ 255|     note.innerHTML = '<b>AI Verified.</b>&nbsp; Categorization matches Sahayak\'s suggestion — it will be posted publicly as soon as you agree below.';
+ 256|   }
+ 257| }
+ 258| 
+ 259| /* Set the badge/note to the "Will Need Review" state. */
+ 260| function setNeedsReview(){
+ 261|   aiVerified = false;
+ 262|   const badge = document.getElementById('aiBadge');
+ 263|   if(badge) badge.innerHTML = '<span class="stamp stamp-pending">Will Need Review</span>';
+ 264|   const note = document.getElementById('routeNote');
+ 265|   if(note){
+ 266|     note.className = 'note warn';
+ 267|     note.innerHTML = '<b>Goes through manual review.</b>&nbsp; Your categorization differs from the AI suggestion — this case will pass through an additional AI re-check plus a moderator before it appears publicly.';
+ 268|   }
+ 269| }
+ 270| 
+ 271| /* Show/hide the "reading your problem…" state in step 2 and block interaction. */
+ 272| function setSahayaLoading(on){
+ 273|   const badge = document.getElementById('aiBadge');
+ 274|   const noteEl = document.getElementById('aiNote');
+ 275|   if(on){
+ 276|     if(badge) badge.innerHTML = '<span style="font-size:12.5px; color:var(--text-faint);">✦ Sahayak is reading your problem…</span>';
+ 277|     if(noteEl){ noteEl.className = 'note'; noteEl.innerHTML = ''; }
+ 278|   }
+ 279|   const pane = document.querySelector('.wz-pane[data-step="2"]');
+ 280|   if(pane){
+ 281|     pane.style.opacity = on ? '0.7' : '';
+ 282|     pane.style.pointerEvents = on ? 'none' : '';
+ 283|   }
+ 284|   /* Popup overlay with bigger text + Cancel */
+ 285|   const ov = document.getElementById('aiReviewOverlay');
+ 286|   if(ov) ov.style.display = on ? 'flex' : 'none';
+ 287| }
+ 288| 
+ 289| /* Cancel the AI review — release the guard so the user can retry. */
+ 290| function stopAiReview(){
+ 291|   aiCancelled = true;
+ 292|   sahayaBusy = false;              /* release the guard so Next works immediately */
+ 293|   setSahayaLoading(false);
+ 294| }
+ 295| /* ← Back — stop AI and return to form 1. */
+ 296| function cancelAiReviewBack(){
+ 297|   stopAiReview();
+ 298|   goStep(1);
+ 299| }
+ 300| /* Cancel — stop AI but stay on form 2 with the "will need review" fallback so
+ 301|    the user can keep editing manually. */
+ 302| function cancelAiReviewStay(){
+ 303|   stopAiReview();
+ 304|   setNeedsReview();
+ 305| }
+ 306| 
+ 307| async function runAiCategorize(){
+ 308|   if(sahayaBusy) return;
+ 309|   sahayaBusy = true;
+ 310|   aiCancelled = false;
+ 311|   setSahayaLoading(true);
+ 312| 
+ 313|   const title = val('fTitle');
+ 314|   const description = val('fDesc');
+ 315|   const district = val('districtSelect');
+ 316|   const state = val('stateSelect');
+ 317|   const aff = val('fAffected');
+ 318|   const affected_count = aff ? parseInt(aff, 10) : null;
+ 319| 
+ 320|   try{
+ 321|     const res = await fetch('/api/categorize', {
+ 322|       method: 'POST',
+ 323|       headers: { 'Content-Type': 'application/json' },
+ 324|       body: JSON.stringify({ title, description, district, state, affected_count })
+ 325|     });
+ 326|     if(aiCancelled) return;              /* user cancelled — ignore late response */
+ 327|     if(!res.ok) throw new Error('HTTP ' + res.status);
+ 328|     const result = await res.json();
+ 329|     if(result && result.error) throw new Error(result.error);
+ 330| 
+ 331|     applyAiResult(result);
+ 332|     if(aiCancelled) return;              /* user cancelled while applying */
+ 333|     setAiVerified();
+ 334|   }catch(err){
+ 335|     if(aiCancelled) return;              /* cancelled — no error toast */
+ 336|     console.error('[sahayak] categorize failed:', err);
+ 337|     toast('Sahayak could not categorize — please select manually');
+ 338|     setNeedsReview();
+ 339|     /* Step 2 is already active — the user can pick categories by hand. */
+ 340|   }finally{
+ 341|     sahayaBusy = false;
+ 342|     if(!aiCancelled) setSahayaLoading(false);   /* don't pop the overlay if user cancelled */
+ 343|   }
+ 344| }
+ 345| 
+ 346| function applyAiResult(result){
+ 347|   /* Categories — match Gemini strings to chips whose text matches exactly. */
+ 348|   const chips = {};
+ 349|   document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => { chips[el.textContent.trim()] = el; });
+ 350| 
+ 351|   document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => el.classList.remove('sel'));
+ 352|   selectedTags.clear();
+ 353|   (Array.isArray(result.categories) ? result.categories : []).slice(0, 4).forEach(cat => {
+ 354|     const chip = chips[cat];
+ 355|     if(chip){
+ 356|       chip.classList.add('sel');
+ 357|       selectedTags.add(cat);
+ 358|     }
+ 359|   });
+ 360|   syncSelection();   // rebuilds the Selected mirror (refreshes badge once aiPick is known)
+ 361| 
+ 362|   /* Severity */
+ 363|   const sev = SEVERITY_LABELS[String(result.severity || '').toLowerCase()];
+ 364|   if(sev) document.getElementById('fSev').value = sev;
+ 365| 
+ 366|   /* Urgency — number 1-10 → dropdown option */
+ 367|   const urg = urgencyLabel(result.urgency);
+ 368|   if(urg) document.getElementById('fUrg').value = urg;
+ 369| 
+ 370|   /* Hashtags */
+ 371|   const fTags = document.getElementById('fTags');
+ 372|   if(fTags && Array.isArray(result.hashtags)) fTags.value = result.hashtags.join(' ');
+ 373| 
+ 374|   /* Reasoning below the badge */
+ 375|   const noteEl = document.getElementById('aiNote');
+ 376|   if(noteEl){
+ 377|     noteEl.className = 'note';
+ 378|     noteEl.innerHTML = result.reasoning
+ 379|       ? '<span style="font-size:11.5px; color:var(--text-faint); font-style:italic; margin-top:4px;">Sahayak: ' + result.reasoning + '</span>'
+ 380|       : '';
+ 381|   }
+ 382| 
+ 383|   /* Remember the AI suggestion so later user changes flip the badge. */
+ 384|   aiPick = { tags: [...selectedTags], sev: val('fSev'), urg: val('fUrg') };
+ 385| }
+ 386| 
+ 387| function isAiMatch(){
+ 388|   if(!aiPick) return false;
+ 389|   const sameTags = aiPick.tags.length === selectedTags.size &&
+ 390|                    aiPick.tags.every(t => selectedTags.has(t));
+ 391|   return sameTags && val('fSev') === aiPick.sev && val('fUrg') === aiPick.urg;
+ 392| }
+ 393| 
+ 394| function refreshAiBadge(){
+ 395|   if(!aiPick) return;
+ 396|   if(isAiMatch()) setAiVerified(); else setNeedsReview();
+ 397| }
+ 398| 
+ 399| function nextFrom2(){ fillSummary(); goStep(3); }
+ 400| 
+ 401| /* ---------- step 3 · agree & post ---------- */
+ 402| function fillSummary(){
+ 403|   document.getElementById('sumTitle').textContent = val('fTitle') || '—';
+ 404|   document.getElementById('sumCats').textContent  = [...selectedTags].join(', ') || '—';
+ 405|   document.getElementById('sumSev').textContent   = val('fSev') || '—';
+ 406|   document.getElementById('sumUrg').textContent   = val('fUrg') || '—';
+ 407| }
+ 408| function updatePostBtn(){
+ 409|   document.getElementById('postBtn').disabled =
+ 410|     !(document.getElementById('chkTerms').checked && document.getElementById('chkConsent').checked);
+ 411| }
+ 412| function postFinal(){
+ 413|   if(!currentUserId){ go('login.html'); return; }
+ 414|   const postBtn = document.getElementById('postBtn');
+ 415|   postBtn.disabled = true;
+ 416|   (async () => {
+ 417|     try{
+ 418|       await uploadEvidenceFiles();        /* evidence → evidences bucket */
+ 419|       const payload = collectFormData();
+ 420|       /* AI-verified cases post straight through; anything else needs review. */
+ 421|       payload.problem_state = (aiVerified === true) ? 'reviewed' : 'unreviewed';
+ 422| 
+ 423|       const draftId = sessionStorage.getItem('ss_draft_id');
+ 424|       let saved;
+ 425|       if(draftId){
+ 426|         /* if the draft row was deleted meanwhile, submit as a fresh problem */
+ 427|         saved = await sbClient.from('problems')
+ 428|           .update(payload).eq('id', draftId).select('case_no').maybeSingle();
+ 429|         if(!saved.data){
+ 430|           saved = await sbClient.from('problems')
+ 431|             .insert(payload).select('case_no').single();
+ 432|         }
+ 433|       } else {
+ 434|         saved = await sbClient.from('problems')
+ 435|           .insert(payload).select('case_no').single();
+ 436|       }
+ 437|       if(saved.error) throw saved.error;
+ 438| 
+ 439|       sessionStorage.removeItem('ss_draft_id');
+ 440|       toast('Problem submitted — Case ' + saved.data.case_no);
+ 441|       setTimeout(() => go('my-problems.html'), 1800);
+ 442|     }catch(err){
+ 443|       console.error('[submit] post failed:', err);
+ 444|       toast('Submission failed — ' + err.message);
+ 445|       updatePostBtn(); /* re-enable so the user can retry */
+ 446|     }
+ 447|   })();
+ 448| }
+ 449| 
+ 450| /* ---------- Supabase persistence (problems table) ---------- */
+ 451| /* Urgency is stored as an integer (1-10) in the problems table; the form
+ 452|    shows it as a dropdown. Map both ways so drafts round-trip. */
+ 453| function urgencyToInt(label){
+ 454|   const n = parseInt(label, 10);
+ 455|   if(!isNaN(n)) return n;
+ 456|   switch(label){
+ 457|     case 'Immediate':    return 10;
+ 458|     case 'Within days':  return 8;
+ 459|     case 'Within months':return 6;
+ 460|     case 'Long-term':    return 3;
+ 461|     default:             return null;
+ 462|   }
+ 463| }
+ 464| 
+ 465| /* The problems table stores severity lowercase ('low'…'critical' — see the
+ 466|    problems_severity_check constraint), while the form's dropdown shows
+ 467|    capitalized options. Convert both ways so inserts pass the check and
+ 468|    resumed drafts round-trip. */
+ 469| const SEVERITIES = ['low', 'medium', 'high', 'critical'];
+ 470| function sevToDb(label){
+ 471|   const v = String(label || '').trim().toLowerCase();
+ 472|   return SEVERITIES.includes(v) ? v : 'medium';
+ 473| }
+ 474| function sevFromDb(v){
+ 475|   const s = String(v || '').trim().toLowerCase();
+ 476|   return SEVERITIES.includes(s) ? s.charAt(0).toUpperCase() + s.slice(1) : 'Medium';
+ 477| }
+ 478| 
+ 479| /* Read every field of the wizard into one problems-table payload. */
+ 480| function collectFormData(){
+ 481|   const affRaw = val('fAffected');
+ 482|   const aff = affRaw ? parseInt(affRaw, 10) : NaN;
+ 483|   return {
+ 484|     title:          val('fTitle'),
+ 485|     description:    val('fDesc'),
+ 486|     state:          val('stateSelect'),
+ 487|     district:       val('districtSelect'),
+ 488|     block:          val('fBlock'),
+ 489|     location_text:  val('fLocation'),
+ 490|     affected_count: (!isNaN(aff) ? aff : null),
+ 491|     media_urls: [...evidenceUrls, ...[...document.querySelectorAll('#linkRows .link-row input')]
+ 492|                   .map(i => i.value.trim()).filter(Boolean)],
+ 493|     categories: [...document.querySelectorAll('#categoryGroups .chip-opt.sel')]
+ 494|                   .map(el => el.textContent.trim()),
+ 495|     hashtags:    val('fTags'),
+ 496|     severity:    sevToDb(val('fSev')),
+ 497|     urgency:     (urgencyToInt(val('fUrg')) ?? 5),
+ 498|     ai_reviewed: aiVerified === true,
+ 499|     contact_email: val('fEmail'),
+ 500|     contact_phone: val('fPhone'),
+ 501|     submitted_by: currentUserId
+ 502|   };
+ 503| }
+ 504| 
+ 505| /* ---------- evidence attachments — click opens the PC file picker (drag & drop too) ----------
+ 506|    Files upload to the `evidences` storage bucket whenever the form is saved
+ 507|    (draft or final submit), and the public URLs are stored in media_urls. */
+ 508| let evidenceFiles = [];   // File objects chosen but not yet uploaded
+ 509| let evidenceUrls = [];    // public URLs already in the evidences bucket
+ 510| 
+ 511| const EVIDENCE_BUCKET = 'evidences';
+ 512| const EVIDENCE_MAX_BYTES = 50 * 1024 * 1024;   /* Supabase per-file limit */
+ 513| 
+ 514| function esc(s){
+ 515|   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ 516| }
+ 517| function isEvidenceUrl(u){ return String(u).indexOf('/object/public/evidences/') >= 0; }
+ 518| function evidenceFileName(url){
+ 519|   try{ return decodeURIComponent(String(url).split('/').pop() || ''); }
+ 520|   catch(e){ return String(url).split('/').pop() || ''; }
+ 521| }
+ 522| function fmtBytes(n){
+ 523|   if(!n) return '';
+ 524|   if(n >= 1024*1024) return (n/1024/1024).toFixed(1) + ' MB';
+ 525|   return Math.max(1, Math.round(n/1024)) + ' KB';
+ 526| }
+ 527| 
+ 528| function renderEvidence(){
+ 529|   const wrap = document.getElementById('evidenceList');
+ 530|   const items = [
+ 531|     ...evidenceUrls.map((u, i) => ({ kind:'url',  i, name: evidenceFileName(u), meta: 'in evidences bucket' })),
+ 532|     ...evidenceFiles.map((f, i) => ({ kind:'file', i, name: f.name, meta: fmtBytes(f.size) })),
+ 533|   ];
+ 534|   wrap.innerHTML = items.map(it => `
+ 535|     <div class="link-row" style="margin-bottom:0;">
+ 536|       <div class="person-row" style="flex:1; min-width:0; padding:0;">
+ 537|         <div class="av" style="border-radius:6px;">📄</div>
+ 538|         <div style="min-width:0;"><b style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(it.name)}</b><span>${esc(it.meta)}</span></div>
+ 539|       </div>
+ 540|       <button class="link-del" type="button" title="Remove this document" onclick="removeEvidence('${it.kind}', ${it.i})">
+ 541|         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ 542|           <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+ 543|         </svg>
+ 544|       </button>
+ 545|     </div>`).join('');
+ 546| }
+ 547| function removeEvidence(kind, i){
+ 548|   if(kind === 'url') evidenceUrls.splice(i, 1);
+ 549|   else evidenceFiles.splice(i, 1);
+ 550|   renderEvidence();
+ 551| }
+ 552| function handleEvidenceFiles(fileList){
+ 553|   const arr = Array.from(fileList || []);
+ 554|   if(!arr.length) return;
+ 555|   let added = 0;
+ 556|   arr.forEach(f => {
+ 557|     /* already attached (same name+size pending, or a bucket URL with the same
+ 558|        file name) → skip silently: don't add it, don't show an error */
+ 559|     if(evidenceFiles.some(x => x.name === f.name && x.size === f.size)) return;
+ 560|     if(evidenceUrls.some(u => evidenceFileName(u) === f.name)) return;
+ 561|     if(f.size > EVIDENCE_MAX_BYTES){ toast(f.name + ' is larger than 50 MB — skipped'); return; }
+ 562|     evidenceFiles.push(f); added++;
+ 563|   });
+ 564|   renderEvidence();
+ 565|   if(added) toast(added + ' document' + (added === 1 ? '' : 's') + ' attached');
+ 566| }
+ 567| 
+ 568| /* ---- evidences bucket ---- */
+ 569| function safeEvidenceName(name){
+ 570|   const base = String(name).replace(/^.*[\\/]/, '');   /* strip any folder path */
+ 571|   return base.replace(/[^\w.\-()]+/g, '_').slice(-120);/* url-safe, keep extension */
+ 572| }
+ 573| /* true if `path` already exists in the evidences bucket — never throws,
+ 574|    never surfaces an error (a blind listing just means "treat as new"). */
+ 575| async function evidenceFileExists(path){
+ 576|   try{
+ 577|     const parts = String(path).split('/');
+ 578|     const name = parts.pop();
+ 579|     const folder = parts.join('/');
+ 580|     const { data, error } = await sbClient.storage.from(EVIDENCE_BUCKET)
+ 581|       .list(folder, { limit: 1, search: name });
+ 582|     if(error) return false;
+ 583|     return (data || []).some(f => f.name === name);
+ 584|   }catch(e){ return false; }
+ 585| }
+ 586| function evidencePublicUrl(path){
+ 587|   try{
+ 588|     const { data } = sbClient.storage.from(EVIDENCE_BUCKET).getPublicUrl(path);
+ 589|     return (data && data.publicUrl) || null;
+ 590|   }catch(e){ return null; }
+ 591| }
+ 592| /* Upload one file → public URL. If it already exists in the bucket, reuse the
+ 593|    existing object silently (no error shown, no duplicate upload). */
+ 594| async function uploadEvidenceFile(file){
+ 595|   if(!currentUserId || !file) return null;
+ 596|   const path = currentUserId + '/' + safeEvidenceName(file.name);
+ 597|   try{
+ 598|     if(await evidenceFileExists(path)) return evidencePublicUrl(path);
+ 599|     const { error } = await sbClient.storage.from(EVIDENCE_BUCKET)
+ 600|       .upload(path, file, { upsert: false, contentType: file.type || undefined });
+ 601|     if(error){
+ 602|       /* upload raced with another tab or the listing missed it — re-check and
+ 603|          reuse the existing object silently */
+ 604|       if(await evidenceFileExists(path)) return evidencePublicUrl(path);
+ 605|       console.error('[submit] evidence upload failed:', error.message);
+ 606|       toast('Could not upload ' + file.name + ' — ' + error.message);
+ 607|       return null;
+ 608|     }
+ 609|     return evidencePublicUrl(path);
+ 610|   }catch(e){
+ 611|     console.error('[submit] evidence upload failed:', e);
+ 612|     return null;
+ 613|   }
+ 614| }
+ 615| /* Upload every pending file; successful ones move into evidenceUrls. */
+ 616| async function uploadEvidenceFiles(){
+ 617|   if(!evidenceFiles.length) return;
+ 618|   const pending = evidenceFiles.slice();
+ 619|   for(const f of pending){
+ 620|     const url = await uploadEvidenceFile(f);
+ 621|     if(url){
+ 622|       evidenceUrls.push(url);
+ 623|       evidenceFiles.splice(evidenceFiles.indexOf(f), 1);
+ 624|       renderEvidence();
+ 625|     }
+ 626|   }
+ 627| }
+ 628| 
+ 629| /* ---------- step 1 helpers ---------- */
+ 630| function linkRowHTML(){
+ 631|   return '<div class="link-row"><input class="input" type="url" placeholder="https://…">' +
+ 632|     '<button class="link-del" type="button" title="Remove this link" onclick="removeLinkRow(this)">' +
+ 633|     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+ 634|     '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+ 635|     '</svg></button></div>';
+ 636| }
+ 637| function addLinkRow(){
+ 638|   document.getElementById('linkRows').insertAdjacentHTML('beforeend', linkRowHTML());
+ 639| }
+ 640| function removeLinkRow(btn){
+ 641|   const rows = document.querySelectorAll('#linkRows .link-row');
+ 642|   if(rows.length <= 1){
+ 643|     rows[0].querySelector('input').value = '';
+ 644|     toast('At least one link row stays — cleared it instead');
+ 645|     return;
+ 646|   }
+ 647|   btn.closest('.link-row').remove();
+ 648| }
+ 649| function clearStep1(){
+ 650|   ['fTitle','fDesc','fBlock','fAffected','fTags','fLocation'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+ 651|   document.querySelectorAll('#linkRows .link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
+ 652|   evidenceFiles = [];
+ 653|   evidenceUrls = [];
+ 654|   renderEvidence();
+ 655|   toast('Form cleared');
+ 656| }
+ 657| /* "Continue with draft" — drafts are now managed from the My Problems page,
+ 658|    where each draft row has its own Continue action. */
+ 659| function continueDraft(){
+ 660|   go('my-problems.html');
+ 661| }
+ 662| /* Save the current wizard state as a draft row in the problems table. */
+ 663| async function saveDraft(){
+ 664|   if(!currentUserId){ go('login.html'); return; }
+ 665|   try{
+ 666|     await uploadEvidenceFiles();          /* evidence → evidences bucket */
+ 667|     const payload = collectFormData();
+ 668|     payload.problem_state = 'draft';
+ 669| 
+ 670|     const draftId = sessionStorage.getItem('ss_draft_id');
+ 671|     if(draftId){
+ 672|       /* maybeSingle: if the draft was deleted from My Problems in another tab,
+ 673|          fall back to inserting a fresh draft so nothing is lost */
+ 674|       const res = await sbClient.from('problems')
+ 675|         .update(payload).eq('id', draftId).select('id').maybeSingle();
+ 676|       if(res.error) throw res.error;
+ 677|       if(!res.data){
+ 678|         const ins = await sbClient.from('problems').insert(payload).select('id').single();
+ 679|         if(ins.error) throw ins.error;
+ 680|         sessionStorage.setItem('ss_draft_id', ins.data.id);
+ 681|       }
+ 682|     } else {
+ 683|       const ins = await sbClient.from('problems')
+ 684|         .insert(payload).select('id').single();
+ 685|       if(ins.error) throw ins.error;
+ 686|       sessionStorage.setItem('ss_draft_id', ins.data.id);
+ 687|     }
+ 688|     toast('Draft saved');
+ 689|   }catch(err){
+ 690|     console.error('[submit] saveDraft failed:', err);
+ 691|     toast('Could not save draft — ' + err.message);
+ 692|   }
+ 693| }
+ 694| 
+ 695| /* Pre-fill the whole wizard from a resumed draft row (Task 1). */
+ 696| function prefillFromDraft(d, applyLocation){
+ 697|   document.getElementById('fTitle').value = d.title || '';
+ 698|   document.getElementById('fDesc').value = d.description || '';
+ 699|   document.getElementById('fBlock').value = d.block || '';
+ 700|   document.getElementById('fLocation').value = d.location_text || '';
+ 701|   document.getElementById('fAffected').value = (d.affected_count != null ? d.affected_count : '');
+ 702|   document.getElementById('fTags').value = d.hashtags || '';
+ 703|   document.getElementById('fSev').value = sevFromDb(d.severity);
+ 704|   if(d.urgency != null){
+ 705|     const lbl = urgencyLabel(d.urgency);
+ 706|     if(lbl) document.getElementById('fUrg').value = lbl;
+ 707|   }
+ 708|   document.getElementById('fEmail').value = d.contact_email || '';
+ 709|   document.getElementById('fPhone').value = d.contact_phone || '';
+ 710| 
+ 711|   /* media_urls → evidence-bucket URLs stay attached to the form; other links
+ 712|      go back into the link rows */
+ 713|   const rowsWrap = document.getElementById('linkRows');
+ 714|   const media = Array.isArray(d.media_urls) ? d.media_urls : [];
+ 715|   evidenceUrls = media.filter(isEvidenceUrl);
+ 716|   const linkUrls = media.filter(u => !isEvidenceUrl(u));
+ 717|   rowsWrap.querySelectorAll('.link-row').forEach((r,i) => { if(i>0) r.remove(); else r.querySelector('input').value=''; });
+ 718|   linkUrls.filter(Boolean).forEach((u, i) => {
+ 719|     if(i === 0){ rowsWrap.querySelector('.link-row input').value = u; }
+ 720|     else { addLinkRow(); const rows = rowsWrap.querySelectorAll('.link-row'); rows[rows.length-1].querySelector('input').value = u; }
+ 721|   });
+ 722|   renderEvidence();
+ 723| 
+ 724|   /* state / district (dropdowns must already be populated) */
+ 725|   applyLocation(d.state, d.district);
+ 726| 
+ 727|   /* categories */
+ 728|   selectedTags.clear();
+ 729|   (Array.isArray(d.categories) ? d.categories : []).forEach(t => selectedTags.add(t));
+ 730|   syncSelection();
+ 731| 
+ 732|   /* if the draft was AI-verified, restore that state so the badge matches */
+ 733|   if(d.ai_reviewed === true){
+ 734|     aiPick = { tags: [...selectedTags], sev: sevFromDb(d.severity), urg: urgencyLabel(d.urgency != null ? d.urgency : 6) };
+ 735|     setAiVerified();
+ 736|   }
+ 737| }
+ 738| 
+ 739| /* ---- grouped category panels + Selected mirror (step 2) ---- */
+ 740| const selectedTags = new Set();
+ 741| 
+ 742| function toggleTag(tag){
+ 743|   if(selectedTags.has(tag)) selectedTags.delete(tag);
+ 744|   else selectedTags.add(tag);
+ 745|   syncSelection();
+ 746| }
+ 747| 
+ 748| function syncSelection(){
+ 749|   /* highlight the source chips inside their group panels */
+ 750|   document.querySelectorAll('#categoryGroups .cat-tag').forEach(el => {
+ 751|     el.classList.toggle('sel', selectedTags.has(el.dataset.tag));
+ 752|   });
+ 753| 
+ 754|   /* rebuild the Selected mirror */
+ 755|   const wrap = document.getElementById('selectedCats');
+ 756|   if(!selectedTags.size){
+ 757|     wrap.innerHTML = '<span style="font-size:12px; color:var(--text-faint);">Sahayak will suggest tags automatically on Next — or pick them yourself below.</span>';
+ 758|   } else {
+ 759|     wrap.innerHTML = '';
+ 760|     [...selectedTags].forEach(tag => {
+ 761|       const b = document.createElement('button');
+ 762|       b.type = 'button';
+ 763|       b.className = 'chip-opt sel cat-mirror';
+ 764|       b.title = 'Click to remove';
+ 765|       b.innerHTML = tag + ' <span style="opacity:.55;">✕</span>';
+ 766|       b.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+ 767|       wrap.appendChild(b);
+ 768|     });
+ 769|   }
+ 770|   document.getElementById('selCount').textContent = '(' + selectedTags.size + ')';
+ 771|   if(typeof refreshAiBadge === 'function') refreshAiBadge();
+ 772| }
+ 773| 
+ 774| function buildCategoryPanels(){
+ 775|   const groupsWrap = document.getElementById('categoryGroups');
+ 776|   PROBLEM_CATEGORY_GROUPS.forEach(gr => {
+ 777|     const panel = document.createElement('div');
+ 778|     panel.className = 'cat-panel';
+ 779|     panel.style.borderColor = gr.color;
+ 780|     panel.innerHTML = `<div class="cat-panel-head"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}</div>`;
+ 781|     const grid = document.createElement('div');
+ 782|     grid.className = 'cat-grid';
+ 783|     gr.tags.forEach(tag => {
+ 784|       const el = document.createElement('button');
+ 785|       el.type = 'button';
+ 786|       el.className = 'chip-opt cat-tag';
+ 787|       el.dataset.tag = tag;
+ 788|       el.textContent = tag;
+ 789|       el.addEventListener('click', e => { e.stopPropagation(); toggleTag(tag); });
+ 790|       grid.appendChild(el);
+ 791|     });
+ 792|     panel.appendChild(grid);
+ 793|     groupsWrap.appendChild(panel);
+ 794|   });
+ 795| }
+ 796| 
+ 797| document.addEventListener('DOMContentLoaded', async () => {
+ 798|   renderShell();
+ 799| 
+ 800|   /* Guests browse only — reporting needs a Citizen account */
+ 801|   if(currentRole() === 'guest'){
+ 802|     toast('Reporting needs a Citizen account — you\u2019re currently browsing as a Guest.');
+ 803|     setTimeout(() => go('explore.html'), 1300);
+ 804|     return;
+ 805|   }
+ 806| 
+ 807|   /* ---- Supabase session check (problems table writes need a user id) ---- */
+ 808|   const { data: sess } = await sbClient.auth.getSession();
+ 809|   const sessUser = sess?.session?.user;
+ 810|   if(!sessUser){ go('login.html'); return; }
+ 811|   currentUserId = sessUser.id;
+ 812| 
+ 813|   buildCategoryPanels();
+ 814|   goStep(1);
+ 815|   document.getElementById('chkTerms').addEventListener('change', updatePostBtn);
+ 816|   document.getElementById('chkConsent').addEventListener('change', updatePostBtn);
+ 817| 
+ 818|   /* Evidence — click opens the PC file picker; drag & drop also works. */
+ 819|   const evidenceInput = document.getElementById('fEvidence');
+ 820|   evidenceInput.addEventListener('change', () => {
+ 821|     handleEvidenceFiles(evidenceInput.files);
+ 822|     evidenceInput.value = '';   /* allow re-attaching the same file later */
+ 823|   });
+ 824|   const evZone = document.getElementById('evidenceZone');
+ 825|   evZone.addEventListener('dragover', e => { e.preventDefault(); evZone.style.borderColor = 'var(--setu-2)'; });
+ 826|   evZone.addEventListener('dragleave', e => { e.preventDefault(); evZone.style.borderColor = ''; });
+ 827|   evZone.addEventListener('drop', e => {
+ 828|     e.preventDefault();
+ 829|     evZone.style.borderColor = '';
+ 830|     handleEvidenceFiles(e.dataTransfer.files);
+ 831|   });
+ 832| 
+ 833|   /* ---- State / District dropdowns ----
+ 834|      Primary source: js/india-districts-fallback.js (works offline & on file://).
+ 835|      When served over HTTP we also refresh from
+ 836|      data-resources/india-districts.json so the JSON stays the editable
+ 837|      source of truth. */
+ 838|   const stateSel = document.getElementById('stateSelect');
+ 839|   const distSel  = document.getElementById('districtSelect');
+ 840|   let indiaData  = Array.isArray(window.INDIA_DISTRICTS_FALLBACK)
+ 841|                  ? window.INDIA_DISTRICTS_FALLBACK.slice() : [];
+ 842|   let loadedDraft = null; // resumed draft row (for re-applying after option rebuilds)
+ 843| 
+ 844|   /* Select a state + district in the dropdowns (used by draft resume). */
+ 845|   function applyLocation(state, district){
+ 846|     if(!state) return;
+ 847|     stateSel.value = state;
+ 848|     const st = indiaData.find(s => s.state === state);
+ 849|     distSel.innerHTML = '<option value="">Select district</option>';
+ 850|     if(st){
+ 851|       st.districts.forEach(d => {
+ 852|         const o = document.createElement('option');
+ 853|         o.value = d; o.textContent = d;
+ 854|         distSel.appendChild(o);
+ 855|       });
+ 856|       distSel.disabled = false;
+ 857|     } else {
+ 858|       distSel.disabled = true;
+ 859|     }
+ 860|     if(district) distSel.value = district;
+ 861|   }
+ 862| 
+ 863|   function populateStates(){
+ 864|     stateSel.innerHTML = '<option value="">Select state</option>';
+ 865|     indiaData.forEach(s => {
+ 866|       const o = document.createElement('option');
+ 867|       o.value = s.state;
+ 868|       o.textContent = s.state;
+ 869|       stateSel.appendChild(o);
+ 870|     });
+ 871|   }
+ 872|   populateStates();
+ 873| 
+ 874|   stateSel.addEventListener('change', () => {
+ 875|     distSel.innerHTML = '<option value="">Select district</option>';
+ 876|     const st = indiaData.find(s => s.state === stateSel.value);
+ 877|     if(st){
+ 878|       st.districts.forEach(d => {
+ 879|         const o = document.createElement('option');
+ 880|         o.value = d;
+ 881|         o.textContent = d;
+ 882|         distSel.appendChild(o);
+ 883|       });
+ 884|       distSel.disabled = false;
+ 885|     } else {
+ 886|       distSel.disabled = true;
+ 887|     }
+ 888|   });
+ 889| 
+ 890|   /* live refresh when served over HTTP */
+ 891|   fetch('data-resources/india-districts.json')
+ 892|     .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+ 893|     .then(data => {
+ 894|       const arr = Array.isArray(data) ? data : (data.states || []);
+ 895|       if(arr.length && arr.length !== indiaData.length){
+ 896|         indiaData = arr;
+ 897|         populateStates();
+ 898|         /* re-apply a resumed draft's location if the refresh rebuilt the options */
+ 899|         if(loadedDraft) applyLocation(loadedDraft.state, loadedDraft.district);
+ 900|       }
+ 901|     })
+ 902|     .catch(() => {});
+ 903| 
+ 904|   /* ---- Draft resume (ss_draft_id set by my-problems "Continue" link) ----
+ 905|      The marker is kept (not cleared) so further edits keep updating the same
+ 906|      draft row; it is cleared only when the problem is finally submitted. */
+ 907|   const draftId = sessionStorage.getItem('ss_draft_id');
+ 908|   if(draftId){
+ 909|     try{
+ 910|       const { data: draft, error } = await sbClient.from('problems')
+ 911|         .select('*').eq('id', draftId).maybeSingle();
+ 912|       if(error) throw error;
+ 913|       if(draft && draft.submitted_by === currentUserId){
+ 914|         loadedDraft = draft;
+ 915|         prefillFromDraft(draft, applyLocation);
+ 916|         toast('Draft loaded — continue where you left off.');
+ 917|       }
+ 918|     }catch(err){
+ 919|       console.error('[submit] draft resume failed:', err);
+ 920|     }
+ 921|   }
+ 922| });
+ 923| </script>
+ 924| </body>
+ 925| </html>
