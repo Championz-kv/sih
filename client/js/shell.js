@@ -190,6 +190,7 @@ function renderModals(){
         <button class="btn btn-primary" onclick="closeModal('inviteModal'); toast('Invitation sent (placeholder)')">Send invitation</button>
       </div>
     </div>
+  </div>
 
   <div class="modal-overlay" id="addTaskModal">
     <div class="modal">
