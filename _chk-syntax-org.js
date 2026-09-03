@@ -1,4 +1,4 @@
-/* Syntax check every inline <script> block in org-profile.html & citizen-profile.html */
+/* Syntax check: every inline <script> block in org-profile.html & citizen-profile.html + client/js/app.js */
 const fs = require('fs');
 let bad = 0;
 ['client/org-profile.html', 'client/citizen-profile.html'].forEach(f => {
@@ -14,5 +14,12 @@ let bad = 0;
     }
   });
 });
+try {
+  new Function(fs.readFileSync('client/js/app.js', 'utf8'));
+  console.log('OK   client/js/app.js');
+} catch (e) {
+  bad++;
+  console.log('FAIL client/js/app.js — ' + e.message);
+}
 console.log('syntax errors: ' + bad);
 process.exit(bad ? 1 : 0);

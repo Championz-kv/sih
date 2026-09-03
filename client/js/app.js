@@ -205,8 +205,14 @@ function closeModal(id){ const m = document.getElementById(id); if(m) m.classLis
 document.addEventListener('click', (e) => {
   if(e.target.classList && e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
+/* Single generic chip toggle for the whole site (org profile chips, submit
+   page previews, etc.). Uses closest() so it keeps working even if a chip
+   later contains nested elements. Pages must NOT register a second
+   document-level .chip-opt listener — two handlers would toggle .sel twice
+   per click, so chips would appear unresponsive (see org-profile.html). */
 document.addEventListener('click', (e) => {
-  if(e.target.classList && e.target.classList.contains('chip-opt')) e.target.classList.toggle('sel');
+  const chip = e.target && e.target.closest ? e.target.closest('.chip-opt') : null;
+  if(chip) chip.classList.toggle('sel');
 });
 
 /* ---------------- search / sort / filter (used on explore & directory pages) ---------------- */

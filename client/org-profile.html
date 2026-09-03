@@ -175,13 +175,11 @@ function removeOrgLinkRow(btn){
    Same pattern as citizen-profile.html: cache-first prefill, fresh DB
    copy, row auto-create if missing, no fake default data anywhere. */
 
-/* Chips toggle on click — a single delegated listener on document, so it
-   works regardless of script order and survives any re-render. */
-document.addEventListener('click', e => {
-  const t = e.target;
-  const chip = t && t.closest ? t.closest('#expChips .chip-opt, #resChips .chip-opt, #prefChips .chip-opt') : null;
-  if(chip) chip.classList.toggle('sel');
-});
+/* Chip toggling is handled by the SHARED generic listener in js/app.js
+   (.chip-opt closest-toggle — the single site-wide source). Do NOT add a
+   second document-level chip-opt listener on this page: two handlers would
+   toggle .sel twice per click and the chips would never appear selected. */
+
 
 /* ---- State / District dropdowns (same source as the problem form) ----
    js/india-districts-fallback.js exposes window.INDIA_DISTRICTS_FALLBACK as

@@ -133,6 +133,18 @@ async function run(opts){
   const doc = makeDoc(chips);
   /* the three chip sections exist in the page's static HTML — pre-create */
   ['expChips', 'resChips', 'prefChips'].forEach(id => doc.getElementById(id));
+
+  /* Emulate js/app.js's generic chip toggle — in the real browser app.js is
+     loaded BEFORE this page's inline scripts and is the single site-wide
+     owner of .chip-opt clicks. Registering the same handler here (first, in
+     load order) lets the harness catch a double-toggle regression: if the
+     page ALSO wired its own document listener, two handlers would toggle
+     .sel twice per click and chips would never appear selected. */
+  doc.addEventListener('click', (e) => {
+    const chip = e.target && e.target.closest ? e.target.closest('.chip-opt') : null;
+    if(chip) chip.classList.toggle('sel');
+  });
+
   const calls = {};
   const store = {};
   if(opts.cached) store.ss_profile = JSON.stringify(opts.cached);
