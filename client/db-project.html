@@ -23,7 +23,7 @@
       <p class="sub" id="wsLinked">Linked to case —</p>
     </div>
     <div class="page-head-actions">
-      <button class="btn btn-outline btn-sm" onclick="toast('Edit Project is a placeholder for now')">✎ Edit Project</button>
+      
       <button class="btn btn-outline btn-sm" onclick="openModal('inviteModal')">Invite collaborator</button>
       <button class="btn btn-primary btn-sm" onclick="postUpdate()">Post update</button>
     </div>
@@ -72,7 +72,11 @@
   </div>
 
   <div class="tabpanel" id="tab-tasks">
-    <div class="card">
+    <div class="card card-pad">
+      <div class="row-flex" style="justify-content:space-between; margin-bottom:12px;">
+        <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0;">Project tasks</h4>
+        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">Add a new task</button>
+      </div>
       <table class="datatable">
         <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th></tr></thead>
         <tbody id="wsTasksBody"></tbody>
@@ -119,6 +123,7 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/tasks.js"></script>
 <script>
 const PIPELINE_STAGES = ["Proposed","Approved","Research","Development","Prototype","Testing","Deployment","Completed"];
 
@@ -190,10 +195,10 @@ function renderProject(pr){
   document.getElementById('wsOrgs').innerHTML =
     '<div class="person-row"><div class="av" style="background:' + avatarColor(pr.lead_organisation || 'Org') + '; color:#fff;">' + initials(pr.lead_organisation || 'Org') + '</div><div><b>' + esc(pr.lead_organisation || '\u2014') + '</b><span>Lead organisation</span></div></div>';
 
-  document.getElementById('wsTasksBody').innerHTML = [
+  renderTasksTable([
     ['Site survey', pr.lead_organisation || 'Team', 'In progress', formatDate(pr.start_date)],
     ['Draft implementation plan', pr.lead_organisation || 'Team', 'Not started', '\u2014']
-  ].map(([t, owner, status, due]) => '<tr><td>' + esc(t) + '</td><td>' + esc(owner) + '</td><td>' + (status === 'Done' ? '<span class="stamp stamp-resolved">Done</span>' : status === 'In progress' ? '<span class="stamp stamp-open">In progress</span>' : '<span class="stamp stamp-pending">Not started</span>') + '</td><td class="mono">' + esc(due) + '</td></tr>').join("");
+  ], pr.project_code || pr.project_id);
 
   document.getElementById('wsDocs').innerHTML = docs.length ? docs.map(d =>
     '<div class="person-row">' +

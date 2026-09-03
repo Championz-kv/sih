@@ -191,6 +191,31 @@ function renderModals(){
       </div>
     </div>
 
+  <div class="modal-overlay" id="addTaskModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Add a new task</h3><button class="close-x" onclick="closeModal('addTaskModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Task name</label><input class="input" id="taskNameInput" placeholder="e.g. Draft field report"></div>
+        <div class="field"><label>Owner</label>
+          <select class="input" id="taskOwnerSelect">${ORGS.map(o => '<option>' + o.name + '</option>').join('')}</select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select class="input" id="taskStatusSelect">
+            <option>In progress</option>
+            <option>Not started</option>
+            <option>Done</option>
+            <option>Due</option>
+          </select>
+        </div>
+        <div class="field"><label>Due date</label><input class="input" id="taskDueInput" type="date"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('addTaskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addTask()">Add task</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="donateModal">
     <div class="modal">
       <div class="modal-head"><h3>Support this request</h3><button class="close-x" onclick="closeModal('donateModal')">✕</button></div>
