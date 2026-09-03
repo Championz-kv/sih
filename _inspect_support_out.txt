@@ -1,0 +1,7 @@
+﻿GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=id&limit=1 -> HTTP 200 | BODY: []
+GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=support&limit=1 -> HTTP 200 | BODY: []
+GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=title&limit=1 -> HTTP 200 | BODY: []
+GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=supporters&limit=1 -> HTTP 400 | BODY: {"code":"42703","details":null,"hint":"Perhaps you meant to reference the column \"problems.support\".","message":"column problems.supporters does not exist"}
+GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=contributors&limit=1 -> HTTP 400 | BODY: 
+GET https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems?select=nonexistent_col_probe&limit=1 -> HTTP 400 | BODY: {"code":"42703","details":null,"hint":null,"message":"column problems.nonexistent_col_probe does not exist"}
+POST https://chwvtrcxnfqfkwlaxxbo.supabase.co/rest/v1/problems -> HTTP 401 | BODY: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"problems\""}

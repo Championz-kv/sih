@@ -86,6 +86,75 @@ function clearExploreFilters(){
 function getChecked(containerId){
   return Array.from(document.querySelectorAll('#'+containerId+' input[type="checkbox"]:checked')).map(cb => cb.value);
 }
+
+/* ---- Real problems from Supabase (replaces the dummy PROBLEMS array) ---- */
+let exploreProblems = [];
+
+function normalizeProblem(p){
+  const cats = Array.isArray(p.categories) && p.categories.length ? p.categories : [p.category || ''];
+  return {
+    id:       p.id,
+    title:    p.title,
+    desc:     p.description,
+    category: cats[0],
+    cats:     cats,
+    tags:     (p.hashtags || '').split(/\s+/).filter(Boolean),
+    affected: p.affected_count || 0,
+    supporters: p.support || 0,
+    severity: p.severity || 'medium',
+    status:   stateToStatus(p.problem_state),
+    district: p.district || '',
+    block:    p.block || '',
+    date:     p.created_at || '',
+    orgs:     [],
+  };
+}
+function stateToStatus(state){
+  return ({ draft:'draft', unreviewed:'review', reviewed:'review', project_active:'progress',
+            resolved:'resolved', removed:'removed' }[state] || 'review');
+}
+
+async function loadExplore(){
+  let rows = [];
+  try{
+    const { data, error } = await sbClient.from('problems')
+      .select('id, title, description, categories, hashtags, affected_count, support, severity, problem_state, district, block, created_at')
+      .not('problem_state', 'in', '("draft","removed")')
+      .order('created_at', { ascending:false });
+    if(error) throw error;
+    rows = data || [];
+  }catch(e){
+    console.error('[explore] load failed:', e);
+    toast('Could not load problems — ' + e.message);
+    rows = [];
+  }
+  exploreProblems = rows.map(normalizeProblem);
+  buildCategoryFilterCounts();
+  renderExplore();
+}
+
+/* Recompute the per-tag counts shown in the Category filter from the real list. */
+function buildCategoryFilterCounts(){
+  const tagCounts = {};
+  exploreProblems.forEach(p => problemCats(p).forEach(t => tagCounts[t] = (tagCounts[t]||0)+1));
+  document.querySelectorAll('#filterCategory .filter-cat-group').forEach(grpEl => {
+    /* match group by the heading text after the dot */
+    const head = grpEl.querySelector('.filter-subhead');
+    const name = (head.textContent || '').trim();
+    const gr = PROBLEM_CATEGORY_GROUPS.find(g => g.name === name);
+    const total = gr ? gr.tags.reduce((s,t)=> s+(tagCounts[t]||0), 0) : 0;
+    const headN = head.querySelector('.n');
+    if(headN) headN.textContent = total || '';
+    grpEl.querySelectorAll('label.check-row').forEach(lbl => {
+      const inp = lbl.querySelector('input');
+      const n = tagCounts[inp.value] || 0;
+      lbl.classList.toggle('dimmed', n === 0);
+      const nEl = lbl.querySelector('.n');
+      if(nEl) nEl.textContent = n || '';
+    });
+  });
+}
+
 function renderExplore(){
   const q = document.getElementById('exploreSearch').value;
   const sortMode = document.getElementById('exploreSort').value;
@@ -93,7 +162,7 @@ function renderExplore(){
   const sevs = getChecked('filterSeverity');
   const stats = getChecked('filterStatus');
 
-  let list = searchProblems(PROBLEMS, q);
+  let list = searchProblems(exploreProblems, q);
   list = filterProblems(list, { categories:cats, severities:sevs, statuses:stats });
   list = sortProblems(list, sortMode);
 
@@ -108,22 +177,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
 
   /* Category filter — the full posting taxonomy, grouped by heading.
-     Problems may carry several sub-tags: a case counts toward every tag it
-     carries, and filterProblems() matches any of them. Zero-count tags stay
-     visible but dimmed so the whole taxonomy remains discoverable. */
-  const tagCounts = {};
-  PROBLEMS.forEach(p => problemCats(p).forEach(t => tagCounts[t] = (tagCounts[t]||0)+1));
+     Counts are recomputed after the real problems load (begin empty). */
   const catHTML = PROBLEM_CATEGORY_GROUPS.map(gr => {
-    const total = gr.tags.reduce((s,t)=> s+(tagCounts[t]||0), 0);
     const rows = gr.tags.map(t => {
-      const n = tagCounts[t] || 0;
-      return `<label class="check-row${n ? '' : ' dimmed'}">` +
+      return `<label class="check-row dimmed">` +
         `<input type="checkbox" value="${t}">` +
         `<span class="cat-dot" style="background:${gr.color};"></span>${t}` +
-        `<span class="n">${n || ''}</span></label>`;
+        `<span class="n"></span></label>`;
     }).join("");
     return `<div class="filter-cat-group">` +
-      `<div class="filter-subhead"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}<span class="n">${total || ''}</span></div>` +
+      `<div class="filter-subhead"><span class="cat-dot" style="background:${gr.color};"></span>${gr.name}<span class="n"></span></div>` +
       rows + `</div>`;
   }).join("");
   document.getElementById('filterCategory').innerHTML =
@@ -138,7 +201,15 @@ document.addEventListener('DOMContentLoaded', () => {
     cb.addEventListener('change', renderExplore);
   });
 
-  renderExplore();
+  loadExplore();
+
+  /* Live supporter counts — overlay problems.support from the DB onto the
+     demo list, then re-render so every ♥ on the cards matches the detail
+     page exactly (same column, no duplicate counter). Demo values stay as
+     the offline fallback when Supabase is unreachable. */
+  fetchSupportCounts().then(map => {
+    if(applySupportCounts(map)) renderExplore();
+  });
 });
 </script>
 </body>
