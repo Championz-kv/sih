@@ -18,13 +18,13 @@
   <div class="page-head"><div><h1>Create Project</h1><p class="sub">Open a collaboration workspace for a problem — link the case, staff the team and save.</p></div></div>
 
   <div class="card card-pad" style="max-width:860px;">
-    <div class="field"><label>Problem ID *</label>
-      <input class="input mono" id="fProblemId" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
+    <div class="field"><label>Case ID *</label>
+      <input class="input mono" id="fProblemId" type="text" placeholder="e.g. 1042" oninput="autofillProblemTitle()">
       <p class="hint">The case this project addresses — the title fills in automatically for known cases.</p>
     </div>
 
-    <div class="field"><label>Problem title *</label>
-      <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Problem ID, or type it here">
+    <div class="field"><label>Project title *</label>
+      <input class="input" id="fProblemTitle" placeholder="Auto-filled from the Case ID, or type it here">
     </div>
 
     <div class="field"><label>Project short summary *</label>
@@ -36,20 +36,9 @@
       <p class="hint">Taken from your logged-in organization account — it will lead this project.</p>
     </div>
 
-    <div class="field"><label>Members / mentors</label>
-      <div id="memberRows"></div>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="addMemberRow()">+ Add another member / mentor</button>
-    </div>
-
-    <div class="field-row">
-      <div class="field"><label>Team size *</label>
-        <input class="input" type="number" id="fTeamSize" min="1" placeholder="e.g. 6">
-        <p class="hint">Auto-suggested from the members above — adjust if needed.</p>
-      </div>
-      <div class="field"><label>Date of starting the project *</label>
-        <input class="input" type="date" id="fStart">
-        <p class="hint">Pre-filled with today — edit it to any other start date.</p>
-      </div>
+    <div class="field"><label>Date of starting the project *</label>
+      <input class="input" type="date" id="fStart">
+      <p class="hint">Pre-filled with today — edit it to any other start date.</p>
     </div>
 
     <div class="field"><label>Documents <span style="font-weight:400; color:var(--text-faint);">(proposals, specs, survey data…)</span></label>
@@ -60,7 +49,7 @@
 
     <div class="row-flex" style="justify-content:space-between; gap:10px; margin-top:14px;">
       <button class="btn btn-ghost" type="button" onclick="clearForm()">✕ Clear form</button>
-      <button class="btn btn-primary" type="button" onclick="saveProject()">Save Project</button>
+      <button class="btn btn-primary" type="button" id="addProjectBtn" onclick="saveProject()">Add project</button>
     </div>
   </div>
 </main>
@@ -76,41 +65,15 @@
 <script>
 /* ==================================================================
    Create Project — organisation form (mirrors the Report-a-Problem
-   interface). Saving is a demo stand-in: the project lands in the
-   My Projects list for this session (sessionStorage) until the
-   backend persists projects.
+   interface). "Add project" inserts a row into the Supabase `projects`
+   table and uploads every attached document to the `project_docs`
+   storage bucket (one folder per project row id; files already in the
+   folder are skipped silently — no error shown). My Projects lists
+   saved rows straight from the database.
    ================================================================== */
 const val = id => (document.getElementById(id)?.value || '').trim();
 
-/* ---------- members / mentors rows ---------- */
-function memberRowHTML(){
-  return '<div class="link-row">' +
-    '<input class="input" placeholder="Name — e.g. R. Kumar">' +
-    '<input class="input" placeholder="Role — e.g. Faculty mentor">' +
-    '<button class="link-del" type="button" title="Remove this member" onclick="removeMemberRow(this)">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-    '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
-    '</svg></button></div>';
-}
-function addMemberRow(){
-  document.getElementById('memberRows').insertAdjacentHTML('beforeend', memberRowHTML());
-  suggestTeamSize();
-}
-function removeMemberRow(btn){
-  btn.closest('.link-row').remove();
-  suggestTeamSize();
-}
-function memberCount(){
-  return document.querySelectorAll('#memberRows .link-row').length;
-}
-
-/* ---------- team size auto-suggestion (editable) ---------- */
-let teamSizeTouched = false;
-function suggestTeamSize(){
-  if(teamSizeTouched) return;
-  /* lead + listed members/mentors */
-  document.getElementById('fTeamSize').value = memberCount() + 1;
-}
+const DOC_BUCKET = 'project_docs';   /* Supabase Storage bucket for evidence files */
 
 /* ---------- documents — click opens the PC file picker (drag & drop too) ---------- */
 let docFiles = [];
@@ -143,49 +106,141 @@ function handleDocFiles(fileList){
 
 /* ---------- problem title auto-fill from known cases ---------- */
 function autofillProblemTitle(){
-  const id = parseInt(val('fProblemId'), 10);
-  const known = PROBLEMS.find(p => p.id === id);
+  const id = val('fProblemId').trim();
+  const known = PROBLEMS.find(p => String(p.id) === id);
   if(known) document.getElementById('fProblemTitle').value = known.title;
+}
+
+/* ---------- storage: project_docs bucket ----------
+   Each project gets its own folder (named by the row's project_id) so
+   the existence check is a single cheap listing. */
+
+/* TRUE when fileName is already stored in the bucket folder.
+   Deliberately SILENT by design: on any listing problem it returns false
+   and the caller lets the upload try (its own handler skips true
+   duplicates without surfacing an error either). */
+async function bucketFileExists(folder, fileName){
+  try{
+    const { data, error } = await sbClient.storage.from(DOC_BUCKET).list(folder, { limit: 1000, search: fileName });
+    if(error) return false;
+    return (data || []).some(f => f.name === fileName);
+  }catch(e){
+    return false;
+  }
+}
+
+/* Upload every attached file into the project's bucket folder. Files that
+   already exist there are NOT uploaded again and produce NO error; a
+   duplicate that slips past the pre-check (e.g. a race) is skipped
+   silently too. Returns the metadata list for the projects.documents
+   column plus the count of genuine failures. */
+async function uploadProjectDocuments(projectId){
+  const folder = String(projectId);
+  const uploaded = [];
+  let failed = 0;
+  for(const f of docFiles){
+    const name = (f.name || 'document').replace(/[\/\\?#%&]/g, '_').trim();
+    const path = folder + '/' + name;
+    try{
+      const exists = await bucketFileExists(folder, name);
+      if(!exists){
+        const { error } = await sbClient.storage.from(DOC_BUCKET).upload(path, f, { cacheControl: '3600', upsert: false });
+        /* a duplicate that slips past the pre-check is not an error */
+        if(error && !/duplicate|already exist|409/i.test(error.message || '')) throw error;
+      }
+      const url = sbClient.storage.from(DOC_BUCKET).getPublicUrl(path).data.publicUrl;
+      uploaded.push({ name, size_kb: Math.round((f.size || 0) / 1024), path, url });
+    }catch(e){
+      failed++;
+    }
+  }
+  return { uploaded, failed };
 }
 
 /* ---------- form actions ---------- */
 function clearForm(){
-  ['fProblemId','fProblemTitle','fSummary','fTeamSize'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  document.getElementById('memberRows').innerHTML = '';
+  ['fProblemId','fProblemTitle','fSummary'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   docFiles = [];
   renderDocList();
-  teamSizeTouched = false;
   initDefaults();
   toast('Form cleared');
 }
-function saveProject(){
+async function saveProject(){
   const need = [];
-  if(!val('fProblemId'))    need.push('Problem ID');
-  if(!val('fProblemTitle')) need.push('Problem title');
+  if(!val('fProblemId'))    need.push('Case ID');
+  if(!val('fProblemTitle')) need.push('Project title');
   if(!val('fSummary'))      need.push('Project short summary');
-  if(!parseInt(val('fTeamSize'),10)) need.push('Team size');
   if(!val('fStart'))        need.push('Start date');
   if(need.length){ toast('Please fill: ' + need.join(', ')); return; }
 
-  /* Demo persistence — sessionStorage until the backend exists. The saved
-     project appears in My Projects for this session. */
-  let saved = [];
-  try{ saved = JSON.parse(sessionStorage.getItem('ss_demo_projects') || '[]'); }catch(e){ saved = []; }
-  saved.unshift({
-    code: 'PRJ-0' + (361 + saved.length),
-    title: val('fProblemTitle'),
-    problem: parseInt(val('fProblemId'), 10) || null,
-    stage: 'Proposed', lead: val('fLead') || MY_ORG,
-    orgs: [val('fLead') || MY_ORG],
-    team: parseInt(val('fTeamSize'), 10),
-    start: val('fStart'), progress: 0,
-    /* attached document names ride along for the future backend wiring */
-    docs: docFiles.map(f => [f.name, f.size ? (f.size/1024).toFixed(0) + ' KB' : ''])
-  });
-  try{ sessionStorage.setItem('ss_demo_projects', JSON.stringify(saved)); }catch(e){}
+  /* Case ID is free text (e.g. 1042 or SS/JH/2026/1042) — sent as-is;
+     the FK to problems.case_no is what guarantees it is a real case. */
+  const problemId = val('fProblemId').trim();
 
-  toast('Project saved — it now appears under My Projects. (Demo — backend wiring comes next)');
-  setTimeout(() => go('my-projects.html'), 900);
+  const btn = document.getElementById('addProjectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  try{
+    if(typeof sbClient === 'undefined'){
+      toast('Supabase is not reachable right now — please try again.');
+      return;
+    }
+
+    /* 1 — insert the form row (documents start empty, filled after upload) */
+    const { data: row, error: insErr } = await sbClient.from('projects')
+      .insert({
+        problem_id:        problemId,
+        project_title:     val('fProblemTitle'),
+        summary:           val('fSummary'),
+        lead_organisation: val('fLead') || MY_ORG,
+        start_date:        val('fStart'),
+        documents:         []
+      })
+      .select('project_id')
+      .single();
+    if(insErr){
+      if(insErr.code === '42501' || /row-level security/i.test(insErr.message || '')){
+        toast('The database blocked this save (RLS policy missing). Run db/fix_projects_rls.sql in the Supabase SQL Editor, then try again.');
+      } else if(insErr.code === '42P01' || /does not exist/i.test(insErr.message || '')){
+        toast('The projects table does not exist yet — run db/projects_table.sql in the Supabase SQL Editor first.');
+      } else {
+        toast('Could not add project: ' + insErr.message);
+      }
+      return;
+    }
+
+    /* 2 — evidence files → project_docs bucket (duplicates skipped silently) */
+    let docsMeta = [], failedUploads = 0;
+    if(docFiles.length){
+      const res = await uploadProjectDocuments(row.project_id);
+      docsMeta = res.uploaded;
+      failedUploads = res.failed;
+      if(failedUploads) toast(failedUploads + ' document' + (failedUploads === 1 ? '' : 's') + ' failed to upload.');
+    }
+
+    /* 3 — attach the upload results to the row */
+    const { error: updErr } = await sbClient.from('projects')
+      .update({ documents: docsMeta })
+      .eq('project_id', row.project_id);
+    if(updErr){
+      if(updErr.code === '42501' || /row-level security/i.test(updErr.message || '')){
+        toast('Project added, but the document-list update was blocked by the database (RLS). Run db/fix_projects_rls.sql — the next save will sync the documents.');
+      } else {
+        toast('Project added, but its document list could not be saved: ' + updErr.message);
+      }
+    }
+
+    /* My Projects reads saved rows straight from the database — no session
+       mirror needed anymore. */
+    toast('Project added to the desk' + (docsMeta.length ? ' — ' + docsMeta.length + ' document' + (docsMeta.length === 1 ? '' : 's') + ' linked.' : '.'));
+    setTimeout(() => go('my-projects.html'), 900);
+  }catch(e){
+    toast('Something went wrong: ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Add project';
+  }
 }
 
 /* ---------- defaults ---------- */
@@ -194,7 +249,6 @@ function initDefaults(){
   document.getElementById('fLead').value = MY_ORG;
   /* Start date — today, editable to any other date. */
   document.getElementById('fStart').value = new Date().toISOString().slice(0, 10);
-  suggestTeamSize();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -208,8 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initDefaults();
-  addMemberRow();   /* start with one empty member row */
-  document.getElementById('fTeamSize').addEventListener('input', () => { teamSizeTouched = true; });
 
   /* Documents — click opens the PC file picker; drag & drop also works. */
   const docsInput = document.getElementById('fDocs');

@@ -175,8 +175,8 @@ function orgCardHTML(o){
    Demo stand-in for per-org project ownership until the backend persists
    projects: the demo org (MMMUT) claims projects where it leads or
    collaborates, padded so the My Projects section always demos with two
-   already-created projects. Shared by my-projects.html and project.html
-   (which gates its Edit Project button on the same rule). */
+   already-created projects. Shared by my-projects.html and the project
+   workspace pages to decide which projects belong to the signed-in org. */
 const MY_ORG = 'MMMUT';
 function myOrgProjects(){
   const mine = PROJECTS.filter(pr => pr.lead === MY_ORG || pr.orgs.includes(MY_ORG));

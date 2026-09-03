@@ -32,10 +32,12 @@ const NAV = [
     { page:'requests', href:'requests.html', label:'Collaboration Requests', roles:['org'], icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>', count:3 },
     { page:'funding', href:'funding.html', label:'Funding', roles:['citizen','org','admin'], icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', count:FUND_REQUESTS.filter(f => !fundIsFunded(f)).length },
   ]},
-  /* My Projects — the signed-in organisation's own created projects.
+  /* My Projects + Create Project — the signed-in organisation's own
+     created projects, and the form to start a new one.
      Org-only; demo count until per-org projects are persisted. */
   { group:null, items:[
     { page:'myprojects', href:'my-projects.html', label:'My Projects', roles:['org'], icon:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M9 14l2 2 4-4"/>', count:2 },
+    { page:'createproject', href:'create-project.html', label:'Create Project', roles:['org'], icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>' },
   ]},
   { group:null, label:'Insights', items:[
     { page:'analytics', href:'analytics.html', label:'Public Analytics', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
@@ -188,6 +190,61 @@ function renderModals(){
         <button class="btn btn-primary" onclick="closeModal('inviteModal'); toast('Invitation sent (placeholder)')">Send invitation</button>
       </div>
     </div>
+  </div>
+
+  <div class="modal-overlay" id="addTaskModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="taskModalTitle">Add a new task</h3><button class="close-x" onclick="closeModal('addTaskModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Task name</label><input class="input" id="taskNameInput" placeholder="e.g. Draft field report"></div>
+        <div class="field"><label>Organisation</label>
+          <select class="input" id="taskOrgSelect">${ORGS.map(o => '<option>' + o.name + '</option>').join('')}</select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select class="input" id="taskStatusSelect">
+            <option>Not started</option>
+            <option>In progress</option>
+            <option>Completed</option>
+          </select>
+        </div>
+        <div class="field"><label>Due date</label><input class="input" id="taskDueInput" type="date"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="taskModalRemoveBtn" style="display:none; margin-right:auto; color:var(--rust);" onclick="removeTask()">Remove task</button>
+        <button class="btn btn-outline" onclick="closeModal('addTaskModal')">Cancel</button>
+        <button class="btn btn-primary" id="taskModalSubmit" onclick="addTask()">Add task</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editSummaryModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Edit project summary</h3><button class="close-x" onclick="closeModal('editSummaryModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Project summary</label>
+          <textarea class="input" id="summaryInput" rows="6" placeholder="Describe the project in a few lines..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('editSummaryModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSummary()">Save summary</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="milestonesModal">
+    <div class="modal">
+      <div class="modal-head"><h3>Project milestones</h3><button class="close-x" onclick="closeModal('milestonesModal')">✕</button></div>
+      <div class="modal-body">
+        <p class="hint" style="margin-top:0;">The 8 stages of the project cycle. Tick a stage once it is completed — checked stages show a ✓ on the pipeline.</p>
+        <div id="milestonesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeModal('milestonesModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMilestones()">Save milestones</button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="donateModal">
     <div class="modal">
