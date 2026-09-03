@@ -193,7 +193,7 @@ function renderModals(){
 
   <div class="modal-overlay" id="addTaskModal">
     <div class="modal">
-      <div class="modal-head"><h3>Add a new task</h3><button class="close-x" onclick="closeModal('addTaskModal')">✕</button></div>
+      <div class="modal-head"><h3 id="taskModalTitle">Add a new task</h3><button class="close-x" onclick="closeModal('addTaskModal')">✕</button></div>
       <div class="modal-body">
         <div class="field"><label>Task name</label><input class="input" id="taskNameInput" placeholder="e.g. Draft field report"></div>
         <div class="field"><label>Owner</label>
@@ -203,7 +203,7 @@ function renderModals(){
           <select class="input" id="taskStatusSelect">
             <option>In progress</option>
             <option>Not started</option>
-            <option>Done</option>
+            <option>Completed</option>
             <option>Due</option>
           </select>
         </div>
@@ -211,7 +211,7 @@ function renderModals(){
       </div>
       <div class="modal-foot">
         <button class="btn btn-outline" onclick="closeModal('addTaskModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="addTask()">Add task</button>
+        <button class="btn btn-primary" id="taskModalSubmit" onclick="addTask()">Add task</button>
       </div>
     </div>
   </div>
