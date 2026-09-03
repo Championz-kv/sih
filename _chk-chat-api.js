@@ -23,6 +23,7 @@ async function call(req) {
 let geminiText = null;
 let geminiCalled = 0;
 let geminiShouldFail = false;
+let geminiFinish = 'STOP';   // Gemini finishReason the mock reports
 let lastGeminiBody = null;
 
 global.fetch = async (url, opts) => {
@@ -32,7 +33,7 @@ global.fetch = async (url, opts) => {
   return {
     ok: true,
     json: async () => ({
-      candidates: [{ content: { parts: [{ text: geminiText }] } }]
+      candidates: [{ finishReason: geminiFinish, content: { parts: [{ text: geminiText }] } }]
     }),
     text: async () => ''
   };
@@ -151,6 +152,53 @@ const GOOD_REPLY =
     geminiText = GOOD_REPLY;
     await call({ method: 'POST', body: { message: 'a'.repeat(5000) } });
     assert.equal(lastGeminiBody.contents.at(-1).parts[0].text.length, 1000);
+  });
+
+  /* ---- truncation fix: raised token ceiling + MAX_TOKENS tidy-up ---- */
+
+  await t('token ceiling raised to 2048 + completeness rule in prompt', async () => {
+    geminiText = GOOD_REPLY;
+    await call({ method: 'POST', body: { message: 'how to post?' } });
+    assert.equal(lastGeminiBody.generationConfig.maxOutputTokens, 2048, 'cap is 2048, not 300');
+    assert.equal(typeof lastGeminiBody.generationConfig.temperature, 'number', 'temperature kept');
+    const si = lastGeminiBody.systemInstruction.parts[0].text;
+    assert.ok(si.includes('ALWAYS finish what you start'), 'completeness rule present');
+  });
+
+  await t('MAX_TOKENS cut mid-tag: dangling tag dropped, list closed cleanly', async () => {
+    geminiText = 'Here is how: <ul><li>Open the <b>Report</b> page <a href="#" onclick="go(\'sub';
+    geminiFinish = 'MAX_TOKENS';
+    const r = await call({ method: 'POST', body: { message: 'steps?' } });
+    geminiFinish = 'STOP';
+    const out = r.body.reply;
+    assert.equal(r.statusCode, 200);
+    assert.ok(!out.includes("go('sub"), 'dangling half-tag removed');
+    assert.ok(out.includes('</ul>'), 'open list closed');
+    assert.ok(/<\/ul>\s*$/.test(out), 'ends on the closed list — looks finished, no ellipsis needed');
+  });
+
+  await t('MAX_TOKENS landing on a complete sentence: left as-is', async () => {
+    geminiText = 'You can explore all cases on the Explore page.';
+    geminiFinish = 'MAX_TOKENS';
+    const r = await call({ method: 'POST', body: { message: 'where?' } });
+    geminiFinish = 'STOP';
+    assert.equal(r.body.reply, 'You can explore all cases on the Explore page.',
+      'already ends like a finished sentence — no ellipsis, no stray tags');
+  });
+
+  await t('MAX_TOKENS cut mid-word: ellipsis added so it never stops abruptly', async () => {
+    geminiText = 'You can explore all cases on the Expl';
+    geminiFinish = 'MAX_TOKENS';
+    const r = await call({ method: 'POST', body: { message: 'where?' } });
+    geminiFinish = 'STOP';
+    assert.ok(r.body.reply.startsWith('You can explore'));
+    assert.ok(/\u2026\s*$/.test(r.body.reply), 'ends with ellipsis, not a bare word fragment');
+  });
+
+  await t('normal STOP finish: reply untouched (no automatic ellipsis)', async () => {
+    geminiText = 'Short complete answer.';
+    const r = await call({ method: 'POST', body: { message: 'x' } });
+    assert.equal(r.body.reply, 'Short complete answer.');
   });
 
   /* ---- chat-brain.js live-mode flip (static checks) ---- */

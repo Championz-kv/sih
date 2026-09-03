@@ -27,6 +27,7 @@ const SYSTEM_PROMPT = `You are Sahayak, the friendly AI assistant of SolveSamaj 
 HOW TO ANSWER (always):
 - Plain, warm, simple English. Never robotic, never preachy.
 - Medium length: 2–5 short sentences, or 2–4 numbered steps when explaining how to do something. Never a wall of text, never a one-word reply.
+- ALWAYS finish what you start: complete every sentence and every step you promise, then end cleanly. Never stop mid-sentence, never rush off with a clipped fragment. A short answer is fine only when the question truly needs nothing more — and it must still be a complete thought that ends properly.
 - Use only simple inline HTML: <b>, <a>, <br>, and <ul><li> lists. No markdown, no headings, no scripts, styles, tables or images.
 - For internal pages, write links EXACTLY in this pattern (the site's router understands it):
   <a href="#" onclick="go('PAGE');return false;">Label →</a>
@@ -51,7 +52,7 @@ Here is the user's chat so far:`;
 /* Shape the client transcript into Gemini turns. Only plain text survives and
    every turn is capped, so a bloated history can't blow up the request. */
 const MAX_TURNS = 12;
-const MAX_TURN_CHARS = 400;
+const MAX_TURN_CHARS = 700;
 function buildContents(userText, history) {
   const turns = Array.isArray(history) ? history.slice(-MAX_TURNS) : [];
   const contents = turns
@@ -94,6 +95,17 @@ function sanitizeReply(html) {
   return s;
 }
 
+/* Tidy a reply that hit the token cap: drop a dangling half-open tag, close
+   a list the cut left open, and end with an ellipsis instead of a mid-word
+   stop — so even a truncated answer looks finished, never broken. */
+function tidyTruncated(text) {
+  let s = String(text).replace(/<[a-zA-Z/][^>]*$/, '').trimEnd();
+  const opens = (s.match(/<ul>/gi) || []).length - (s.match(/<\/ul>/gi) || []).length;
+  if (opens > 0) s += '</ul>';
+  if (!/[.!?…>]\s*$/.test(s)) s += ' …';
+  return s;
+}
+
 /* --- Vercel serverless handler --- */
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -133,7 +145,12 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: buildContents(message, body.history),
-          generationConfig: { temperature: 0.6, maxOutputTokens: 300 }
+          /* Token cap: 300 TRUNCATED replies mid-sentence — navigation links
+             like <a onclick="go('submit.html')…"> cost ~25–30 tokens each, so
+             a 3-step answer with 2 links never fit. 2048 is a ceiling, not a
+             target — the prompt keeps answers compact; billing is per token
+             actually generated. */
+          generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
         })
       }
     );
@@ -142,11 +159,15 @@ module.exports = async function handler(req, res) {
       throw new Error('Gemini HTTP ' + geminiRes.status + ' ' + errText);
     }
     const data = await geminiRes.json();
-    const raw = (data.candidates && data.candidates[0] && data.candidates[0].content &&
-      data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-      data.candidates[0].content.parts[0].text) || '';
+    const cand = data.candidates && data.candidates[0];
+    const raw = (cand && cand.content && cand.content.parts &&
+      cand.content.parts[0] && cand.content.parts[0].text) || '';
     if (!raw.trim()) throw new Error('Gemini returned an empty reply');
-    res.status(200).json({ reply: sanitizeReply(raw.trim()) });
+    let reply = raw.trim();
+    /* Rare (cap is high now) — but if the reply hit the token cap, tidy the
+       cut so users never see a mid-word/mid-markup stop. */
+    if (cand && cand.finishReason === 'MAX_TOKENS') reply = tidyTruncated(reply);
+    res.status(200).json({ reply: sanitizeReply(reply) });
   } catch (err) {
     console.error('[chat] fallback used:', err.message);
     res.status(200).json({ reply: FALLBACK_REPLY, reason: 'unavailable' });
