@@ -373,6 +373,10 @@ html[data-theme="dark"] .guide-banner.gb-ochre{ background:linear-gradient(130de
   content:''; position:absolute; top:13px; left:50%; width:100%; height:1.5px; background:var(--border-2); z-index:1;
 }
 .pipe-step .lbl{ font-size:11px; color:var(--text-soft); font-weight:600; letter-spacing:.01em; }
+/* Completed stage: the number bubble is FILLED with the accent colour
+   instead of showing a tick mark. */
+.pipe-step.done .n{ background:var(--ledger); border-color:var(--ledger); color:#fff; }
+.pipe-step.done .lbl{ color:var(--ink); }
 
 /* ---- Ledger stats strip ---- */
 .ledger-strip{

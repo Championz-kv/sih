@@ -58,10 +58,25 @@ function openMyProject(code){
 
 function openDbProject(id){ go('db-project.html', { id: id }); }
 
+/* The stage column was removed from the projects table — derive the label
+   from the milestones list (completed stage numbers 1-8; names are fixed). */
+const DB_STAGE_NAMES = ["Proposed","Approved","Research","Development","Prototype","Testing","Deployment","Completed"];
+function dbStageLabel(pr){
+  const done = Array.isArray(pr && pr.milestones)
+    ? pr.milestones.map(Number).filter(n => n >= 1 && n <= DB_STAGE_NAMES.length) : [];
+  return DB_STAGE_NAMES[Math.min(DB_STAGE_NAMES.length - 1, done.length)];
+}
+
 /* Card for a row saved in the `projects` table — opens db-project.html. */
 function dbCardHTML(pr){
   const code = pr.project_code || ('DB-' + String(pr.project_id || '').slice(0, 8).toUpperCase());
-  const docs = Array.isArray(pr.documents) ? pr.documents.length : 0;
+  /* participating_organisation jsonb = collaborators; +1 for the lead org */
+  const partners = Array.isArray(pr.participating_organisation) ? pr.participating_organisation.filter(Boolean) : [];
+  const orgCount = 1 + partners.length;
+  /* documents column removed — the count lives in the project_documents
+     child table, fetched as an embedded count alongside the row */
+  const docsRow = Array.isArray(pr.project_documents) ? pr.project_documents[0] : null;
+  const docs = docsRow && typeof docsRow.count === 'number' ? docsRow.count : 0;
   const linked = pr.problem_id
     ? 'Linked to case #' + esc(pr.problem_id) + ' · lead ' + esc(pr.lead_organisation || '')
     : 'Created by ' + esc(pr.lead_organisation || '') + ' · no linked case yet';
@@ -69,7 +84,7 @@ function dbCardHTML(pr){
     <div class="card card-pad" style="cursor:pointer; display:flex; flex-direction:column; gap:10px;" onclick="openDbProject('${esc(pr.project_id)}')">
       <div class="row-flex" style="justify-content:space-between;">
         <span class="pcard-id mono">${esc(code)}</span>
-        <span class="eyebrow">${esc(pr.stage || 'Proposed')}</span>
+        <span class="eyebrow">${esc(dbStageLabel(pr))}</span>
       </div>
       <h3 style="font-size:15.5px; margin:0;">${esc(pr.project_title || 'Untitled project')}</h3>
       <p style="font-size:12px; margin:0; color:var(--text-faint);">${linked}</p>
@@ -78,7 +93,7 @@ function dbCardHTML(pr){
         <div class="track"><div class="fill" style="width:${pr.progress || 0}%;"></div></div>
       </div>
       <div class="pcard-foot" style="border-top:1px solid var(--border); padding-top:9px;">
-        <span>1 org${docs ? ' · ' + docs + ' document' + (docs === 1 ? '' : 's') : ''}</span><span class="mono">since ${formatDate(pr.start_date)}</span>
+        <span>${orgCount} org${orgCount === 1 ? '' : 's'}${docs ? ' · ' + docs + ' document' + (docs === 1 ? '' : 's') : ''}</span><span class="mono">since ${formatDate(pr.start_date)}</span>
       </div>
     </div>`;
 }
@@ -114,7 +129,7 @@ function renderMyProjects(){
    the demo list still renders, and the RLS select policy is public anyway. */
 async function loadDbProjects(){
   if(typeof sbClient === 'undefined') return;
-  const { data, error } = await sbClient.from('projects').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sbClient.from('projects').select('*, project_documents(count)').order('created_at', { ascending: false });
   if(error){ console.warn('[my-projects] saved projects unavailable:', error.message); return; }
   dbProjects = data || [];
   renderMyProjects();

@@ -81,7 +81,7 @@
         <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">Add a new task</button>
       </div>
       <table class="datatable">
-        <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Task</th><th>Organisation</th><th>Status</th><th>Due</th><th style="text-align:right;">Actions</th></tr></thead>
         <tbody id="wsTasksBody"></tbody>
       </table>
     </div>
@@ -91,7 +91,8 @@
     <div class="card card-pad">
       <div class="row-flex" style="justify-content:space-between; margin-bottom:12px;">
         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin:0;">Shared documents</h4>
-        <button class="btn btn-outline btn-sm" onclick="toast('Upload placeholder')">+ Upload</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('docFileInput').click()">+ Upload</button>
+        <input type="file" id="docFileInput" style="display:none;" onchange="uploadProjectDoc(this)">
       </div>
       <div id="wsDocs"></div>
     </div>
@@ -134,15 +135,89 @@ function switchTab(tab){
   document.querySelectorAll('.tabbar .tabbtn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tabpanel[id^="tab-"]').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
 }
+let CUR_PR = null;   /* the loaded DB project row, kept in sync by the hooks */
+async function dbUpdateProject(patch){
+  if(!CUR_PR || typeof sbClient === 'undefined') return false;
+  const { error } = await sbClient.from('projects').update(patch).eq('project_id', CUR_PR.project_id);
+  if(error){ toast('Save failed: ' + error.message); return false; }
+  Object.assign(CUR_PR, patch);
+  return true;
+}
+function fmtTime(t){
+  if(!t) return '';
+  const d = new Date(t);
+  if(isNaN(d)) return String(t);
+  return d.toLocaleDateString() + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function renderUpdates(list){
+  const rows = Array.isArray(list) ? list : [];
+  const el = document.getElementById('wsUpdates');
+  if(!el) return;
+  if(!rows.length){ el.innerHTML = '<p style="font-size:12px; color:var(--text-faint); margin:0;">No updates yet — post the first one below.</p>'; return; }
+  el.innerHTML = rows.slice().reverse().map(u =>
+    '<div class="notif-item"><span class="notif-dot" style="background:' + avatarColor(u.heading || u.user || 'Team') + ';"></span>' +
+      '<div><p><b>' + esc(u.heading || 'Update') + '</b> — ' + esc(u.content || '') + '</p><span>' + esc(fmtTime(u.time)) + '</span></div>' +
+    '</div>').join('');
+}
+function renderDiscussions(list){
+  const rows = Array.isArray(list) ? list : [];
+  const el = document.getElementById('wsDiscussion');
+  if(!el) return;
+  if(!rows.length){ el.innerHTML = '<p style="font-size:12px; color:var(--text-faint); margin:0;">No messages yet — start the discussion below.</p>'; return; }
+  el.innerHTML = rows.map(m =>
+    '<div class="notif-item"><div class="av" style="width:30px;height:30px;border-radius:50%;background:' + avatarColor(m.user || 'Team') + ';color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--font-mono);font-weight:600;">' + initials(m.user || 'Team') + '</div>' +
+      '<div><p><b>' + esc(m.user || 'Team') + '</b></p><p style="margin-top:-4px;">' + esc(m.content || '') + '</p><span>' + esc(fmtTime(m.time)) + '</span></div>' +
+    '</div>').join('');
+}
+function renderDocs(list){
+  const rows = Array.isArray(list) ? list : [];
+  const el = document.getElementById('wsDocs');
+  if(!el) return;
+  if(!rows.length){ el.innerHTML = '<p style="font-size:12px; color:var(--text-faint); margin:0;">No documents were attached to this project.</p>'; return; }
+  el.innerHTML = rows.map(d =>
+    '<div class="person-row">' +
+      '<div class="av" style="border-radius:6px;">📄</div>' +
+      '<div style="flex:1; min-width:0;"><b>' + esc(d.name || 'document') + '</b><span>' + (d.size_kb ? d.size_kb + ' KB' : '') + (d.path ? ' · ' + esc(d.path) : '') + '</span></div>' +
+      (d.url ? '<a class="btn btn-outline btn-sm" href="' + esc(d.url) + '" target="_blank" rel="noopener">Open</a>' : '') +
+    '</div>').join('');
+}
 function postUpdate(){
-  const v = document.getElementById('wsPostInput').value.trim();
-  if(v) document.getElementById('wsPostInput').value = '';
-  toast('Update posted (placeholder \u2014 not saved)');
+  const input = document.getElementById('wsPostInput');
+  const v = input.value.trim();
+  if(!v){ toast('Write something first'); return; }
+  if(!CUR_PR){ toast('Project still loading — try again in a moment'); return; }
+  input.value = '';
+  const heading = v.length > 60 ? v.slice(0, 60) + '…' : v;
+  const entry = { heading: heading, content: v, time: new Date().toISOString() };
+  const list = (Array.isArray(CUR_PR.updates) ? CUR_PR.updates : []).concat([entry]);
+  dbUpdateProject({ updates: list }).then(ok => { if(!ok) return; renderUpdates(CUR_PR.updates); toast('Update posted'); });
 }
 function postDiscussion(){
   const input = document.getElementById('wsPostInput');
-  if(input.value.trim()) toast('Message posted (placeholder \u2014 not saved)');
+  const v = input.value.trim();
+  if(!v){ toast('Write something first'); return; }
+  if(!CUR_PR){ toast('Project still loading — try again in a moment'); return; }
   input.value = '';
+  const entry = { user: CUR_PR.lead_organisation || 'Team', content: v, time: new Date().toISOString() };
+  const list = (Array.isArray(CUR_PR.discussions) ? CUR_PR.discussions : []).concat([entry]);
+  dbUpdateProject({ discussions: list }).then(ok => { if(!ok) return; renderDiscussions(CUR_PR.discussions); toast('Message posted'); });
+}
+async function uploadProjectDoc(inputEl){
+  const file = inputEl.files && inputEl.files[0];
+  inputEl.value = '';
+  if(!file || !CUR_PR || typeof sbClient === 'undefined') return;
+  const folder = String(CUR_PR.project_id);   /* same bucket folder convention as create-project.html */
+  const name = (file.name || 'document').replace(/[\/\\?#%&]/g, '_').trim();
+  const path = folder + '/' + name;
+  const { error } = await sbClient.storage.from('project_docs').upload(path, file, { cacheControl: '3600', upsert: false });
+  if(error && !/duplicate|already exist|409/i.test(error.message || '')){ toast('Upload failed: ' + error.message); return; }
+  const url = sbClient.storage.from('project_docs').getPublicUrl(path).data.publicUrl;
+  const row = { project_id: CUR_PR.project_id, name: name, path: path, size_kb: Math.max(1, Math.round((file.size || 0) / 1024)), url: url };
+  const { error: dbErr } = await sbClient.from('project_documents').insert(row);
+  if(dbErr){ toast('Uploaded to storage but not indexed: ' + dbErr.message); return; }
+  CUR_PR.project_documents = (Array.isArray(CUR_PR.project_documents) ? CUR_PR.project_documents : []).concat([row]);
+  renderDocs(CUR_PR.project_documents);
+  toast('Document uploaded');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -155,20 +230,26 @@ async function loadDbProject(){
   const id = new URLSearchParams(location.search).get('id');
   if(!id){ document.getElementById('wsSummary').textContent = 'No project id in the link.'; return; }
   if(typeof sbClient === 'undefined'){ document.getElementById('wsSummary').textContent = 'Supabase is not reachable right now.'; return; }
-  const { data: pr, error } = await sbClient.from('projects').select('*').eq('project_id', id).maybeSingle();
+  const { data: pr, error } = await sbClient.from('projects').select('*, project_documents(*)').eq('project_id', id).maybeSingle();
   if(error){ document.getElementById('wsSummary').textContent = error.message; return; }
   if(!pr){ document.getElementById('wsSummary').textContent = 'This project may have been removed from the database.'; return; }
   renderProject(pr);
 }
 
 function renderProject(pr){
-  const stage = pr.stage || 'Proposed';
-  const idx = Math.max(0, PIPELINE_STAGES.indexOf(stage));
+  CUR_PR = pr;
+  /* The "stage" column was dropped — derive the stage from the fixed
+     8-stage milestones list (highest completed stage number). */
+  const msDone = Array.isArray(pr.milestones)
+    ? pr.milestones.filter(x => Number.isInteger(x) && x >= 1 && x <= PIPELINE_STAGES.length)
+    : [];
+  const idx = msDone.length ? Math.max.apply(null, msDone) - 1 : 0;
   const progress = Math.max(0, Math.min(100, pr.progress || 0));
-  const docs = Array.isArray(pr.documents) ? pr.documents : [];
+  const docs = Array.isArray(pr.project_documents) ? pr.project_documents : [];
+  const partnerOrgs = Array.isArray(pr.participating_organisation) ? pr.participating_organisation.filter(Boolean) : [];
 
   document.getElementById('wsCode').textContent = pr.project_code || ('DB-' + String(pr.project_id).slice(0, 8).toUpperCase());
-  document.getElementById('wsStage').textContent = stage.toUpperCase();
+  document.getElementById('wsStage').textContent = PIPELINE_STAGES[idx].toUpperCase();
   document.getElementById('wsTitle').textContent = pr.project_title || 'Untitled project';
   document.title = (pr.project_title || 'Project') + ' \u2014 SolveSamaj';
 
@@ -179,43 +260,39 @@ function renderProject(pr){
         : '<span class="mono">#' + esc(pr.problem_id) + '</span>'))
     : 'Not linked to a case yet';
 
+  /* Completed stages are FILLED with colour (.pipe-step.done) — no tick. */
   document.getElementById('wsPipeline').innerHTML = PIPELINE_STAGES.map((label, i) =>
-    '<div class="pipe-step"><div class="n">' + (i < idx ? '\u2713' : (i + 1)) + '</div><div class="lbl">' + label + '</div></div>').join("");
+    '<div class="pipe-step' + (msDone.indexOf(i + 1) !== -1 ? ' done' : '') + '"><div class="n">' + (i + 1) + '</div><div class="lbl">' + label + '</div></div>').join("");
 
   document.getElementById('wsSummary').textContent = pr.summary || 'No summary provided.';
   document.getElementById('ovProgress').textContent = progress + '%';
   document.getElementById('ovProgressFill').style.width = progress + '%';
   document.getElementById('wsLead').textContent = pr.lead_organisation || '\u2014';
-  document.getElementById('wsOrgCount').textContent = '1';
+  document.getElementById('wsOrgCount').textContent = partnerOrgs.length + (pr.lead_organisation ? 1 : 0);
   document.getElementById('wsStart').textContent = formatDate(pr.start_date);
-  window.CUR_PROJECT_ORGS = [pr.lead_organisation].filter(Boolean);
+  window.CUR_PROJECT_ORGS = partnerOrgs.concat(pr.lead_organisation ? [pr.lead_organisation] : []);
+  window.CUR_PROJECT_MILESTONES = msDone;   /* completed stage numbers — DB truth */
   window.CUR_STAGE_IDX = idx;
+  window.CUR_PROJECT_ID = pr.project_id;
+  /* tasks.js calls these after every add/edit/remove/save — write through to the DB */
+  window.persistTasksHook = rows => dbUpdateProject({ tasks: rows });
+  window.persistMilestonesHook = nums => dbUpdateProject({ milestones: nums });
+  window.persistSummaryHook = text => dbUpdateProject({ summary: text });
 
-  document.getElementById('wsUpdates').innerHTML =
-    '<div class="notif-item"><span class="notif-dot" style="background:' + avatarColor(pr.lead_organisation || 'System') + ';"></span>' +
-      '<div><p><b>System</b> \u2014 Project created via the Create Project form and saved to the database.</p><span>' + formatDate(pr.created_at) + ' \u00b7 now</span></div>' +
-    '</div>';
+  renderUpdates(pr.updates);
 
-  document.getElementById('wsOrgs').innerHTML =
-    '<div class="person-row"><div class="av" style="background:' + avatarColor(pr.lead_organisation || 'Org') + '; color:#fff;">' + initials(pr.lead_organisation || 'Org') + '</div><div><b>' + esc(pr.lead_organisation || '\u2014') + '</b><span>Lead organisation</span></div></div>';
+  const orgRows = (pr.lead_organisation ? [{ name: pr.lead_organisation, role: 'Lead organisation' }] : [])
+    .concat(partnerOrgs.filter(o => o !== pr.lead_organisation).map(o => ({ name: o, role: 'Partner organisation' })));
+  document.getElementById('wsOrgs').innerHTML = orgRows.length ? orgRows.map(o =>
+    '<div class="person-row"><div class="av" style="background:' + avatarColor(o.name) + '; color:#fff;">' + initials(o.name) + '</div><div><b>' + esc(o.name) + '</b><span>' + o.role + '</span></div></div>').join('')
+    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No organisations recorded yet.</p>';
 
-  renderTasksTable([
-    ['Site survey', pr.lead_organisation || 'Team', 'In progress', formatDate(pr.start_date)],
-    ['Draft implementation plan', pr.lead_organisation || 'Team', 'Not started', '\u2014']
-  ], pr.project_code || pr.project_id);
+  /* tasks jsonb: list of [name, organisation, status, due] */
+  renderTasksTable(Array.isArray(pr.tasks) ? pr.tasks : [], pr.project_code || pr.project_id);
 
-  document.getElementById('wsDocs').innerHTML = docs.length ? docs.map(d =>
-    '<div class="person-row">' +
-      '<div class="av" style="border-radius:6px;">\ud83d\udcc4</div>' +
-      '<div style="flex:1; min-width:0;"><b>' + esc(d.name || 'document') + '</b><span>' + (d.size_kb ? d.size_kb + ' KB' : '') + (d.path ? ' \u00b7 ' + esc(d.path) : '') + '</span></div>' +
-      (d.url ? '<a class="btn btn-outline btn-sm" href="' + esc(d.url) + '" target="_blank" rel="noopener">Open</a>' : '') +
-    '</div>').join("")
-    : '<p style="font-size:12px; color:var(--text-faint); margin:0;">No documents were attached to this project.</p>';
+  renderDocs(docs);
 
-  document.getElementById('wsDiscussion').innerHTML =
-    '<div class="notif-item"><div class="av" style="width:30px;height:30px;border-radius:50%;background:' + avatarColor(pr.lead_organisation || 'Team') + ';color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--font-mono);font-weight:600;">' + initials(pr.lead_organisation || 'Team') + '</div>' +
-      '<div><p><b>' + esc(pr.lead_organisation || 'Team') + '</b></p><p style="margin-top:-4px;">Kicking off the workspace for ' + esc(pr.project_title || 'this project') + ' \u2014 welcome aboard!</p><span>just now</span></div>' +
-    '</div>';
+  renderDiscussions(pr.discussions);
 
   window.CUR_REF = pr.project_code || pr.project_id;
   window.renderFunding = function(){

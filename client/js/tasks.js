@@ -171,6 +171,7 @@ function addTask(){
     ADDED_TASKS[key].push([name, orgEl.value, statusEl.value, due]);
   }
   renderTasksTable(TASK_SEEDS[key] || [], key);
+  if(typeof window.persistTasksHook === 'function') window.persistTasksHook(taskRowsFor(key));
   TASK_EDIT = null;
   closeModal('addTaskModal');
   toast(wasEdit ? 'Task updated' : 'Task added');
@@ -188,6 +189,7 @@ function removeTask(){
     added.splice(TASK_EDIT.idx - seeds.length, 1);
   }
   renderTasksTable(TASK_SEEDS[key] || [], key);
+  if(typeof window.persistTasksHook === 'function') window.persistTasksHook(taskRowsFor(key));
   TASK_EDIT = null;
   closeModal('addTaskModal');
   toast('Task removed');
@@ -195,7 +197,7 @@ function removeTask(){
 
 /* ---- Project milestones: the 8 stages of the project cycle ----
    Checkbox list in the milestones popup; saved state re-renders the
-   pipeline strip with a check mark on completed stages. */
+   pipeline strip with completed stages FILLED with colour. */
 function cycleStages(){
   return (typeof PIPELINE_STAGES !== 'undefined' && PIPELINE_STAGES.length) ? PIPELINE_STAGES : [];
 }
@@ -221,9 +223,12 @@ function openMilestonesModal(){
     list.innerHTML = '<p class="hint" style="margin:0;">No project cycle stages are defined for this workspace.</p>';
   } else {
     const saved = MILESTONES_DONE[currentTaskKey()];
+    const fromDb = Array.isArray(window.CUR_PROJECT_MILESTONES) ? window.CUR_PROJECT_MILESTONES : [];
     const done = (saved && saved.length === stages.length)
       ? saved
-      : stages.map((s, i) => i < currentStageIdx());  /* seed from the project's current stage */
+      : (fromDb.length
+          ? stages.map((s, i) => fromDb.indexOf(i + 1) !== -1)      /* DB milestones */
+          : stages.map((s, i) => i < currentStageIdx()));           /* new project: seed from its current stage */
     list.innerHTML = stages.map((label, i) => milestoneRowHTML(label, i, done[i])).join('');
   }
   openModal('milestonesModal');
@@ -241,21 +246,34 @@ function saveMilestones(){
   const key = currentTaskKey();
   const boxes = Array.prototype.slice.call(document.querySelectorAll('#milestonesList .milestone-check'));
   if(boxes.length) MILESTONES_DONE[key] = boxes.map(b => !!b.checked);
+  if(boxes.length && typeof window.persistMilestonesHook === 'function'){
+    const nums = [];
+    MILESTONES_DONE[key].forEach((d, i) => { if(d) nums.push(i + 1); });
+    window.persistMilestonesHook(nums);
+  }
   closeModal('milestonesModal');
   renderPipelineFromMilestones(key);
   toast('Milestones updated');
 }
 
-/* Pipeline strip: a stage shows a check mark when its milestone checkbox
-   is ticked, or when it lies before the project's current stage. */
+/* Pipeline strip: a completed stage (checkbox ticked / DB milestone) is
+   FILLED with colour instead of showing a tick mark. */
 function renderPipelineFromMilestones(key){
   const el = document.getElementById('wsPipeline');
   const stages = cycleStages();
   if(!el || !stages.length) return;
-  const done = MILESTONES_DONE[key || currentTaskKey()] || [];
+  const k = key || currentTaskKey();
+  let done;
+  if(MILESTONES_DONE[k] && MILESTONES_DONE[k].length){
+    done = MILESTONES_DONE[k];                                    /* saved this session */
+  } else if(Array.isArray(window.CUR_PROJECT_MILESTONES) && window.CUR_PROJECT_MILESTONES.length){
+    done = stages.map((s, i) => window.CUR_PROJECT_MILESTONES.indexOf(i + 1) !== -1);  /* DB milestones */
+  } else {
+    done = stages.map((s, i) => i < currentStageIdx());           /* new project fallback */
+  }
   el.innerHTML = stages.map((label, i) => {
-    const complete = !!done[i] || i < currentStageIdx();
-    return '<div class="pipe-step"><div class="n">' + (complete ? '\u2713' : (i + 1)) + '</div><div class="lbl">' + label + '</div></div>';
+    const complete = !!done[i];
+    return '<div class="pipe-step' + (complete ? ' done' : '') + '"><div class="n">' + (i + 1) + '</div><div class="lbl">' + label + '</div></div>';
   }).join('');
 }
 
@@ -274,6 +292,7 @@ function saveSummary(){
   if(!text){ toast('Summary cannot be empty'); return; }
   const el = document.getElementById('wsSummary');
   if(el){ el.textContent = text; el.style.whiteSpace = 'pre-wrap'; }
+  if(typeof window.persistSummaryHook === 'function') window.persistSummaryHook(text);
   closeModal('editSummaryModal');
   toast('Summary updated');
 }

@@ -77,7 +77,7 @@
         <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">Add a new task</button>
       </div>
       <table class="datatable">
-        <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Task</th><th>Organisation</th><th>Status</th><th>Due</th><th style="text-align:right;">Actions</th></tr></thead>
         <tbody id="wsTasksBody"></tbody>
       </table>
     </div>
@@ -157,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('wsStart').textContent = formatDate(pr.start);
 
   document.getElementById('wsPipeline').innerHTML = PIPELINE_STAGES.map((label,i) => {
-    const n = i < pr.stageIdx ? '✓' : (i + 1);
-    return `<div class="pipe-step"><div class="n">${n}</div><div class="lbl">${label}</div></div>`;
+    const done = i < pr.stageIdx;
+    return `<div class="pipe-step${done ? ' done' : ''}"><div class="n">${i + 1}</div><div class="lbl">${label}</div></div>`;
   }).join("");
 
   document.getElementById('wsUpdates').innerHTML = pr.discussion.map(([who,msg,when]) => `

@@ -11,7 +11,7 @@
 -- Project short summary *       → summary
 -- Lead organisation (auto)      → lead_organisation
 -- Date of starting the project* → start_date
--- Documents (multi-file)        → documents         (jsonb: [{name, size}])
+-- Documents (multi-file)        → project_documents table (+ project_docs bucket)
 --
 -- Run in: Supabase Dashboard → SQL Editor.
 -- ============================================================================
@@ -44,17 +44,22 @@ create table public.projects (
   start_date        date not null,
 
   /* ---- form: Documents (multiple files) ----
-     Each attachment is stored as {"name", "size_kb", "path", "url"} —
-     "path" is the object's location in the project_docs bucket
-     (<project_id>/<file name>); "url" is its public URL (only usable if
-     the bucket is public). The files themselves live in the bucket.
-     Normalized alternative: a project_documents child table — use that
-     instead if you later need per-document metadata/permissions. */
-  documents         jsonb not null default '[]'::jsonb,
+     Document FILES live in the `project_docs` storage bucket (one folder
+     per project_id); their METADATA lives in the `project_documents`
+     child table — see db/projects_extend.sql. No `documents` column here. */
 
-  /* ---- platform defaults (not form fields — the UI expects them) ---- */
-  stage             text not null default 'Proposed',
+  /* ---- platform defaults (not form fields — the UI expects them) ----
+     NOTE: no `stage` column — the workspace derives the current stage of
+     the fixed 8-step project cycle from the `milestones` jsonb below. */
   progress          integer not null default 0 check (progress between 0 and 100),
+
+  /* ---- workspace data (also added to existing tables by
+          db/projects_extend.sql — see that file for the shapes) ---- */
+  participating_organisation jsonb not null default '[]'::jsonb,
+  updates           jsonb not null default '[]'::jsonb,
+  discussions       jsonb not null default '[]'::jsonb,
+  milestones        jsonb not null default '[]'::jsonb,
+  tasks             jsonb not null default '[]'::jsonb,
 
   created_at        timestamptz not null default now()
 );
