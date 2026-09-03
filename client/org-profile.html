@@ -64,8 +64,8 @@
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>State</label><select class="input" id="oState"><option value="">— Select state —</option><option value="Uttar Pradesh">Uttar Pradesh</option></select></div>
-        <div class="field"><label>District / City</label><input class="input" id="oDistrict" placeholder="District or city"></div>
+        <div class="field"><label>State</label><select class="input" id="oState"><option value="">Select state</option></select></div>
+        <div class="field"><label>District</label><select class="input" id="oDist" disabled><option value="">Select district</option></select></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Phone</label><input class="input" id="oPhone" type="tel" placeholder="+91 …"></div>
@@ -120,7 +120,7 @@
     <div>
       <div class="card card-pad" style="margin-bottom:16px;">
         <h4 style="font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:10px;">Verification</h4>
-        <p style="font-size:12.5px;">Admins review your registration documents before granting verified status. Verified organizations appear first in matching results.</p>
+        <p style="font-size:12.5px;">Your registration documents are reviewed before granting verified status. Verified organizations can create and work on projects and appear first in results.</p>
         <button class="btn btn-outline btn-block btn-sm" onclick="toast('Documents submitted for review (placeholder)')">Submit documents</button>
       </div>
       <div class="card card-pad">
@@ -149,6 +149,7 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/india-districts-fallback.js"></script>
 <script>
 function orgLinkRowHTML(){
   return '<div class="link-row"><input class="input link-input" type="url" placeholder="https://…">' +
@@ -164,9 +165,6 @@ function removeOrgLinkRow(btn){
 </script>
 
 <script>document.addEventListener('DOMContentLoaded', () => {
-  /* Make chips selectable first so a first-time org can fill the form
-     even while the profile is still loading. */
-  wireOrgChips();
   loadOrgProfile();
   renderShell();
 });</script>
@@ -177,16 +175,58 @@ function removeOrgLinkRow(btn){
    Same pattern as citizen-profile.html: cache-first prefill, fresh DB
    copy, row auto-create if missing, no fake default data anywhere. */
 
-/* Chips toggle on click (same interaction as the problem form tags). */
-function wireOrgChips(){
-  ['expChips','resChips','prefChips'].forEach(id => {
-    const wrap = document.getElementById(id);
-    if(!wrap) return;
-    wrap.addEventListener('click', e => {
-      const chip = e.target.closest('.chip-opt');
-      if(chip) chip.classList.toggle('sel');
-    });
+/* Chips toggle on click — a single delegated listener on document, so it
+   works regardless of script order and survives any re-render. */
+document.addEventListener('click', e => {
+  const t = e.target;
+  const chip = t && t.closest ? t.closest('#expChips .chip-opt, #resChips .chip-opt, #prefChips .chip-opt') : null;
+  if(chip) chip.classList.toggle('sel');
+});
+
+/* ---- State / District dropdowns (same source as the problem form) ----
+   js/india-districts-fallback.js exposes window.INDIA_DISTRICTS_FALLBACK as
+   [{ state, districts: [...] }] and works offline and on file://. */
+const orgIndia = Array.isArray(window.INDIA_DISTRICTS_FALLBACK)
+  ? window.INDIA_DISTRICTS_FALLBACK.slice() : [];
+
+function populateOrgStates(){
+  const stateSel = document.getElementById('oState');
+  stateSel.innerHTML = '<option value="">Select state</option>';
+  orgIndia.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.state; o.textContent = s.state;
+    stateSel.appendChild(o);
   });
+}
+
+function fillOrgDistricts(stateSel, distSel){
+  distSel.innerHTML = '<option value="">Select district</option>';
+  const st = orgIndia.find(s => s.state === stateSel.value);
+  if(st){
+    st.districts.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = d;
+      distSel.appendChild(o);
+    });
+    distSel.disabled = false;
+  } else {
+    distSel.disabled = true;
+  }
+}
+
+populateOrgStates();
+document.getElementById('oState').addEventListener('change', () => {
+  fillOrgDistricts(document.getElementById('oState'), document.getElementById('oDist'));
+});
+
+/* Select a saved state + district (used by profile prefill) */
+function applyOrgLocation(state, district){
+  const stateSel = document.getElementById('oState');
+  const distSel = document.getElementById('oDist');
+  if(!state){ stateSel.value = ''; return; }
+  stateSel.value = state;
+  fillOrgDistricts(stateSel, distSel);
+  if(district) distSel.value = district;
 }
 
 /* Selected chip labels → comma-separated string for the DB column */
@@ -234,8 +274,7 @@ function applyOrgProfileToForm(p, user){
   document.getElementById('oName').value = (p && (p.full_name || '').trim()) || md.full_name || md.name || '';
   setOrgSelect(document.getElementById('oType'), (p && p.org_type) || '');
   document.getElementById('oAbout').value = (p && p.about) || '';
-  setOrgSelect(document.getElementById('oState'), (p && p.state) || '');
-  document.getElementById('oDistrict').value = (p && p.district) || '';
+  applyOrgLocation((p && p.state) || '', (p && p.district) || '');
   document.getElementById('oPhone').value = (p && p.phone) || '';
   document.getElementById('oEmail').value = (p && p.email) || (user && user.email) || '';
   document.getElementById('oAddress').value = (p && p.address) || '';
@@ -362,7 +401,7 @@ async function saveOrgProfile(){
     org_type: document.getElementById('oType').value || null,
     about: document.getElementById('oAbout').value.trim(),
     state: document.getElementById('oState').value || null,
-    district: document.getElementById('oDistrict').value.trim(),
+    district: document.getElementById('oDist').value || null,
     phone: document.getElementById('oPhone').value.trim(),
     email: document.getElementById('oEmail').value.trim(),
     address: document.getElementById('oAddress').value.trim(),
