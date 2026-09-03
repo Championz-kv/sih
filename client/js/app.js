@@ -254,27 +254,25 @@ function wireGlobalSearch(){
   });
 }
 
-/* ---------------- live supporter counts (DB-backed: problems.support) -------
-   The problems table stores each case's supporter count in its `support`
-   column, keyed by the problem id. Demo data in data.js uses the property
-   name `supporters`, so the helpers below read the DB column and overlay
-   the value onto the PROBLEMS list — every renderer keeps using
-   p.supporters and card hearts / the detail page stay in sync with the DB
-   (single source of truth, no duplicate counter).
+/* ---------------- live supporter counts + per-account support toggle --------
+   problems.support holds each case's supporter count. WHO backed it lives in
+   profiles.supported_problems (bigint[] of problem ids), and profiles.
+   cases_supported is that account's total. The Support button on problem.html
+   is a two-way toggle — see toggleSupport() below. There is no per-session /
+   localStorage lock anymore: the profile row IS the source of truth, so the
+   state follows the account (across devices and refreshes) and a supporter
+   can never double-count a case.
+
+   Demo data in data.js uses the property name `supporters`, so the count
+   helpers below read the DB column and overlay the value onto the PROBLEMS
+   list — every renderer keeps using p.supporters and card hearts / the detail
+   page stay in sync with the DB (single source of truth).
 
    Every helper degrades silently to the demo values when Supabase is
    unreachable (offline / CDN blocked), matching shell.js behaviour. */
-const SS_SUPPORTED_KEY = 'ss-supported';            /* ids supported this session */
-function supportedSet(){
-  try{ return new Set(JSON.parse(sessionStorage.getItem(SS_SUPPORTED_KEY) || '[]')); }
-  catch(e){ return new Set(); }
-}
-function hasSupported(id){ return supportedSet().has(String(id)); }
-function markSupported(id){
-  const s = supportedSet(); s.add(String(id));
-  try{ sessionStorage.setItem(SS_SUPPORTED_KEY, JSON.stringify(Array.from(s))); }catch(e){}
-}
 function supportApiReady(){ return typeof sbClient !== 'undefined' && !!sbClient; }
+/* Coerce a DB number (Postgres may hand back a string) to a safe integer. */
+function num(v){ const n = (typeof v === 'number') ? v : parseInt(v, 10); return isNaN(n) ? 0 : n; }
 
 /* Every problem row the visitor can read: { id -> support }. null on failure. */
 async function fetchSupportCounts(){
@@ -283,10 +281,7 @@ async function fetchSupportCounts(){
     const { data, error } = await sbClient.from('problems').select('id, support');
     if(error) throw error;
     const map = {};
-    (data || []).forEach(r => {
-      const v = (typeof r.support === 'number') ? r.support : parseInt(r.support, 10);
-      map[r.id] = isNaN(v) ? 0 : v;
-    });
+    (data || []).forEach(r => { map[r.id] = num(r.support); });
     return map;
   }catch(e){
     console.warn('[support] count fetch failed:', (e && e.message) || e);
@@ -305,20 +300,51 @@ function applySupportCounts(map){
   return n;
 }
 
-/* +1 on problems.support for one id. Resolves with the authoritative new
-   count (re-read via RETURNING) or throws — callers decide how to recover. */
-async function incrementSupport(id){
+/* One Support-button click — a two-way toggle, applied live to the DB:
+     • not backed yet   → problems.support +1, profiles.cases_supported +1,
+                          and this problem id appended to supported_problems
+     • already backed   → both counters −1 (never below 0) and the id removed
+                          from supported_problems.
+   Reads the two current rows, writes both, resolves with the NEW state so
+   the caller can repaint its button and counts. Throws when either write
+   fails or either row is missing. */
+async function toggleSupport(problemId, userId){
   if(!supportApiReady()) throw new Error('Supabase unavailable');
-  const { data: row, error: readErr } = await sbClient.from('problems')
-    .select('id, support').eq('id', id).maybeSingle();
-  if(readErr) throw readErr;
-  if(!row) throw new Error('problems has no row for id ' + id);
-  const cur = (typeof row.support === 'number') ? row.support : parseInt(row.support, 10);
-  const next = (isNaN(cur) ? 0 : cur) + 1;
-  const { data: updated, error: upErr } = await sbClient.from('problems')
-    .update({ support: next }).eq('id', id).select('id, support');
-  if(upErr) throw upErr;
-  if(!updated || !updated.length) throw new Error('support update matched no row (RLS policy?)');
-  const v = (typeof updated[0].support === 'number') ? updated[0].support : parseInt(updated[0].support, 10);
-  return isNaN(v) ? next : v;
+  const pid = Number(problemId);
+  const [probRes, profRes] = await Promise.all([
+    sbClient.from('problems').select('id, support').eq('id', pid).maybeSingle(),
+    sbClient.from('profiles').select('id, cases_supported, supported_problems').eq('id', userId).maybeSingle()
+  ]);
+  if(probRes.error) throw probRes.error;
+  if(!probRes.data) throw new Error('problems has no row for id ' + pid);
+  if(profRes.error) throw profRes.error;
+  if(!profRes.data) throw new Error('No profile row for your account — sign in or save your profile first');
+
+  const prob = probRes.data, prof = profRes.data;
+  const backed = new Set(Array.isArray(prof.supported_problems) ? prof.supported_problems.map(x => Number(x)) : []);
+  const wasBacked = backed.has(pid);
+
+  const support = wasBacked
+    ? Math.max(0, num(prob.support) - 1)
+    : num(prob.support) + 1;
+  const cases_supported = wasBacked
+    ? Math.max(0, num(prof.cases_supported) - 1)
+    : num(prof.cases_supported) + 1;
+  if(wasBacked) backed.delete(pid); else backed.add(pid);
+  const supported_problems = Array.from(backed);
+
+  const [updProb, updProf] = await Promise.all([
+    sbClient.from('problems').update({ support }).eq('id', pid).select('id, support'),
+    sbClient.from('profiles').update({ cases_supported, supported_problems }).eq('id', userId).select('id')
+  ]);
+  if(updProb.error) throw updProb.error;
+  if(!updProb.data || !updProb.data.length) throw new Error('support update matched no problems row (RLS policy?)');
+  if(updProf.error) throw updProf.error;
+
+  return {
+    supported: !wasBacked,
+    support: num(updProb.data[0].support),
+    cases_supported,
+    supported_problems
+  };
 }

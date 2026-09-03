@@ -33,14 +33,8 @@
           <button class="btn btn-accent btn-sm" id="actSupport" onclick="supportThisProblem()">Support</button>
           <button class="btn btn-outline btn-sm" id="actEvidence" onclick="toast('Evidence upload placeholder')">Add evidence</button>
           <button class="btn btn-outline btn-sm" id="actCommunity" onclick="document.getElementById('communityPanel').scrollIntoView({behavior:'smooth'})">💬 Community</button>
-          <button class="btn btn-outline btn-sm" id="actFund" style="margin-left:auto;" onclick="openRequestFund('problem', CUR_REF)">Donate funds</button>
           <button class="btn btn-primary btn-sm" id="actInterest" onclick="openModal('interestModal')">Express Interest</button>
         </div>
-      </div>
-
-      <div class="card card-pad">
-        <div class="section-head"><h2>Status timeline</h2></div>
-        <div class="status-rail" id="detailRail"></div>
       </div>
     </div>
 
@@ -65,14 +59,6 @@
         <div id="detailOrgs"></div>
       </div>
     </div>
-  </div>
-
-  <div class="card card-pad" style="margin-top:16px;">
-    <div class="section-head">
-      <h2>Funding needs <span class="count-pill" id="fundCount"></span></h2>
-      <button class="btn btn-outline btn-sm" onclick="openRequestFund('problem', CUR_REF)">+ Request funds for this case</button>
-    </div>
-    <div id="fundList"></div>
   </div>
 
   <!-- ============ COMMUNITY DISCUSSION ============ -->
@@ -160,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('detailStamp').innerHTML = '';
     const mg = document.getElementById('mediaGrid'); if(mg) mg.innerHTML = '';
     document.title = 'Problem not found — SolveSamaj';
-    ['actSupport','actEvidence','actCommunity','actFund','actInterest'].forEach(x => { const b = document.getElementById(x); if(b) b.style.display = 'none'; });
+    ['actSupport','actEvidence','actCommunity','actInterest'].forEach(x => { const b = document.getElementById(x); if(b) b.style.display = 'none'; });
     const ct = document.getElementById('cmText'); if(ct){ ct.readOnly = true; ct.placeholder = 'Sign in to join the discussion'; }
     const pb = document.getElementById('cmPostBtn'); if(pb) pb.style.display = 'none';
     return;
@@ -204,13 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   renderMedia(p);
 
-  const stageOrder = STATUS_STAGES.map(s=>s[0]);
-  const curIdx = stageOrder.indexOf(p.status) === -1 ? 0 : stageOrder.indexOf(p.status);
-  document.getElementById('detailRail').innerHTML = STATUS_STAGES.map(([key,label,desc],i) => {
-    const cls = i < curIdx ? 'done' : (i === curIdx ? 'current' : '');
-    return `<div class="rail-item ${cls}"><div class="rail-dot"></div><div class="rail-body"><b>${label}</b><span>${desc}</span></div></div>`;
-  }).join("");
-
   document.getElementById('detailOrgs').innerHTML = p.orgs.length
     ? p.orgs.map(name => {
         const o = ORGS.find(x=>x.name===name);
@@ -234,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Guests get a view-only case page */
   const GUEST = currentRole() === 'guest';
   if(GUEST){
-    ['actSupport','actEvidence','actFund'].forEach(x => {
+    ['actSupport','actEvidence'].forEach(x => {
       const b = document.getElementById(x);
       if(b) b.style.display = 'none';
     });
@@ -255,45 +234,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(pb) pb.style.display = 'none';
   }
 
-  /* ---------- live supporter counter (DB-backed: problems.support) ----------
-     The button shows a "Support" label with a count pill on its right edge;
-     the pill always mirrors the row's support value. A successful click
-     writes +1 through Supabase, bumps the pill immediately, and locks the
-     button into its green .btn-supported state for the rest of this
-     session. The count itself lives in the DB (survives refresh, same for
-     everyone); only the green "already supported" lock is per-session. */
+  /* ---------- support toggle (DB-backed + per-profile) ----------
+     The Support button is a two-way toggle:
+       • not backed yet  → problems.support +1 AND profiles.cases_supported +1,
+                           with this problem id appended to
+                           profiles.supported_problems
+       • already backed  → both counters −1 and the id is removed again.
+     profiles.supported_problems is the source of truth for "did this account
+     back the case?", so the state follows the signed-in account (not this
+     browser session) and a supporter can never double-count. */
   const actSupportBtn = document.getElementById('actSupport');
   let supportCount = p.supporters;
   let supportInFlight = false;
+  let iSupported = false;                 /* does the current account back this case? */
   function paintSupportButton(){
     if(!actSupportBtn) return;
-    const locked = hasSupported(p.id);
-    actSupportBtn.disabled = locked;
-    actSupportBtn.classList.toggle('btn-supported', locked);
-    actSupportBtn.innerHTML = 'Support<span class="supp-pill">' + supportCount + '</span>';
+    const busy = supportInFlight;
+    actSupportBtn.disabled = busy;
+    actSupportBtn.classList.toggle('btn-supported', iSupported);
+    const verb = busy
+      ? (iSupported ? 'Unsupporting…' : 'Supporting…')
+      : (iSupported ? 'Supported ✓' : 'Support');
+    actSupportBtn.innerHTML = verb + '<span class="supp-pill">' + supportCount + '</span>';
   }
   function paintSupportersField(){
     document.getElementById('detailSupp').textContent = suppLine(supportCount, p.contributors);
   }
-  window.supportThisProblem = async function(){
-    if(!actSupportBtn || supportInFlight || hasSupported(p.id)) return;
-    supportInFlight = true;
-    actSupportBtn.disabled = true;
-    actSupportBtn.innerHTML = 'Supporting…<span class="supp-pill">' + supportCount + '</span>';
+  async function currentUserId(){
     try{
-      const next = await incrementSupport(p.id);
-      supportCount = next;
-      p.supporters = next;                       /* keep the in-memory object in sync */
-      markSupported(p.id);
-      paintSupportButton();                      /* green + bumped pill + disabled */
-      paintSupportersField();                    /* CASE FILE Supporters field */
-      toast('Thanks — your support was recorded');
+      const { data } = await sbClient.auth.getSession();
+      if(data && data.session && data.session.user) return data.session.user.id;
+    }catch(e){}
+    const prof = getSessionProfile();
+    return (prof && prof.id) || null;
+  }
+  /* Prime the button from the account's own profile row so an already-backed
+     case shows "Supported ✓" (and the next click unsupports it). */
+  async function loadMySupport(){
+    if(!supportApiReady() || p.demo) return;
+    const uid = await currentUserId();
+    if(!uid) return;
+    try{
+      const { data: prof, error } = await sbClient.from('profiles')
+        .select('id, supported_problems').eq('id', uid).maybeSingle();
+      if(error || !prof) return;
+      const sp = Array.isArray(prof.supported_problems) ? prof.supported_problems.map(Number) : [];
+      iSupported = sp.includes(Number(p.id));
+      paintSupportButton();
+    }catch(e){ console.warn('[support] state load failed:', (e && e.message) || e); }
+  }
+  window.supportThisProblem = async function(){
+    if(!actSupportBtn || supportInFlight) return;
+    if(p.demo){ toast('This is a sample case — support works on filed problems'); return; }
+    supportInFlight = true;
+    paintSupportButton();
+    try{
+      const uid = await currentUserId();
+      if(!uid){
+        openModal('loginModal');
+        toast('Sign in to support this case');
+        return;
+      }
+      const res = await toggleSupport(p.id, uid);
+      supportCount = res.support;
+      p.supporters = res.support;
+      iSupported = res.supported;
+      paintSupportButton();
+      paintSupportersField();
+      /* keep the cached profile (topbar / citizen stats) in sync */
+      try{
+        const stored = getSessionProfile() || {};
+        stored.cases_supported = res.cases_supported;
+        stored.supported_problems = res.supported_problems;
+        saveSessionProfile(stored);
+      }catch(e){}
+      toast(iSupported ? 'Thanks — this case is now on your support list' : 'Support removed — you no longer back this case');
     }catch(e){
-      console.warn('[support] increment failed:', (e && e.message) || e);
-      toast('Could not record support — please try again');
-      paintSupportButton();                      /* restore the clickable state */
+      console.warn('[support] toggle failed:', (e && e.message) || e);
+      toast('Could not update support — ' + ((e && e.message) || 'please try again'));
     }finally{
       supportInFlight = false;
+      paintSupportButton();
     }
   };
   paintSupportButton();
@@ -307,8 +328,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data: row, error } = await sbClient.from('problems')
         .select('id, support').eq('id', p.id).maybeSingle();
       if(error || !row) return;
-      const v = (typeof row.support === 'number') ? row.support : parseInt(row.support, 10);
-      if(!isNaN(v) && v !== supportCount){
+      const v = num(row.support);
+      if(v !== supportCount){
         supportCount = v;
         p.supporters = v;
         paintSupportButton();
@@ -317,35 +338,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }catch(e){ console.warn('[support] initial count fetch failed:', (e && e.message) || e); }
   })();
 
-  window.renderFunding = function(){
-    /* Demo funding requests only exist for the bundled sample cases;
-       real DB-backed cases have no funding rows in the prototype yet. */
-    const list = IS_DEMO ? FUND_REQUESTS.filter(f => f.kind === 'problem' && f.ref === id) : [];
-    document.getElementById('fundCount').textContent = list.length ? list.length + ' request' + (list.length === 1 ? '' : 's') : '';
-    document.getElementById('fundList').innerHTML = list.length ? list.map(fr => `
-      <div style="padding:14px 0; border-bottom:1px dashed var(--border);">
-        <div class="row-flex" style="justify-content:space-between; align-items:flex-start; gap:10px;">
-          <div>
-            <b style="font-size:14px;">${fr.title}</b>
-            <div class="pcard-id mono">${fr.id} · posted by ${fr.postedBy}</div>
-          </div>
-          ${fundIsFunded(fr) ? '<span class="stamp stamp-validated">Fully funded</span>' : '<span class="stamp stamp-open">Open</span>'}
-        </div>
-        <p style="font-size:12.5px; margin:6px 0 12px;">${fr.desc}</p>
-        ${fundProgressHTML(fr)}
-        <div style="display:flex; flex-direction:column; gap:2px;">
-          ${fr.pledges.map((p, idx) => pledgeRowHTML(fr.id, idx, p)).join('')}
-        </div>
-        ${fr.pledges.length ? '' : '<p style="font-size:12px; color:var(--text-faint); margin:4px 0 8px;">No contributions yet — be the first backer.</p>'}
-        ${fundIsFunded(fr) ? '<p style="font-size:12px; color:var(--ledger); margin:8px 0 0;"><b>Fully funded.</b> Thank you to every backer.</p>'
-          : `<div class="row-flex" style="justify-content:flex-end; margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="openDonate('${fr.id}')">Donate to this need</button></div>`}
-      </div>`).join("")
-      : `<div class="empty" style="padding:26px 16px;">
-          <h4>No funding needs posted for this case</h4>
-          <p>Driving this problem? Use “Request funds” to post what money is needed — organizations and individuals can then pledge any amount.</p>
-        </div>`;
-  };
-  window.renderFunding();
+  /* Prime the Support button with this account's own backed-cases state. */
+  loadMySupport();
 
   /* ---------- community discussion (Supabase-backed) ----------
      Table public.community: comment_id (pk), problem_id -> problems.id,
